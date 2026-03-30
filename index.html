@@ -82,6 +82,33 @@
 
         .pre-logo-wrap { position: relative; overflow: hidden; }
 
+        /* ── SHINING TEXT ───────────────────────────────── */
+        @keyframes shine-sweep {
+            from { background-position: 200% 0; }
+            to   { background-position: -200% 0; }
+        }
+        .shining-text {
+            background: linear-gradient(110deg, #585858 35%, #ffffff 50%, #585858 75%, #585858);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: shine-sweep 2s linear infinite;
+        }
+        .pre-tagline {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            margin-top: 1.1rem;
+        }
+        .panel-sub.shining-text {
+            background: linear-gradient(110deg, #a0a0a0 35%, #ffffff 50%, #a0a0a0 75%);
+            background-size: 200% 100%;
+        }
+
         .pre-logo {
             width: clamp(240px, 50vw, 640px);
             display: block;
@@ -120,6 +147,7 @@
             animation: barFill 1.67s cubic-bezier(0.4,0,0.2,1) 0.13s forwards;
         }
         @keyframes barFill { to { width: 100%; } }
+
 
         /* ── HEADER ────────────────────────────────── */
         .site-header {
@@ -308,7 +336,8 @@
         .panel--bath .panel-dots   { background-image: radial-gradient(circle at 2px 2px, #fff 1px, transparent 0); }
 
         .panel--forge .panel-bg {
-            background-image: url('görsel/marka/forge.JPG');
+            background-image: url('görsel/forge/forge banner.JPG');
+            background-size: cover;
             background-position: center;
         }
         .panel--forge .panel-title  { color: #ffffff; }
@@ -623,6 +652,7 @@
     <div class="pre-logo-wrap">
         <img src="logo/blaene-logo.png" alt="Blaene" class="pre-logo">
     </div>
+    <p class="pre-tagline shining-text">Metal. Tasarım. Endüstri.</p>
     <div class="pre-bar"></div>
 </div>
 
@@ -936,6 +966,8 @@ document.getElementById('lang-toggle').addEventListener('click', () => {
         if (TRANSLATIONS[key]) el.textContent = TRANSLATIONS[key][currentLang];
     });
 });
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const preloader = document.getElementById('preloader');
