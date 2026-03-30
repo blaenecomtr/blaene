@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaene — Ürün Detayı</title>
+    <meta name="description" content="Blaene Bath koleksiyonu ürün detayı. 304 Paslanmaz Çelik, DFMA uyumlu metal tasarım.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --background:       #000000;
+            --foreground:       #ffffff;
+            --card:             #080808;
+            --border:           #1c1c1c;
+            --muted:            #0d0d0d;
+            --muted-foreground: #888888;
+            --accent:           #E07020;
+            --accent-dark:      #C05810;
+            --text-2:           var(--muted-foreground);
+            --text-3:           #3a3a3a;
+            --white:            #ffffff;
+        }
+
+        ::selection { background: var(--accent); color: #000; }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ── HEADER ─────────────────────────────────────── */
+        .site-header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; height: 60px;
+            background-color: rgba(8,8,8,0.97);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo { height: 16px; filter: invert(1); opacity: 0.88; display: block; }
+        .header-center { display: flex; align-items: center; gap: 2rem; }
+        @media (max-width: 860px) { .header-center { display: none; } }
+        .nav-link {
+            font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+            text-transform: uppercase; text-decoration: none;
+            color: var(--text-2); transition: color 0.15s;
+        }
+        .nav-link:hover { color: var(--white); }
+        .nav-link.active { color: var(--white); }
+        .header-right { display: flex; align-items: center; gap: 1.2rem; }
+        .wa-header-btn {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            padding: 0.42rem 0.9rem;
+            background-color: var(--accent); color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.68rem; font-weight: 600;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none;
+            transition: background-color 0.15s;
+        }
+        .wa-header-btn:hover { background-color: var(--accent-dark); }
+
+        /* ── BREADCRUMB ──────────────────────────────────── */
+        .breadcrumb-bar {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--card);
+        }
+        .breadcrumb {
+            font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text-3); display: flex; align-items: center; gap: 0.4rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .breadcrumb a { color: var(--text-3); text-decoration: none; transition: color 0.15s; }
+        .breadcrumb a:hover { color: var(--text-2); }
+        .breadcrumb-sep { color: var(--text-3); }
+        .breadcrumb-current { color: var(--foreground); }
+
+        /* ── PRODUCT LAYOUT ──────────────────────────────── */
+        .product-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: calc(100dvh - 120px);
+        }
+        @media (max-width: 860px) {
+            .product-layout { grid-template-columns: 1fr; }
+        }
+
+        /* ── IMAGE COLUMN ────────────────────────────────── */
+        .img-col {
+            position: sticky; top: 60px;
+            height: calc(100dvh - 60px);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            background-color: #0a0a0a;
+            overflow: hidden;
+        }
+        @media (max-width: 860px) {
+            .img-col {
+                position: relative; top: 0;
+                height: auto; border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+        .gallery-main {
+            flex: 1; min-height: 0;
+            display: flex; align-items: center; justify-content: center;
+            background-color: #0f0f0f;
+            position: relative; overflow: hidden;
+        }
+        @media (max-width: 860px) { .gallery-main { height: 60vw; min-height: 280px; flex: none; } }
+        .gallery-main-img {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            padding: 2rem;
+            display: block;
+            transition: filter 0.35s, opacity 0.25s;
+        }
+        .gallery-main-img.siyah { filter: brightness(0.2) contrast(1.1) saturate(0); }
+        .gallery-thumbs {
+            display: flex; gap: 1px;
+            background-color: var(--border);
+            flex-shrink: 0;
+        }
+        .gallery-thumb {
+            flex: 1; aspect-ratio: 1; overflow: hidden;
+            cursor: pointer; opacity: 0.4;
+            background-color: #0f0f0f;
+            transition: opacity 0.15s;
+            max-width: 80px;
+        }
+        .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; }
+        .gallery-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 0.25rem; }
+
+        /* ── INFO COLUMN ─────────────────────────────────── */
+        .info-col {
+            display: flex; flex-direction: column;
+            padding: 2.5rem 2rem;
+            overflow-y: auto;
+            gap: 0;
+        }
+        @media (max-width: 860px) { .info-col { padding: 1.75rem 1.5rem; } }
+
+        .info-eyebrow {
+            font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.6rem;
+        }
+        .info-code {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.4rem, 4vw, 3.4rem);
+            letter-spacing: 0.02em; line-height: 1;
+            color: var(--accent); margin-bottom: 0.35rem;
+        }
+        .info-name {
+            font-size: 1rem; font-weight: 500;
+            color: var(--white); margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .info-divider { height: 1px; background-color: var(--border); margin-bottom: 1.5rem; }
+
+        /* ── VARIANT SELECTOR ────────────────────────────── */
+        .sub-label {
+            font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.6rem;
+        }
+        .variant-btns { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+        .variant-btn {
+            padding: 0.38rem 1rem;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-2); font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+        }
+        .variant-btn.active {
+            border-color: var(--accent); color: var(--accent);
+            background-color: rgba(224,112,32,0.06);
+        }
+        .variant-btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+        /* ── SPECS TABLE ─────────────────────────────────── */
+        .specs-table {
+            width: 100%; border-collapse: collapse;
+            border-top: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .specs-table tr { border-bottom: 1px solid var(--border); }
+        .specs-table td { padding: 0.75rem 0; font-size: 0.82rem; }
+        .specs-table td:first-child {
+            color: var(--text-3); font-size: 0.64rem;
+            letter-spacing: 0.12em; text-transform: uppercase; width: 38%;
+        }
+        .specs-table td:last-child { color: var(--foreground); font-weight: 500; }
+
+        /* ── TECHNICAL FILES ─────────────────────────────── */
+        .tech-section { margin-bottom: 1.5rem; }
+        .tech-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tech-btn {
+            display: inline-flex; align-items: center; gap: 0.42rem;
+            padding: 0.45rem 0.9rem;
+            border: 1px solid var(--border); color: var(--text-2);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.66rem; font-weight: 600;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .tech-btn:hover { border-color: rgba(255,255,255,0.25); color: var(--white); }
+
+        /* ── CTA SECTION ─────────────────────────────────── */
+        .cta-section {
+            display: flex; flex-direction: column; gap: 0.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .cta-primary {
+            width: 100%; padding: 0.95rem 1rem;
+            background-color: var(--accent); color: #fff;
+            border: none; font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            text-decoration: none; cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        .cta-primary:hover { background-color: var(--accent-dark); }
+        .cta-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .cta-secondary {
+            width: 100%; padding: 0.82rem 1rem;
+            background-color: transparent; color: var(--text-2);
+            border: 1px solid var(--border); font-family: 'Montserrat', sans-serif;
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            text-decoration: none; cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .cta-secondary:hover { border-color: rgba(255,255,255,0.22); color: var(--white); }
+
+        /* ── TRUST BADGES ────────────────────────────────── */
+        .badge-row {
+            display: flex; flex-wrap: wrap; gap: 4px;
+        }
+        .badge {
+            font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 0.2rem 0.5rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #ffffff;
+        }
+
+        /* ── BACK SECTION ────────────────────────────────── */
+        .back-section {
+            max-width: 1200px; margin: 0 auto;
+            padding: 2rem 2rem;
+            border-top: 1px solid var(--border);
+        }
+        .back-to-collection {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text-2); text-decoration: none;
+            transition: color 0.15s;
+        }
+        .back-to-collection:hover { color: var(--white); }
+
+        /* ── FOOTER ──────────────────────────────────────── */
+        .site-footer {
+            padding: 2.5rem 2rem; border-top: 1px solid var(--border);
+            background-color: #000;
+        }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: flex-start; justify-content: space-between;
+            flex-wrap: wrap; gap: 2rem;
+        }
+        .footer-logo { height: 13px; filter: invert(1); opacity: 0.4; display: block; margin-bottom: 0.75rem; }
+        .footer-tagline { font-size: 0.72rem; color: var(--text-3); line-height: 1.6; max-width: 200px; }
+        .footer-meta { display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-end; }
+        @media (max-width: 600px) { .footer-meta { align-items: flex-start; } }
+        .footer-address { font-size: 0.72rem; color: var(--text-3); text-align: right; line-height: 1.6; font-style: normal; }
+        @media (max-width: 600px) { .footer-address { text-align: left; } }
+        .footer-social { display: flex; gap: 0.5rem; }
+        .footer-social a {
+            width: 28px; height: 28px; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-3); text-decoration: none;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .footer-social a:hover { color: var(--accent); border-color: rgba(224,112,32,0.35); }
+        .footer-copy { font-size: 0.66rem; color: var(--text-3); margin-top: 2rem; text-align: center; }
+
+        /* ── FLOATING WA ─────────────────────────────────── */
+        .wa-float {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500;
+            width: 50px; height: 50px; background-color: #16a34a; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px -4px rgba(22,163,74,0.4);
+            transition: background-color 0.15s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .wa-float:hover { background-color: #15803d; transform: scale(1.08); }
+
+        /* ── NOT FOUND ───────────────────────────────────── */
+        .not-found {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: calc(100dvh - 120px);
+            gap: 1.5rem; padding: 2rem;
+            text-align: center;
+        }
+        .not-found h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem; color: var(--accent);
+        }
+        .not-found p { font-size: 0.88rem; color: var(--text-2); }
+        .not-found a {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent); color: #fff;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none;
+            transition: background-color 0.15s;
+        }
+        .not-found a:hover { background-color: var(--accent-dark); }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <a href="index.html" aria-label="Blaene anasayfa">
+        <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
+    </a>
+    <nav class="header-center" aria-label="Ana navigasyon">
+        <a href="bath.html" class="nav-link active">Bath</a>
+        <a href="forge.html" class="nav-link">Forge</a>
+        <a href="industrial.html" class="nav-link">Industrial</a>
+        <a href="index.html#why" class="nav-link">Hakkımızda</a>
+        <a href="index.html#contact" class="nav-link">İletişim</a>
+    </nav>
+    <div class="header-right">
+        <a href="#" class="wa-header-btn" id="header-teklif" target="_blank" rel="noopener noreferrer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+            </svg>
+            Teklif Al
+        </a>
+    </div>
+</header>
+
+<nav class="breadcrumb-bar" aria-label="Sayfa yolu">
+    <div class="breadcrumb">
+        <a href="index.html">Ana Sayfa</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <a href="bath.html">Bath</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <span class="breadcrumb-current" id="bc-code">—</span>
+    </div>
+</nav>
+
+<main id="main-content">
+    <!-- JS tarafından doldurulacak -->
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div>
+            <img src="logo/blaene-logo.png" alt="Blaene" class="footer-logo">
+            <p class="footer-tagline">304 Paslanmaz Çelik<br>Metal Tasarım Ürünleri</p>
+        </div>
+        <div class="footer-meta">
+            <address class="footer-address">Çorum / Osmancık, Türkiye</address>
+            <div class="footer-social" aria-label="Sosyal medya">
+                <a href="https://instagram.com/blaenecomtr" target="_blank" rel="noopener noreferrer" aria-label="Instagram @blaenecomtr">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <rect width="20" height="20" x="2" y="2" rx="5"/>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    <p class="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
+</footer>
+
+<a href="https://wa.me/905320540019?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum."
+   id="wa-float-link" target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp ile iletişime geç">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+        <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+    </svg>
+</a>
+
+<script>
+const PRODUCTS = [
+    { code: 'BTH-001',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '25×25×5 cm',   images: ['bath/bath/BTH-001-304-1.5MM-28.03.2026.jpg'] },
+    { code: 'BTH-002',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '25×25×2 cm',   images: ['bath/bath/BTH-002-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-003',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '40×10 cm',     images: ['bath/bath/BTH-003-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-004',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '40×13×15 cm',  images: ['bath/bath/BTH-004-304-1.5MM-28.03.2026.jpg'] },
+    { code: 'BTH-005',   name: 'Havluluk',                thickness: '1.5mm', dims: '40×12×6 cm',   images: ['bath/bath/BTH-005-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-006',   name: 'Havluluk',                thickness: '1.5mm', dims: '13×9×12 cm',   images: ['bath/bath/BTH-006-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-007',   name: 'Sabunluk',                thickness: '1.5mm', dims: '10×10×3 cm',   images: ['bath/bath/BTH-007-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-008',   name: 'Havluluk',                thickness: '1.5mm', dims: '50×10×4 cm',   images: ['bath/bath/BTH-008-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-009',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '35×10×5 cm',   images: ['bath/bath/BTH-009-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-010',   name: 'Sabunluk',                thickness: '1.5mm', dims: '12×10×3 cm',   images: ['bath/bath/BTH-010-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-011',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '15×10×13 cm',  images: ['bath/bath/BTH-011-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-012',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '10×18×5 cm',   images: ['bath/bath/BTH-012-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-013',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '25 cm',        images: ['bath/bath/BTH-013-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-014',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '10×12 cm',     images: ['bath/bath/BTH-014-304-1,5MM-27.03.2026.jpg', 'bath/bath/BTH-014-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-014-A', name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '10×12 cm',     images: ['bath/bath/BTH-014-A-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-015',   name: 'Havluluk',                thickness: '2mm',   dims: '33×6×5 cm',    images: ['bath/bath/BTH-015-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-016',   name: 'Tuvalet Kağıdı Askısı',  thickness: '2mm',   dims: '8×14×4 cm',    images: ['bath/bath/BTH-016-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-017',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '40×10×5 cm',   images: ['bath/bath/BTH-017-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-018',   name: 'Havluluk',                thickness: '1.5mm', dims: '32×12×15 cm',  images: ['bath/bath/BTH-018-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-019',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '28×10×8 cm',   images: ['bath/bath/BTH-019-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-020',   name: 'Fön Makinası Askısı',     thickness: '2mm',   dims: '12×12×4 cm',   images: ['bath/bath/BTH-020-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-021',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '50×12×4 cm',   images: ['bath/bath/BTH-021-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-022',   name: 'Havluluk',                thickness: '2mm',   dims: '7×30×7 cm',    images: ['bath/bath/BTH-022-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-023',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '14×8 cm',      images: ['bath/bath/BTH-023-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-024',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '35×10×5 cm',   images: ['bath/bath/BTH-024-304-1,5MM-27.03.2026 .jpg'] },
+    { code: 'BTH-025',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '30×11×10 cm',  images: ['bath/bath/BTH-025-304-1,5MM-28.03.2026.jpg'] },
+].map(p => ({ ...p, material: '304 Paslanmaz Çelik' }));
+
+// ── INIT ─────────────────────────────────────────────
+const params  = new URLSearchParams(window.location.search);
+const code    = params.get('code');
+const product = PRODUCTS.find(p => p.code === code);
+
+const wa = (msg) => `https://wa.me/905320540019?text=${encodeURIComponent(msg)}`;
+
+if (!product) {
+    document.getElementById('main-content').innerHTML = `
+        <div class="not-found">
+            <h1>Ürün Bulunamadı</h1>
+            <p>Aradığınız ürün mevcut değil veya kaldırılmış olabilir.</p>
+            <a href="bath.html">← Bath Koleksiyonuna Dön</a>
+        </div>`;
+    document.title = 'Blaene — Ürün Bulunamadı';
+} else {
+    // Update meta
+    document.title = `Blaene ${product.code} — ${product.name}`;
+    document.getElementById('bc-code').textContent = product.code;
+
+    // Update WA links
+    const teklifMsg = `Merhaba, ${product.code} ürünü için fiyat teklifi almak istiyorum.`;
+    const bilgiMsg  = `Merhaba, ${product.code} ürünü hakkında bilgi almak istiyorum.`;
+    const dxfMsg    = `Merhaba, ${product.code} ürünü için DXF teknik çizim dosyasını talep ediyorum.`;
+    const stepMsg   = `Merhaba, ${product.code} ürününün STEP dosyasını talep ediyorum.`;
+    document.getElementById('header-teklif').href = wa(teklifMsg);
+    document.getElementById('wa-float-link').href = wa(bilgiMsg);
+
+    // Build gallery thumbs HTML
+    const thumbsHTML = product.images.length > 1
+        ? product.images.map((src, i) => `
+            <div class="gallery-thumb${i === 0 ? ' active' : ''}" data-idx="${i}">
+                <img src="${src}" alt="${product.code} görsel ${i + 1}" loading="lazy">
+            </div>`).join('')
+        : '';
+
+    // Specs rows
+    const specsHTML = `
+        <tr><td>Ürün</td><td>${product.name}</td></tr>
+        <tr><td>Malzeme</td><td>${product.material}</td></tr>
+        <tr><td>Kalınlık</td><td>${product.thickness}</td></tr>
+        <tr><td>Ölçüler</td><td>${product.dims}</td></tr>
+        <tr><td>Kategori</td><td>Bath</td></tr>
+        <tr><td>Standart</td><td>DFMA Uyumlu</td></tr>`;
+
+    document.getElementById('main-content').innerHTML = `
+        <div class="product-layout">
+            <div class="img-col">
+                <div class="gallery-main">
+                    <img class="gallery-main-img" id="gallery-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="eager">
+                </div>
+                <div class="gallery-thumbs" id="gallery-thumbs" ${product.images.length <= 1 ? 'style="display:none"' : ''}>${thumbsHTML}</div>
+            </div>
+            <div class="info-col">
+                <p class="info-eyebrow">Bath Koleksiyonu</p>
+                <h1 class="info-code">${product.code}</h1>
+                <h2 class="info-name">${product.name}</h2>
+
+                <div class="info-divider"></div>
+
+                <p class="sub-label">Yüzey</p>
+                <div class="variant-btns">
+                    <button class="variant-btn active" data-variant="krom">Krom</button>
+                    <button class="variant-btn" data-variant="siyah">Siyah</button>
+                </div>
+
+                <table class="specs-table" aria-label="Ürün özellikleri">
+                    <tbody>${specsHTML}</tbody>
+                </table>
+
+                <div class="tech-section">
+                    <p class="sub-label">Teknik Dosyalar</p>
+                    <div class="tech-btns">
+                        <a href="${wa(dxfMsg)}" class="tech-btn" target="_blank" rel="noopener noreferrer">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><polyline points="14,2 14,8 20,8"/></svg>
+                            DXF Talep Et
+                        </a>
+                        <a href="${wa(stepMsg)}" class="tech-btn" target="_blank" rel="noopener noreferrer">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><polyline points="14,2 14,8 20,8"/></svg>
+                            STEP Talep Et
+                        </a>
+                    </div>
+                </div>
+
+                <div class="cta-section">
+                    <a href="${wa(teklifMsg)}" class="cta-primary" target="_blank" rel="noopener noreferrer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg>
+                        Teklif Al
+                    </a>
+                    <a href="${wa(bilgiMsg)}" class="cta-secondary" target="_blank" rel="noopener noreferrer">
+                        Bilgi Al
+                    </a>
+                </div>
+
+                <div class="badge-row">
+                    <span class="badge">304 Kalite</span>
+                    <span class="badge">Lazer Kesim</span>
+                    <span class="badge">Mühendislik Onaylı</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="back-section">
+            <a href="bath.html" class="back-to-collection">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Bath Koleksiyonuna Dön
+            </a>
+        </div>`;
+
+    // ── Gallery interaction
+    let currentVariant = 'krom';
+
+    document.getElementById('gallery-thumbs')?.addEventListener('click', e => {
+        const thumb = e.target.closest('.gallery-thumb');
+        if (!thumb) return;
+        const idx = parseInt(thumb.dataset.idx, 10);
+        const img = document.getElementById('gallery-img');
+        img.src = product.images[idx];
+        document.querySelectorAll('.gallery-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+    });
+
+    document.querySelector('.variant-btns')?.addEventListener('click', e => {
+        const btn = e.target.closest('.variant-btn');
+        if (!btn) return;
+        currentVariant = btn.dataset.variant;
+        document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const img = document.getElementById('gallery-img');
+        img.classList.toggle('siyah', currentVariant === 'siyah');
+    });
+}
+</script>
+</body>
+</html>

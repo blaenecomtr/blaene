@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaene Interior — Metal Mobilya ve İç Mekan</title>
+    <meta name="description" content="Blaene Interior Koleksiyonu: Premium metal mobilya ve iç mekan ürünleri. Yakında sizlerle.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --background: #000000; --foreground: #ffffff; --card: #080808;
+            --border: #1c1c1c; --muted: #0d0d0d; --muted-foreground: #888888;
+            --accent: #E07020; --accent-dark: #C05810; --accent-fg: #ffffff;
+            --text-2: var(--muted-foreground); --text-3: #3a3a3a; --white: #ffffff;
+        }
+        ::selection { background: var(--accent); color: var(--accent-fg); }
+        html { scroll-behavior: smooth; }
+        body { background-color: var(--background); color: var(--foreground); font-family: 'Montserrat', sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.7; overflow-x: hidden; }
+
+        .site-header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; height: 60px;
+            background-color: rgba(10,10,10,0.96);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo { height: 16px; filter: invert(1); opacity: 0.88; display: block; }
+        .header-right { display: flex; align-items: center; gap: 1.5rem; }
+        .back-link { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
+        .back-link:hover { color: var(--white); }
+
+        .cat-header { padding: 3.5rem 2rem 2rem; border-bottom: 1px solid var(--border); }
+        .breadcrumb { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 1rem; }
+        .breadcrumb a { color: var(--text-3); text-decoration: none; transition: color 0.15s; }
+        .breadcrumb a:hover { color: var(--text-2); }
+        .breadcrumb span { margin: 0 0.4rem; }
+        .cat-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 0.9; letter-spacing: -0.01em; color: var(--white); }
+        .cat-desc { font-size: 0.85rem; color: var(--text-2); max-width: 380px; line-height: 1.75; margin-top: 0.8rem; }
+
+        .sort-bar {
+            position: sticky; top: 60px; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 46px; background-color: var(--card); border-bottom: 1px solid var(--border); padding: 0 2rem;
+        }
+        .sort-tabs { display: flex; }
+        .sort-tab {
+            height: 46px; padding: 0 1.1rem; background: transparent; border: none;
+            border-right: 1px solid var(--border); color: var(--text-3);
+            font-family: 'Montserrat', sans-serif; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: not-allowed;
+        }
+        .sort-tab:first-child { border-left: 1px solid var(--border); }
+        .sort-count { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.05em; }
+
+        /* ── PRODUCT GRID (3 cols) ── */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background-color: var(--border);
+        }
+        @media (max-width: 768px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 400px)  { .product-grid { grid-template-columns: repeat(1, 1fr); } }
+
+        /* Empty placeholder cards */
+        .placeholder-card {
+            background-color: var(--card);
+            aspect-ratio: 3/4;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .placeholder-img {
+            flex: 1;
+            background-color: var(--muted);
+            position: relative; overflow: hidden;
+        }
+        .placeholder-img::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.02) 50%, transparent 80%);
+            background-size: 200% 100%;
+            animation: skel 2.2s ease-in-out infinite;
+        }
+        @keyframes skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .placeholder-info {
+            padding: 0.85rem 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .placeholder-line { height: 8px; background-color: var(--muted); margin-bottom: 0.4rem; }
+        .placeholder-line:last-child { width: 60%; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 5rem 2rem;
+            text-align: center;
+            /* Overlay on top of placeholder grid */
+        }
+        .empty-icon { color: var(--accent); margin-bottom: 1.5rem; opacity: 0.7; }
+        .empty-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem; color: var(--white); margin-bottom: 0.75rem;
+        }
+        .empty-desc { font-size: 0.85rem; color: var(--text-2); max-width: 340px; line-height: 1.75; margin-bottom: 2rem; }
+        .empty-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent); color: var(--accent-fg);
+            font-family: 'Montserrat', sans-serif; font-size: 0.76rem;
+            font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none;
+            transition: background-color 0.15s;
+        }
+        .empty-btn:hover { background-color: var(--accent-dark); color: var(--white); }
+
+        /* Grid wrapper + overlay */
+        .grid-wrapper { position: relative; }
+        .grid-overlay {
+            position: absolute; inset: 0; z-index: 5;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.2) 0%, rgba(10,10,10,0.95) 40%, var(--background) 100%);
+            display: flex; align-items: center; justify-content: center; padding-top: 6rem;
+        }
+
+        .site-footer { padding: 3rem 2rem; border-top: 1px solid var(--border); margin-top: 4rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .footer-logo { height: 13px; filter: invert(1); opacity: 0.4; }
+        .footer-copy { font-size: 0.68rem; color: var(--text-3); letter-spacing: 0.05em; }
+
+        .wa-float { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500; width: 50px; height: 50px; background-color: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px -4px rgba(22,163,74,0.4); transition: background-color 0.15s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+        .wa-float:hover { background-color: #15803d; transform: scale(1.08); }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <a href="index.html" aria-label="Blaene anasayfa">
+        <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
+    </a>
+    <div class="header-right">
+        <a href="index.html" class="back-link">← Koleksiyonlar</a>
+    </div>
+</header>
+
+<main>
+    <div class="cat-header">
+        <nav class="breadcrumb" aria-label="Sayfa yolu">
+            <a href="index.html">Ana Sayfa</a>
+            <span aria-hidden="true">/</span>
+            <span>Interior</span>
+        </nav>
+        <h1 class="cat-title">Interior<br>Koleksiyonu</h1>
+        <p class="cat-desc">Metal mobilya ve iç mekan aksesuarları. Yaşam alanlarını birer deneyim merkezine dönüştüren metal mimari.</p>
+    </div>
+
+    <div class="sort-bar" role="toolbar" aria-label="Sıralama">
+        <div class="sort-tabs">
+            <button class="sort-tab" disabled>Yeni</button>
+            <button class="sort-tab" disabled>A—Z</button>
+            <button class="sort-tab" disabled>Kalınlık</button>
+        </div>
+        <span class="sort-count">0 ürün</span>
+    </div>
+
+    <div class="grid-wrapper">
+        <!-- Placeholder grid (blurred/faded out) -->
+        <div class="product-grid" aria-hidden="true" id="placeholder-grid"></div>
+
+        <!-- Overlay + empty state message -->
+        <div class="grid-overlay">
+            <div class="empty-state">
+                <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <h2 class="empty-title">Yakında Geliyor</h2>
+                <p class="empty-desc">Interior koleksiyonu hazırlanıyor. Haberdar olmak için WhatsApp üzerinden bize ulaşın.</p>
+                <a href="https://wa.me/905320540019?text=Merhaba%2C%20Interior%20koleksiyonu%20hakkında%20bilgi%20almak%20istiyorum."
+                   target="_blank" rel="noopener noreferrer" class="empty-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+                    </svg>
+                    Haberdar Ol
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="site-footer">
+    <img src="logo/blaene-logo.png" alt="Blaene" class="footer-logo">
+    <span class="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</span>
+</footer>
+
+<a href="https://wa.me/905320540019?text=Merhaba%2C%20Interior%20koleksiyonu%20hakkında%20bilgi%20almak%20istiyorum."
+   target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp ile iletişime geç">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+        <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+    </svg>
+</a>
+
+<script>
+// Arka planda 6 adet faded placeholder kart oluştur
+const grid = document.getElementById('placeholder-grid');
+for (let i = 0; i < 6; i++) {
+    grid.innerHTML += `
+        <div class="placeholder-card" aria-hidden="true">
+            <div class="placeholder-img"></div>
+            <div class="placeholder-info">
+                <div class="placeholder-line" style="width:45%"></div>
+                <div class="placeholder-line"></div>
+            </div>
+        </div>
+    `;
+}
+</script>
+</body>
+</html>

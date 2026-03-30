@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaene Forge — Özel Metal Üretim</title>
+    <meta name="description" content="Blaene Forge Koleksiyonu: Sipariş üzerine üretilen özel metal parçalar. Lazer kesim, büküm ve kaynak teknolojisiyle kişiye özel tasarım.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --background:       #000000;
+            --foreground:       #ffffff;
+            --card:             #080808;
+            --border:           #1c1c1c;
+            --muted:            #0d0d0d;
+            --muted-foreground: #888888;
+            --accent:           #E07020;
+            --accent-dark:      #C05810;
+            --accent-fg:        #ffffff;
+            --text-2:           var(--muted-foreground);
+            --text-3:           #3a3a3a;
+            --white:            #ffffff;
+        }
+
+        ::selection { background: var(--accent); color: #000; }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ── HEADER ─────────────────────────────────────── */
+        .site-header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; height: 60px;
+            background-color: rgba(8,8,8,0.97);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo { height: 16px; filter: invert(1); opacity: 0.88; display: block; }
+        .header-center { display: flex; align-items: center; gap: 2rem; }
+        @media (max-width: 860px) { .header-center { display: none; } }
+        .nav-link {
+            font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+            text-transform: uppercase; text-decoration: none;
+            color: var(--text-2); transition: color 0.15s;
+        }
+        .nav-link:hover { color: var(--white); }
+        .nav-link.active { color: var(--white); }
+        .header-right { display: flex; align-items: center; gap: 1.2rem; }
+        .wa-header-btn {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            padding: 0.42rem 0.9rem;
+            background-color: var(--accent); color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.68rem; font-weight: 600;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none; transition: background-color 0.15s;
+        }
+        .wa-header-btn:hover { background-color: var(--accent-dark); }
+        .hamburger {
+            display: none; background: transparent; border: none;
+            color: var(--foreground); cursor: pointer; padding: 0.25rem;
+        }
+        @media (max-width: 860px) { .hamburger { display: block; } }
+        #mobile-nav {
+            position: fixed; inset: 0; z-index: 1500;
+            background-color: rgba(5,5,5,0.97);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            opacity: 0; pointer-events: none; transition: opacity 0.25s;
+            display: flex; flex-direction: column;
+        }
+        #mobile-nav.open { opacity: 1; pointer-events: all; }
+        .mobile-nav-inner { display: flex; flex-direction: column; padding: 5.5rem 2.5rem 3rem; height: 100%; position: relative; }
+        #mobile-nav-close {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--foreground); width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1rem;
+        }
+        #mobile-nav nav { display: flex; flex-direction: column; flex: 1; justify-content: center; }
+        #mobile-nav nav a {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.4rem, 9vw, 3.6rem);
+            color: var(--text-2); text-decoration: none;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+            padding: 0.7rem 0; transition: color 0.15s;
+        }
+        #mobile-nav nav a:hover { color: var(--accent); }
+        #mobile-nav nav a:first-child { border-top: 1px solid var(--border); }
+        .mobile-nav-footer { font-size: 0.72rem; color: var(--text-3); margin-top: 2rem; }
+        .mobile-nav-footer a { color: var(--text-3); text-decoration: none; }
+
+        /* ── CATEGORY HEADER ─────────────────────────────── */
+        .cat-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 280px;
+            border-bottom: 1px solid var(--border);
+        }
+        @media (max-width: 700px) { .cat-header { grid-template-columns: 1fr; } }
+        .cat-header-left {
+            padding: 3rem 2rem 2rem;
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        .cat-header-right {
+            border-left: 1px solid var(--border);
+            position: relative; overflow: hidden;
+            background-color: #080808;
+            min-height: 220px;
+        }
+        @media (max-width: 700px) { .cat-header-right { border-left: none; border-top: 1px solid var(--border); min-height: 180px; } }
+        .cat-banner-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.75; }
+        .cat-banner-img:not([src]), .cat-banner-img[src=""] { display: none; }
+        .cat-stat-overlay {
+            position: absolute; bottom: 1.5rem; right: 1.5rem;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem;
+        }
+        .cat-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; line-height: 1; color: var(--accent); }
+        .cat-stat-label { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+        .breadcrumb { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.9rem; }
+        .breadcrumb a { color: var(--text-3); text-decoration: none; transition: color 0.15s; }
+        .breadcrumb a:hover { color: var(--text-2); }
+        .breadcrumb span { margin: 0 0.4rem; }
+        .cat-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 0.9; letter-spacing: -0.01em; color: var(--white); }
+        .cat-desc { font-size: 0.85rem; color: var(--text-2); max-width: 380px; line-height: 1.75; margin-top: 0.8rem; }
+
+        /* ── SORT BAR ────────────────────────────────────── */
+        .sort-bar {
+            position: sticky; top: 60px; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 46px; background-color: var(--card);
+            border-bottom: 1px solid var(--border); padding: 0 2rem;
+        }
+        .sort-count { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.05em; }
+
+        /* ── COMING SOON ─────────────────────────────────── */
+        .coming-soon {
+            padding: 6rem 2rem;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; gap: 1.5rem;
+            min-height: 400px;
+            background-color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .coming-soon-eyebrow {
+            font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+            color: var(--text-3);
+        }
+        .coming-soon-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 0.9; letter-spacing: -0.01em;
+            color: var(--white);
+        }
+        .coming-soon-desc {
+            font-size: 0.88rem; color: var(--text-2);
+            max-width: 440px; line-height: 1.8;
+        }
+        .coming-soon-cta {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.8rem 1.75rem;
+            background-color: var(--accent); color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.74rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            text-decoration: none; transition: background-color 0.15s;
+        }
+        .coming-soon-cta:hover { background-color: var(--accent-dark); }
+        .coming-soon-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1px; background-color: var(--border);
+            max-width: 640px; width: 100%; margin-top: 1rem;
+        }
+        @media (max-width: 500px) { .coming-soon-grid { grid-template-columns: 1fr; } }
+        .coming-soon-feature {
+            background-color: var(--muted); padding: 1.5rem;
+        }
+        .coming-soon-feature h3 { font-size: 0.82rem; font-weight: 600; color: var(--white); margin-bottom: 0.3rem; }
+        .coming-soon-feature p { font-size: 0.74rem; color: var(--text-2); line-height: 1.6; }
+
+        /* ── FOOTER ──────────────────────────────────────── */
+        .site-footer { padding: 2.5rem 2rem; border-top: 1px solid var(--border); background-color: #000; }
+        .footer-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 2rem; }
+        .footer-logo { height: 13px; filter: invert(1); opacity: 0.4; display: block; margin-bottom: 0.75rem; }
+        .footer-tagline { font-size: 0.72rem; color: var(--text-3); line-height: 1.6; max-width: 200px; }
+        .footer-meta { display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-end; }
+        @media (max-width: 600px) { .footer-meta { align-items: flex-start; } }
+        .footer-address { font-size: 0.72rem; color: var(--text-3); text-align: right; line-height: 1.6; font-style: normal; }
+        @media (max-width: 600px) { .footer-address { text-align: left; } }
+        .footer-social { display: flex; gap: 0.5rem; }
+        .footer-social a { width: 28px; height: 28px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-3); text-decoration: none; transition: color 0.15s, border-color 0.15s; }
+        .footer-social a:hover { color: var(--accent); border-color: rgba(224,112,32,0.35); }
+        .footer-copy { font-size: 0.66rem; color: var(--text-3); margin-top: 2rem; text-align: center; }
+        .wa-float {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500;
+            width: 50px; height: 50px; background-color: #16a34a; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px -4px rgba(22,163,74,0.4);
+            transition: background-color 0.15s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .wa-float:hover { background-color: #15803d; transform: scale(1.08); }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <a href="index.html" aria-label="Blaene anasayfa">
+        <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
+    </a>
+    <nav class="header-center" aria-label="Ana navigasyon">
+        <a href="bath.html" class="nav-link">Bath</a>
+        <a href="forge.html" class="nav-link active">Forge</a>
+        <a href="industrial.html" class="nav-link">Industrial</a>
+        <a href="index.html#why" class="nav-link">Hakkımızda</a>
+        <a href="index.html#contact" class="nav-link">İletişim</a>
+    </nav>
+    <div class="header-right">
+        <a href="https://wa.me/905320540019?text=Merhaba%2C%20Forge%20koleksiyonu%20hakkında%20özel%20üretim%20teklifi%20almak%20istiyorum."
+           target="_blank" rel="noopener noreferrer" class="wa-header-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+            </svg>
+            Teklif Al
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 5h16M4 12h16M4 19h16"/>
+            </svg>
+        </button>
+    </div>
+</header>
+
+<div id="mobile-nav" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mobil menü">
+    <div class="mobile-nav-inner">
+        <button id="mobile-nav-close" aria-label="Menüyü kapat">✕</button>
+        <nav aria-label="Mobil navigasyon">
+            <a href="bath.html">Bath</a>
+            <a href="forge.html">Forge</a>
+            <a href="industrial.html">Industrial</a>
+            <a href="index.html#why">Hakkımızda</a>
+            <a href="index.html#contact">İletişim</a>
+        </nav>
+        <div class="mobile-nav-footer">
+            <a href="https://wa.me/905320540019">0532 054 0019</a>
+        </div>
+    </div>
+</div>
+
+<main>
+    <div class="cat-header">
+        <div class="cat-header-left">
+            <nav class="breadcrumb" aria-label="Sayfa yolu">
+                <a href="index.html">Ana Sayfa</a>
+                <span aria-hidden="true">/</span>
+                <span>Forge</span>
+            </nav>
+            <h1 class="cat-title">Forge<br>Koleksiyonu</h1>
+            <p class="cat-desc">Sipariş üzerine üretilen özel metal parçalar. Lazer kesim, büküm ve kaynak teknolojisiyle kişiye özel çözümler.</p>
+        </div>
+        <div class="cat-header-right">
+            <!-- KATEGORİ GÖRSELİ: src kısmına görsel yolunu yazın (örn: görsel/marka/forge.JPG) -->
+            <img class="cat-banner-img" src="görsel/marka/forge.JPG" alt="Forge Koleksiyonu">
+            <div class="cat-stat-overlay">
+                <span class="cat-stat-num">—</span>
+                <span class="cat-stat-label">Yakında</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="sort-bar">
+        <span style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Forge</span>
+        <span class="sort-count">Yakında</span>
+    </div>
+
+    <section class="coming-soon" aria-labelledby="cs-title">
+        <span class="coming-soon-eyebrow">Blaene Forge · Özel Üretim</span>
+        <h2 class="coming-soon-title" id="cs-title">Yakında</h2>
+        <p class="coming-soon-desc">Sipariş üzerine üretilen özel metal parçalar, prototip çalışmaları ve endüstriyel tasarımlar için Forge koleksiyonu hazırlanıyor.</p>
+        <a href="https://wa.me/905320540019?text=Merhaba%2C%20Forge%20koleksiyonu%20hakkında%20özel%20üretim%20teklifi%20almak%20istiyorum."
+           target="_blank" rel="noopener noreferrer" class="coming-soon-cta">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+            </svg>
+            Özel Üretim Teklifi Al
+        </a>
+        <div class="coming-soon-grid">
+            <div class="coming-soon-feature">
+                <h3>Lazer Kesim</h3>
+                <p>Yüksek hassasiyetli CNC lazer kesim, ±0.1mm tolerans.</p>
+            </div>
+            <div class="coming-soon-feature">
+                <h3>Büküm</h3>
+                <p>Hassas pres bükme, karmaşık geometriler ve çok eksenli formlar.</p>
+            </div>
+            <div class="coming-soon-feature">
+                <h3>Kaynak</h3>
+                <p>TIG/MIG kaynak, yüzey işleme ve bitirme hizmetleri.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div>
+            <img src="logo/blaene-logo.png" alt="Blaene" class="footer-logo">
+            <p class="footer-tagline">304 Paslanmaz Çelik<br>Metal Tasarım Ürünleri</p>
+        </div>
+        <div class="footer-meta">
+            <address class="footer-address">Çorum / Osmancık, Türkiye</address>
+            <div class="footer-social" aria-label="Sosyal medya">
+                <a href="https://instagram.com/blaenecomtr" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <rect width="20" height="20" x="2" y="2" rx="5"/>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    <p class="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
+</footer>
+
+<a href="https://wa.me/905320540019?text=Merhaba%2C%20Forge%20koleksiyonu%20hakkında%20bilgi%20almak%20istiyorum."
+   target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp ile iletişime geç">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+        <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+    </svg>
+</a>
+
+<script>
+(function() {
+    const hamburger   = document.getElementById('hamburger');
+    const mobileNav   = document.getElementById('mobile-nav');
+    const mobileClose = document.getElementById('mobile-nav-close');
+    function openNav()  { mobileNav.classList.add('open'); mobileNav.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; hamburger.setAttribute('aria-expanded','true'); }
+    function closeNav() { mobileNav.classList.remove('open'); mobileNav.setAttribute('aria-hidden','true'); document.body.style.overflow=''; hamburger.setAttribute('aria-expanded','false'); }
+    hamburger.addEventListener('click', openNav);
+    mobileClose.addEventListener('click', closeNav);
+    mobileNav.addEventListener('click', e => { if (e.target === mobileNav) closeNav(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && mobileNav.classList.contains('open')) closeNav(); });
+})();
+</script>
+</body>
+</html>

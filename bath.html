@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaene Bath — 304 Paslanmaz Çelik Banyo Koleksiyonu</title>
+    <meta name="description" content="Blaene Bath Koleksiyonu: DFMA prensiplerine uygun, 304 paslanmaz çelikten üretilmiş banyo aksesuarları.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --background:       #000000;
+            --foreground:       #ffffff;
+            --card:             #080808;
+            --border:           #1c1c1c;
+            --muted:            #0d0d0d;
+            --muted-foreground: #888888;
+            --accent:           #E07020;
+            --accent-dark:      #C05810;
+            --accent-fg:        #000000;
+            --text-2:           var(--muted-foreground);
+            --text-3:           #3a3a3a;
+            --white:            #ffffff;
+        }
+
+        ::selection { background: var(--accent); color: var(--accent-fg); }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ── HEADER ─────────────────────────────────────── */
+        .site-header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; height: 60px;
+            background-color: rgba(8,8,8,0.97);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo { height: 16px; filter: invert(1); opacity: 0.88; display: block; }
+        .header-center { display: flex; align-items: center; gap: 2rem; }
+        @media (max-width: 860px) { .header-center { display: none; } }
+        .nav-link {
+            font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em;
+            text-transform: uppercase; text-decoration: none;
+            color: var(--text-2); transition: color 0.15s;
+        }
+        .nav-link:hover { color: var(--white); }
+        .nav-link.active { color: var(--white); }
+        .header-right { display: flex; align-items: center; gap: 1.2rem; }
+        .wa-header-btn {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            padding: 0.42rem 0.9rem;
+            background-color: var(--accent); color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.68rem; font-weight: 600;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            text-decoration: none;
+            transition: background-color 0.15s;
+        }
+        .wa-header-btn:hover { background-color: var(--accent-dark); }
+        .wa-header-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .hamburger {
+            display: none; background: transparent; border: none;
+            color: var(--foreground); cursor: pointer; padding: 0.25rem;
+        }
+        @media (max-width: 860px) { .hamburger { display: block; } }
+        /* ── MOBILE NAV ─────────────────────────────────────── */
+        #mobile-nav {
+            position: fixed; inset: 0; z-index: 1500;
+            background-color: rgba(5,5,5,0.97);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s;
+            display: flex; flex-direction: column;
+        }
+        #mobile-nav.open { opacity: 1; pointer-events: all; }
+        .mobile-nav-inner { display: flex; flex-direction: column; padding: 5.5rem 2.5rem 3rem; height: 100%; position: relative; }
+        #mobile-nav-close {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--foreground); width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1rem; line-height: 1;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+        #mobile-nav nav { display: flex; flex-direction: column; flex: 1; justify-content: center; gap: 0; }
+        #mobile-nav nav a {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.4rem, 9vw, 3.6rem);
+            color: var(--text-2); text-decoration: none;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border);
+            padding: 0.7rem 0; transition: color 0.15s;
+        }
+        #mobile-nav nav a:hover { color: var(--accent); }
+        #mobile-nav nav a:first-child { border-top: 1px solid var(--border); }
+        .mobile-nav-footer { font-size: 0.72rem; color: var(--text-3); margin-top: 2rem; }
+        .mobile-nav-footer a { color: var(--text-3); text-decoration: none; }
+        .mobile-nav-footer a:hover { color: var(--accent); }
+
+        /* ── CATEGORY HEADER ─────────────────────────────── */
+        .cat-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 280px;
+            border-bottom: 1px solid var(--border);
+        }
+        @media (max-width: 700px) { .cat-header { grid-template-columns: 1fr; } }
+        .cat-header-left {
+            padding: 3rem 2rem 2rem;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            gap: 0;
+        }
+        .cat-header-right {
+            border-left: 1px solid var(--border);
+            position: relative; overflow: hidden;
+            background-color: #080808;
+            min-height: 220px;
+        }
+        @media (max-width: 700px) { .cat-header-right { border-left: none; border-top: 1px solid var(--border); min-height: 180px; } }
+        .cat-banner-img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+            opacity: 0.75;
+        }
+        /* Placeholder görünümü — görsel yokken */
+        .cat-banner-img:not([src]), .cat-banner-img[src=""] {
+            display: none;
+        }
+        .cat-header-right:has(.cat-banner-img:not([src])),
+        .cat-header-right:has(.cat-banner-img[src=""]) {
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cat-img-placeholder {
+            display: none;
+            font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-3); text-align: center;
+        }
+        .cat-header-right:has(.cat-banner-img:not([src])) .cat-img-placeholder,
+        .cat-header-right:has(.cat-banner-img[src=""]) .cat-img-placeholder {
+            display: block;
+        }
+        .cat-stat-overlay {
+            position: absolute; bottom: 1.5rem; right: 1.5rem;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem;
+            text-align: right;
+        }
+        .cat-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; line-height: 1; color: var(--accent); }
+        .cat-stat-label { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+        .breadcrumb {
+            font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.9rem;
+        }
+        .breadcrumb a { color: var(--text-3); text-decoration: none; transition: color 0.15s; }
+        .breadcrumb a:hover { color: var(--text-2); }
+        .breadcrumb span { margin: 0 0.4rem; }
+        .cat-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            line-height: 0.9; letter-spacing: -0.01em; color: var(--white);
+        }
+        .cat-desc {
+            font-size: 0.85rem; color: var(--text-2);
+            max-width: 380px; line-height: 1.75; margin-top: 0.8rem;
+        }
+
+        /* ── SORT BAR ────────────────────────────────────── */
+        .sort-bar {
+            position: sticky; top: 60px; z-index: 50;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 46px; background-color: var(--card);
+            border-bottom: 1px solid var(--border); padding: 0 2rem;
+        }
+        .sort-tabs { display: flex; }
+        .sort-tab {
+            height: 46px; padding: 0 1.1rem;
+            background: transparent; border: none;
+            border-right: 1px solid var(--border);
+            color: var(--text-3); font-family: 'Montserrat', sans-serif;
+            font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.15s, background-color 0.15s;
+        }
+        .sort-tab:first-child { border-left: 1px solid var(--border); }
+        .sort-tab.active { color: var(--accent); background-color: rgba(224,112,32,0.06); }
+        .sort-tab:hover:not(.active) { color: var(--foreground); }
+        .sort-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+        .sort-count { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.05em; }
+
+        /* ── PRODUCT GRID ────────────────────────────────── */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px; background-color: var(--border);
+        }
+        @media (max-width: 1100px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 900px)  { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 380px)  { .product-grid { grid-template-columns: 1fr; } }
+
+        /* ── SKELETON ────────────────────────────────────── */
+        .skeleton {
+            background-color: var(--card); aspect-ratio: 3/4;
+            position: relative; overflow: hidden;
+        }
+        .skeleton::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.035) 50%, transparent 80%);
+            background-size: 200% 100%;
+            animation: skel 1.6s ease-in-out infinite;
+        }
+        @keyframes skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* ── PRODUCT CARD ────────────────────────────────── */
+        .product-card {
+            background-color: var(--card);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            text-decoration: none; color: inherit;
+        }
+        .product-card:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+        .card-img-wrap {
+            aspect-ratio: 4/5; overflow: hidden;
+            position: relative; background-color: #111111;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-img {
+            width: 100%; height: 100%; object-fit: contain; display: block;
+            padding: 0.5rem;
+            opacity: 0; transform: scale(1.03);
+            transition: opacity 0.5s, transform 0.55s cubic-bezier(0.22,1,0.36,1);
+        }
+        .card-img.loaded { opacity: 1; transform: scale(1); }
+        .product-card:hover .card-img { transform: scale(1.02); }
+        .card-img-overlay {
+            position: absolute; inset: 0;
+            background-color: rgba(0,0,0,0.45);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .product-card:hover .card-img-overlay { opacity: 1; }
+        .card-overlay-btn {
+            padding: 0.6rem 1.6rem;
+            background-color: var(--accent); color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            transform: translateY(10px); opacity: 0;
+            transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), opacity 0.18s;
+        }
+        .product-card:hover .card-overlay-btn { transform: translateY(0); opacity: 1; }
+        .card-info { padding: 0.75rem 0.9rem; border-top: 1px solid var(--border); flex: 1; }
+        .card-code { font-size: 0.5rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+        .card-name { font-size: 0.72rem; font-weight: 600; color: var(--white); margin-top: 0.1rem; line-height: 1.3; }
+        .card-dims { font-size: 0.62rem; color: var(--muted-foreground); margin-top: 0.08rem; line-height: 1.4; }
+
+        /* ── TRUST BADGES ────────────────────────────────── */
+        .card-badges {
+            display: flex; flex-wrap: wrap; gap: 3px;
+            margin-top: 0.55rem;
+        }
+        .card-badge {
+            font-size: 0.48rem; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 0.15rem 0.42rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #ffffff;
+        }
+
+        /* ── PACKAGING SECTION ───────────────────────────── */
+        .packaging-section {
+            border-top: 1px solid var(--border);
+            padding: 4rem 2rem; background-color: var(--muted);
+        }
+        .packaging-inner { max-width: 960px; margin: 0 auto; }
+        .packaging-head { margin-bottom: 2.5rem; }
+        .packaging-eyebrow {
+            display: block; font-size: 0.6rem;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.7rem;
+        }
+        .packaging-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            line-height: 0.95; color: var(--white);
+        }
+        .packaging-desc {
+            font-size: 0.82rem; color: var(--text-2);
+            max-width: 440px; line-height: 1.75; margin-top: 0.6rem;
+        }
+        .packaging-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1px; background-color: var(--border);
+        }
+        @media (max-width: 640px) { .packaging-grid { grid-template-columns: 1fr; } }
+        .packaging-item { background-color: var(--muted); padding: 1.6rem 1.75rem; }
+        .packaging-icon { color: var(--accent); margin-bottom: 0.9rem; }
+        .packaging-item h3 { font-size: 0.85rem; font-weight: 600; color: var(--white); margin-bottom: 0.4rem; }
+        .packaging-item p { font-size: 0.76rem; color: var(--text-2); line-height: 1.7; }
+
+        /* ── FOOTER ──────────────────────────────────────── */
+        .site-footer {
+            padding: 2.5rem 2rem; border-top: 1px solid var(--border);
+            background-color: #000;
+        }
+        .footer-inner {
+            max-width: 960px; margin: 0 auto;
+            display: flex; align-items: flex-start; justify-content: space-between;
+            flex-wrap: wrap; gap: 2rem;
+        }
+        .footer-logo { height: 13px; filter: invert(1); opacity: 0.4; display: block; margin-bottom: 0.75rem; }
+        .footer-tagline { font-size: 0.72rem; color: var(--text-3); line-height: 1.6; max-width: 200px; }
+        .footer-meta { display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-end; }
+        @media (max-width: 600px) { .footer-meta { align-items: flex-start; } }
+        .footer-address { font-size: 0.72rem; color: var(--text-3); text-align: right; line-height: 1.6; font-style: normal; }
+        @media (max-width: 600px) { .footer-address { text-align: left; } }
+        .footer-social { display: flex; gap: 0.5rem; }
+        .footer-social a {
+            width: 28px; height: 28px; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-3); text-decoration: none;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .footer-social a:hover { color: var(--accent); border-color: rgba(224,112,32,0.35); }
+        .footer-copy { font-size: 0.66rem; color: var(--text-3); margin-top: 2rem; text-align: center; }
+
+        /* ── FLOATING WA ─────────────────────────────────── */
+        .wa-float {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500;
+            width: 50px; height: 50px; background-color: #16a34a; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px -4px rgba(22,163,74,0.4);
+            transition: background-color 0.15s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .wa-float:hover { background-color: #15803d; transform: scale(1.08); }
+        .wa-float:focus-visible { outline: 2px solid #22c55e; outline-offset: 3px; }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <a href="index.html" aria-label="Blaene anasayfa">
+        <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
+    </a>
+    <nav class="header-center" aria-label="Ana navigasyon">
+        <a href="bath.html" class="nav-link active">Bath</a>
+        <a href="forge.html" class="nav-link">Forge</a>
+        <a href="industrial.html" class="nav-link">Industrial</a>
+        <a href="index.html#why" class="nav-link">Hakkımızda</a>
+        <a href="index.html#contact" class="nav-link">İletişim</a>
+    </nav>
+    <div class="header-right">
+        <a href="https://wa.me/905320540019?text=Merhaba%2C%20Bath%20koleksiyonu%20hakkında%20fiyat%20teklifi%20almak%20istiyorum."
+           target="_blank" rel="noopener noreferrer" class="wa-header-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+            </svg>
+            Teklif Al
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 5h16M4 12h16M4 19h16"/>
+            </svg>
+        </button>
+    </div>
+</header>
+
+<div id="mobile-nav" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mobil menü">
+    <div class="mobile-nav-inner">
+        <button id="mobile-nav-close" aria-label="Menüyü kapat">✕</button>
+        <nav aria-label="Mobil navigasyon">
+            <a href="bath.html">Bath</a>
+            <a href="forge.html">Forge</a>
+            <a href="industrial.html">Industrial</a>
+            <a href="index.html#why">Hakkımızda</a>
+            <a href="index.html#contact">İletişim</a>
+        </nav>
+        <div class="mobile-nav-footer">
+            <a href="https://wa.me/905320540019">0532 054 0019</a>
+        </div>
+    </div>
+</div>
+
+<main>
+    <div class="cat-header">
+        <div class="cat-header-left">
+            <nav class="breadcrumb" aria-label="Sayfa yolu">
+                <a href="index.html">Ana Sayfa</a>
+                <span aria-hidden="true">/</span>
+                <span>Bath</span>
+            </nav>
+            <h1 class="cat-title">Bath<br>Koleksiyonu</h1>
+            <p class="cat-desc">304 paslanmaz çelikten üretilmiş, DFMA prensiplerine uygun banyo aksesuarları. Modern banyonun metal imzası.</p>
+        </div>
+        <div class="cat-header-right">
+            <!-- KATEGORİ GÖRSELİ: src kısmına görsel yolunu yazın (örn: görsel/marka/bath.JPG) -->
+            <img class="cat-banner-img" src="görsel/marka/bath.JPG" alt="Bath Koleksiyonu">
+            <div class="cat-img-placeholder">Görsel<br>alanı</div>
+            <div class="cat-stat-overlay" aria-label="Koleksiyon istatistikleri">
+                <span class="cat-stat-num" id="product-count-num">26</span>
+                <span class="cat-stat-label">Ürün</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="sort-bar" role="toolbar" aria-label="Sıralama">
+        <div class="sort-tabs">
+            <button class="sort-tab active" data-sort="new" aria-pressed="true">Yeni</button>
+            <button class="sort-tab" data-sort="az" aria-pressed="false">A—Z</button>
+            <button class="sort-tab" data-sort="thick" aria-pressed="false">Kalınlık</button>
+        </div>
+        <span class="sort-count" id="sort-count">26 ürün</span>
+    </div>
+
+    <div class="product-grid" id="product-grid" role="list" aria-label="Bath ürünleri"></div>
+</main>
+
+<section class="packaging-section" aria-labelledby="packaging-title">
+    <div class="packaging-inner">
+        <div class="packaging-head">
+            <span class="packaging-eyebrow">Lojistik &amp; Teslimat</span>
+            <h2 class="packaging-title" id="packaging-title">Blaene Özel<br>Koruyucu Paketleme</h2>
+            <p class="packaging-desc">Metal hassasiyetine uygun, sıfır hasar garantili paketleme sistemi. Her ürün, size ulaşana kadar fabrika çıkış kalitesinde korunur.</p>
+        </div>
+        <div class="packaging-grid">
+            <div class="packaging-item">
+                <div class="packaging-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                    </svg>
+                </div>
+                <h3>Sıfır Hasar Garantisi</h3>
+                <p>Her ürün, yüzey çizilmelerine karşı çok katmanlı köpük ve özel film ambalajla korunur.</p>
+            </div>
+            <div class="packaging-item">
+                <div class="packaging-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>
+                    </svg>
+                </div>
+                <h3>Metal Hassasiyetine Uygun</h3>
+                <p>304 paslanmaz çelik yüzeylerin oksidasyonunu ve mekanik hasarı önleyen VCI koruyucu kullanılır.</p>
+            </div>
+            <div class="packaging-item">
+                <div class="packaging-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+                        <circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>
+                    </svg>
+                </div>
+                <h3>Türkiye Geneli Teslimat</h3>
+                <p>Çorum / Osmancık merkezli lojistik ağımızla tüm Türkiye'ye güvenli ve hızlı sevkiyat.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div>
+            <img src="logo/blaene-logo.png" alt="Blaene" class="footer-logo">
+            <p class="footer-tagline">304 Paslanmaz Çelik<br>Metal Tasarım Ürünleri</p>
+        </div>
+        <div class="footer-meta">
+            <address class="footer-address">Çorum / Osmancık, Türkiye</address>
+            <div style="margin-bottom:0.75rem;">
+                <p style="font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.5rem;">PDF Katalog</p>
+                <div style="width:68px;height:68px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;opacity:0.35;" aria-label="Katalog QR Kodu">
+                    <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="1" y="1" width="16" height="16" rx="1" stroke="#ededed" stroke-width="1.5"/>
+                        <rect x="5" y="5" width="8" height="8" fill="#ededed"/>
+                        <rect x="25" y="1" width="16" height="16" rx="1" stroke="#ededed" stroke-width="1.5"/>
+                        <rect x="29" y="5" width="8" height="8" fill="#ededed"/>
+                        <rect x="1" y="25" width="16" height="16" rx="1" stroke="#ededed" stroke-width="1.5"/>
+                        <rect x="5" y="29" width="8" height="8" fill="#ededed"/>
+                        <rect x="25" y="25" width="4" height="4" fill="#ededed"/>
+                        <rect x="33" y="25" width="4" height="4" fill="#ededed"/>
+                        <rect x="25" y="33" width="4" height="4" fill="#ededed"/>
+                        <rect x="33" y="33" width="4" height="4" fill="#ededed"/>
+                        <rect x="29" y="29" width="4" height="4" fill="#ededed"/>
+                    </svg>
+                </div>
+                <p style="font-size:0.55rem;color:var(--text-3);margin-top:0.35rem;letter-spacing:0.05em;">Taratın · İndirin</p>
+            </div>
+            <div class="footer-social" aria-label="Sosyal medya">
+                <a href="https://instagram.com/blaenecomtr" target="_blank" rel="noopener noreferrer" aria-label="Instagram @blaenecomtr">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <rect width="20" height="20" x="2" y="2" rx="5"/>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    <p class="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
+</footer>
+
+<a href="https://wa.me/905320540019?text=Merhaba%2C%20Bath%20koleksiyonu%20hakkında%20bilgi%20almak%20istiyorum."
+   target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp ile iletişime geç">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+        <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+    </svg>
+</a>
+
+<script type="application/ld+json" id="page-schema">{"@context":"https://schema.org","@type":"CollectionPage","name":"Blaene Bath Koleksiyonu","description":"304 Paslanmaz Çelik banyo aksesuarları","publisher":{"@type":"Organization","name":"Blaene"}}</script>
+
+<script>
+const PRODUCTS = [
+    { code: 'BTH-001',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '25×25×5 cm',   images: ['bath/bath/BTH-001-304-1.5MM-28.03.2026.jpg'] },
+    { code: 'BTH-002',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '25×25×2 cm',   images: ['bath/bath/BTH-002-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-003',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '40×10 cm',     images: ['bath/bath/BTH-003-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-004',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '40×13×15 cm',  images: ['bath/bath/BTH-004-304-1.5MM-28.03.2026.jpg'] },
+    { code: 'BTH-005',   name: 'Havluluk',                thickness: '1.5mm', dims: '40×12×6 cm',   images: ['bath/bath/BTH-005-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-006',   name: 'Havluluk',                thickness: '1.5mm', dims: '13×9×12 cm',   images: ['bath/bath/BTH-006-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-007',   name: 'Sabunluk',                thickness: '1.5mm', dims: '10×10×3 cm',   images: ['bath/bath/BTH-007-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-008',   name: 'Havluluk',                thickness: '1.5mm', dims: '50×10×4 cm',   images: ['bath/bath/BTH-008-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-009',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '35×10×5 cm',   images: ['bath/bath/BTH-009-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-010',   name: 'Sabunluk',                thickness: '1.5mm', dims: '12×10×3 cm',   images: ['bath/bath/BTH-010-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-011',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '15×10×13 cm',  images: ['bath/bath/BTH-011-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-012',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '10×18×5 cm',   images: ['bath/bath/BTH-012-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-013',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '25 cm',        images: ['bath/bath/BTH-013-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-014',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '10×12 cm',     images: ['bath/bath/BTH-014-304-1,5MM-27.03.2026.jpg', 'bath/bath/BTH-014-304-1,5MM-28.03.2026.jpg'] },
+    { code: 'BTH-014-A', name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '10×12 cm',     images: ['bath/bath/BTH-014-A-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-015',   name: 'Havluluk',                thickness: '2mm',   dims: '33×6×5 cm',    images: ['bath/bath/BTH-015-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-016',   name: 'Tuvalet Kağıdı Askısı',  thickness: '2mm',   dims: '8×14×4 cm',    images: ['bath/bath/BTH-016-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-017',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '40×10×5 cm',   images: ['bath/bath/BTH-017-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-018',   name: 'Havluluk',                thickness: '1.5mm', dims: '32×12×15 cm',  images: ['bath/bath/BTH-018-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-019',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '28×10×8 cm',   images: ['bath/bath/BTH-019-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-020',   name: 'Fön Makinası Askısı',     thickness: '2mm',   dims: '12×12×4 cm',   images: ['bath/bath/BTH-020-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-021',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '50×12×4 cm',   images: ['bath/bath/BTH-021-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-022',   name: 'Havluluk',                thickness: '2mm',   dims: '7×30×7 cm',    images: ['bath/bath/BTH-022-304-2MM-27.03.2026.jpg'] },
+    { code: 'BTH-023',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '14×8 cm',      images: ['bath/bath/BTH-023-304-1,5MM-27.03.2026.jpg'] },
+    { code: 'BTH-024',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '35×10×5 cm',   images: ['bath/bath/BTH-024-304-1,5MM-27.03.2026 .jpg'] },
+    { code: 'BTH-025',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '30×11×10 cm',  images: ['bath/bath/BTH-025-304-1,5MM-28.03.2026.jpg'] },
+].map(p => ({ ...p, material: '304 Paslanmaz Çelik' }));
+
+function renderSkeletons() {
+    const grid = document.getElementById('product-grid');
+    PRODUCTS.forEach(() => {
+        const sk = document.createElement('div');
+        sk.className = 'skeleton';
+        sk.setAttribute('role', 'listitem');
+        sk.setAttribute('aria-label', 'Yükleniyor');
+        grid.appendChild(sk);
+    });
+}
+
+function renderProducts(list) {
+    const grid = document.getElementById('product-grid');
+    grid.innerHTML = '';
+    document.getElementById('sort-count').textContent = `${list.length} ürün`;
+    document.getElementById('product-count-num').textContent = list.length;
+
+    list.forEach(product => {
+        const a = document.createElement('a');
+        a.className = 'product-card';
+        a.href = `product.html?code=${encodeURIComponent(product.code)}`;
+        a.setAttribute('role', 'listitem');
+        a.setAttribute('aria-label', `${product.code} — ${product.name}, ${product.thickness}`);
+        a.innerHTML = `
+            <div class="card-img-wrap">
+                <img class="card-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="lazy" decoding="async">
+                <div class="card-img-overlay" aria-hidden="true"><span class="card-overlay-btn">İncele</span></div>
+            </div>
+            <div class="card-info">
+                <p class="card-code">${product.code}</p>
+                <p class="card-name">${product.name}</p>
+                <p class="card-dims">${product.dims} &middot; ${product.thickness}</p>
+                <div class="card-badges" aria-label="Sertifikalar">
+                    <span class="card-badge">304 Kalite</span>
+                    <span class="card-badge">Lazer Kesim</span>
+                    <span class="card-badge">Mühendislik Onaylı</span>
+                </div>
+            </div>`;
+        const img = a.querySelector('.card-img');
+        img.addEventListener('load', () => img.classList.add('loaded'));
+        if (img.complete) img.classList.add('loaded');
+        grid.appendChild(a);
+    });
+
+    document.getElementById('page-schema').textContent = JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'ItemList',
+        name: 'Blaene Bath Koleksiyonu', numberOfItems: list.length,
+        itemListElement: list.map((p, i) => ({
+            '@type': 'ListItem', position: i + 1,
+            item: { '@type': 'Product', name: `Blaene ${p.code}`, sku: p.code, material: p.material, brand: { '@type': 'Brand', name: 'Blaene' } }
+        }))
+    }, null, 2);
+}
+
+document.querySelectorAll('.sort-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+        btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
+        const sort = btn.dataset.sort;
+        let sorted = [...PRODUCTS];
+        if (sort === 'az')    sorted.sort((a, b) => a.code.localeCompare(b.code));
+        if (sort === 'thick') sorted.sort((a, b) => parseFloat(b.thickness) - parseFloat(a.thickness));
+        renderProducts(sorted);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderSkeletons();
+    requestAnimationFrame(() => setTimeout(() => renderProducts(PRODUCTS), 80));
+});
+
+// ── MOBILE NAV ────────────────────────────────────────────────
+(function() {
+    const hamburger   = document.getElementById('hamburger');
+    const mobileNav   = document.getElementById('mobile-nav');
+    const mobileClose = document.getElementById('mobile-nav-close');
+    if (!hamburger) return;
+    function openNav()  { mobileNav.classList.add('open'); mobileNav.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; hamburger.setAttribute('aria-expanded','true'); }
+    function closeNav() { mobileNav.classList.remove('open'); mobileNav.setAttribute('aria-hidden','true'); document.body.style.overflow=''; hamburger.setAttribute('aria-expanded','false'); }
+    hamburger.addEventListener('click', openNav);
+    mobileClose.addEventListener('click', closeNav);
+    mobileNav.addEventListener('click', e => { if (e.target === mobileNav) closeNav(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && mobileNav.classList.contains('open')) closeNav(); });
+})();
+</script>
+</body>
+</html>
