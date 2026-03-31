@@ -143,6 +143,26 @@
         .gallery-thumb:hover, .gallery-thumb.active { opacity: 1; }
         .gallery-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 0.25rem; }
 
+        /* ── GALLERY NAV ARROWS ──────────────────────────── */
+        .gallery-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 44px; height: 44px; z-index: 10;
+            background: rgba(255,255,255,0.88); border: 1px solid rgba(0,0,0,0.12);
+            color: rgba(0,0,0,0.6); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+            opacity: 0.7;
+        }
+        .gallery-arrow:hover { background: var(--accent); border-color: var(--accent); color: #fff; opacity: 1; }
+        .gallery-arrow:disabled { opacity: 0.15; cursor: default; pointer-events: none; }
+        .gallery-arrow-prev { left: 0.75rem; }
+        .gallery-arrow-next { right: 0.75rem; }
+        @media (max-width: 480px) {
+            .gallery-arrow { width: 36px; height: 36px; }
+            .gallery-arrow-prev { left: 0.4rem; }
+            .gallery-arrow-next { right: 0.4rem; }
+        }
+
         /* ── ZOOM BUTTON ─────────────────────────────────── */
         .gallery-main { cursor: zoom-in; }
         .zoom-btn {
@@ -656,6 +676,12 @@ if (!product) {
             <div class="img-col">
                 <div class="gallery-main" id="gallery-main-area">
                     <img class="gallery-main-img" id="gallery-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="eager">
+                    <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="Önceki görsel">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow-next" id="gallery-next" aria-label="Sonraki görsel">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
                     <button class="zoom-btn" aria-label="Görseli büyüt">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                     </button>
@@ -673,7 +699,9 @@ if (!product) {
                 <div class="variant-btns">
                     ${product.colorGroups
                         ? Object.keys(product.colorGroups).map((c, i) => `<button class="variant-btn${i === 0 ? ' active' : ''}" data-color="${c}">${c}</button>`).join('')
-                        : '<button class="variant-btn active" data-variant="krom">Krom</button><button class="variant-btn" data-variant="siyah">Siyah</button>'
+                        : product.code.startsWith('FRG')
+                            ? '<button class="variant-btn active" data-variant="siyah">Siyah</button>'
+                            : '<button class="variant-btn active" data-variant="krom">Krom</button><button class="variant-btn" data-variant="siyah">Siyah</button>'
                     }
                 </div>
 
@@ -730,20 +758,46 @@ if (!product) {
             </div>`).join('');
     }
 
+    let currentImgIdx = 0;
+
     function setMainImg(src) {
         const img = document.getElementById('gallery-img');
         img.src = src;
     }
 
+    function goToImg(idx) {
+        const imgs = getCurrentImages();
+        currentImgIdx = ((idx % imgs.length) + imgs.length) % imgs.length;
+        setMainImg(imgs[currentImgIdx]);
+        document.querySelectorAll('.gallery-thumb').forEach((t, i) => t.classList.toggle('active', i === currentImgIdx));
+        updateArrows(imgs.length);
+    }
+
+    function updateArrows(total) {
+        const prev = document.getElementById('gallery-prev');
+        const next = document.getElementById('gallery-next');
+        if (!prev || !next) return;
+        prev.disabled = false;
+        next.disabled = false;
+        prev.style.display = total <= 1 ? 'none' : '';
+        next.style.display = total <= 1 ? 'none' : '';
+    }
+
+    document.getElementById('gallery-main-area')?.addEventListener('click', e => {
+        if (e.target.closest('#gallery-prev')) { goToImg(currentImgIdx - 1); return; }
+        if (e.target.closest('#gallery-next')) { goToImg(currentImgIdx + 1); return; }
+    });
+
     document.getElementById('gallery-thumbs')?.addEventListener('click', e => {
         const thumb = e.target.closest('.gallery-thumb');
         if (!thumb) return;
         const idx = parseInt(thumb.dataset.idx, 10);
-        const activeColor = document.querySelector('.variant-btn.active[data-color]')?.dataset.color;
-        const imgs = (product.colorGroups && activeColor) ? product.colorGroups[activeColor] : product.images;
-        setMainImg(imgs[idx]);
-        document.querySelectorAll('.gallery-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+        goToImg(idx);
     });
+
+    // Init arrows
+    updateArrows(getCurrentImages().length);
+
 
     document.querySelector('.variant-btns')?.addEventListener('click', e => {
         const btn = e.target.closest('.variant-btn');
@@ -754,8 +808,10 @@ if (!product) {
         if (product.colorGroups && btn.dataset.color) {
             // Color-based swap — real photos per color
             const imgs = product.colorGroups[btn.dataset.color];
+            currentImgIdx = 0;
             setMainImg(imgs[0]);
             buildThumbs(imgs);
+            updateArrows(imgs.length);
         } else {
             // Yüzey (Bath) — CSS filter
             const img = document.getElementById('gallery-img');

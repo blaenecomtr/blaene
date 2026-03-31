@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blaene Bath — 304 Paslanmaz Çelik Banyo Koleksiyonu</title>
+    <title>Blaene Bath — 304 Paslanmaz Çelik Banyo Aksesuarları
+        
+    </title>
     <meta name="description" content="Blaene Bath Koleksiyonu: DFMA prensiplerine uygun, 304 paslanmaz çelikten üretilmiş banyo aksesuarları.">
     <link rel="icon" href="logo/sitelogo.png" type="image/png">
     <link rel="apple-touch-icon" href="logo/sitelogo.png">
@@ -189,20 +191,32 @@
             height: 46px; background-color: var(--card);
             border-bottom: 1px solid var(--border); padding: 0 2rem;
         }
-        .sort-tabs { display: flex; }
+        .sort-tabs { display: flex; position: relative; }
         .sort-tab {
             height: 46px; padding: 0 1.1rem;
             background: transparent; border: none;
             border-right: 1px solid var(--border);
             color: var(--text-3); font-family: 'Montserrat', sans-serif;
             font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
-            cursor: pointer;
-            transition: color 0.15s, background-color 0.15s;
+            cursor: pointer; position: relative; z-index: 2;
+            transition: color 0.15s;
         }
         .sort-tab:first-child { border-left: 1px solid var(--border); }
-        .sort-tab.active { color: var(--accent); background-color: rgba(224,112,32,0.06); }
+        .sort-tab.active { color: var(--accent); }
         .sort-tab:hover:not(.active) { color: var(--foreground); }
         .sort-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+        .sort-tab-hover {
+            position: absolute; top: 8px; height: 30px;
+            background-color: rgba(14,15,17,0.07); border-radius: 4px;
+            transition: left 0.25s ease-out, width 0.25s ease-out, opacity 0.2s ease-out;
+            opacity: 0; pointer-events: none; z-index: 0;
+        }
+        .sort-tab-indicator {
+            position: absolute; bottom: 0; height: 2px;
+            background-color: var(--accent);
+            transition: left 0.25s ease-out, width 0.25s ease-out;
+            pointer-events: none; z-index: 1;
+        }
         .sort-count { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.05em; }
         @media (max-width: 600px) {
             .sort-bar { padding: 0 0.75rem; }
@@ -630,6 +644,35 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSkeletons();
     requestAnimationFrame(() => setTimeout(() => renderProducts(PRODUCTS), 80));
 });
+
+// ── VERCEL TAB ANIMATION ──────────────────────────────────────
+(function() {
+    const sortTabsEl = document.querySelector('.sort-tabs');
+    if (!sortTabsEl) return;
+    const hoverEl = document.createElement('div');
+    hoverEl.className = 'sort-tab-hover';
+    sortTabsEl.insertBefore(hoverEl, sortTabsEl.firstChild);
+    const indicatorEl = document.createElement('div');
+    indicatorEl.className = 'sort-tab-indicator';
+    sortTabsEl.appendChild(indicatorEl);
+    function updateIndicator(tab) {
+        indicatorEl.style.left = tab.offsetLeft + 'px';
+        indicatorEl.style.width = tab.offsetWidth + 'px';
+    }
+    requestAnimationFrame(() => {
+        const activeTab = sortTabsEl.querySelector('.sort-tab.active');
+        if (activeTab) updateIndicator(activeTab);
+    });
+    sortTabsEl.querySelectorAll('.sort-tab').forEach(tab => {
+        tab.addEventListener('mouseenter', () => {
+            hoverEl.style.left = tab.offsetLeft + 'px';
+            hoverEl.style.width = tab.offsetWidth + 'px';
+            hoverEl.style.opacity = '1';
+        });
+        tab.addEventListener('mouseleave', () => { hoverEl.style.opacity = '0'; });
+        tab.addEventListener('click', () => { requestAnimationFrame(() => updateIndicator(tab)); });
+    });
+})();
 
 // ── MOBILE NAV ────────────────────────────────────────────────
 (function() {

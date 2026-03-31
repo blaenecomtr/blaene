@@ -91,7 +91,7 @@
             align-items: center;
             z-index: 2000;
             opacity: 1;
-            transition: opacity 0.53s cubic-bezier(0.4,0,0.2,1);
+            transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1);
         }
         #preloader.fade-out { opacity: 0; pointer-events: none; }
 
@@ -131,8 +131,8 @@
             transform: translateY(16px);
             filter: none;
             animation:
-                logoReveal 0.6s cubic-bezier(0.22,1,0.36,1) 0.2s forwards,
-                laserFlash 0.37s ease-out 1.07s;
+                logoReveal 0.35s cubic-bezier(0.22,1,0.36,1) 0.1s forwards,
+                laserFlash 0.25s ease-out 0.5s;
         }
         @keyframes logoReveal { to { opacity: 1; transform: translateY(0); } }
         @keyframes laserFlash {
@@ -150,7 +150,7 @@
             inset: 0;
             background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.22) 50%, transparent 80%);
             transform: translateX(-100%);
-            animation: shimmer 0.53s cubic-bezier(0.4,0,0.1,1) 0.8s forwards;
+            animation: shimmer 0.3s cubic-bezier(0.4,0,0.1,1) 0.35s forwards;
         }
         @keyframes shimmer { to { transform: translateX(120%); } }
 
@@ -159,7 +159,7 @@
             bottom: 0; left: 0;
             height: 1px; width: 0%;
             background-color: rgba(0,0,0,0.15);
-            animation: barFill 1.67s cubic-bezier(0.4,0,0.2,1) 0.13s forwards;
+            animation: barFill 0.85s cubic-bezier(0.4,0,0.2,1) 0.05s forwards;
         }
         @keyframes barFill { to { width: 100%; } }
 
@@ -749,7 +749,7 @@
         <div class="panel-body">
             <span class="panel-number">01</span>
             <h2 class="panel-title">Bath</h2>
-            <p class="panel-sub" data-i18n="panel-bath-sub">304 Paslanmaz Çelik Banyo Koleksiyonu</p>
+            <p class="panel-sub" data-i18n="panel-bath-sub">304 Paslanmaz Çelik Banyo Aksesuarları</p>
             <span class="panel-cta">
                 Keşfet
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -765,6 +765,7 @@
             <span class="panel-number">02</span>
             <h2 class="panel-title">Forge</h2>
             <p class="panel-sub" data-i18n="panel-forge-sub">Özel Metal Üretim</p>
+            <p class="panel-sub" style="margin-top:0.3rem;opacity:0.7;">Kampcı Ateş Çukuru &amp; Mangal</p>
             <span class="panel-cta">
                 Keşfet
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -780,6 +781,7 @@
             <span class="panel-number">03</span>
             <h2 class="panel-title">Industrial</h2>
             <p class="panel-sub" data-i18n="panel-ind-sub">Atölye &amp; Sanayi Ekipmanları</p>
+            <p class="panel-sub" style="margin-top:0.3rem;opacity:0.7;">Modüler Raf &amp; Sanayi Ekipmanları</p>
             <span class="panel-cta">
                 Keşfet
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -932,26 +934,6 @@
                 </a>
             </div>
         </div>
-        <div class="footer-col" aria-label="PDF Katalog">
-            <h4>Katalog</h4>
-            <!-- QR KOD: PDF URL eklendiğinde gerçek QR görsel buraya gelecek -->
-            <div style="border:1px solid var(--border);width:72px;height:72px;display:flex;align-items:center;justify-content:center;opacity:0.3;margin-bottom:0.5rem;" aria-label="Katalog QR Kodu">
-                <svg width="44" height="44" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <rect x="1" y="1" width="16" height="16" rx="1" stroke="#ededed" stroke-width="1.5"/>
-                    <rect x="5" y="5" width="8" height="8" fill="#ededed"/>
-                    <rect x="25" y="1" width="16" height="16" rx="1" stroke="#ededed" stroke-width="1.5"/>
-                    <rect x="29" y="5" width="8" height="8" fill="#ededed"/>
-                    <rect x="1" y="25" width="16" height="16" rx="1" stroke="#ededed" stroke-width="1.5"/>
-                    <rect x="5" y="29" width="8" height="8" fill="#ededed"/>
-                    <rect x="25" y="25" width="4" height="4" fill="#ededed"/>
-                    <rect x="33" y="25" width="4" height="4" fill="#ededed"/>
-                    <rect x="25" y="33" width="4" height="4" fill="#ededed"/>
-                    <rect x="33" y="33" width="4" height="4" fill="#ededed"/>
-                    <rect x="29" y="29" width="4" height="4" fill="#ededed"/>
-                </svg>
-            </div>
-            <p style="font-size:0.68rem;color:var(--text-3);line-height:1.6;">Taratın,<br>kataloğu indirin.</p>
-        </div>
     </div>
     <div class="footer-bottom"><p>© 2026 Blaene. Tüm hakları saklıdır.</p></div>
 </footer>
@@ -985,7 +967,7 @@ const TRANSLATIONS = {
     'nav-contact':    { tr: 'İletişim',   en: 'Contact' },
     'teklif-btn-txt': { tr: 'Teklif Al',  en: 'Get Quote' },
     'panel-bath-num': { tr: '01', en: '01' },
-    'panel-bath-sub': { tr: '304 Paslanmaz Çelik Banyo Koleksiyonu', en: '304 Stainless Steel Bath Collection' },
+    'panel-bath-sub': { tr: '304 Paslanmaz Çelik Banyo Aksesuarları', en: '304 Stainless Steel Bath Collection' },
     'panel-forge-sub': { tr: 'Özel Metal Üretim',         en: 'Custom Metal Fabrication' },
     'panel-ind-sub':  { tr: 'Ağır Hizmet Metal Çözümleri', en: 'Heavy-Duty Metal Solutions' },
     'why-eyebrow':    { tr: 'Blaene Farkı', en: 'The Blaene Edge' },
@@ -1013,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => p.classList.add('animate-in'), i * 100);
         });
         document.querySelector('.scroll-hint').style.opacity = '1';
-    }, 2000);
+    }, 1000);
 });
 
 window.addEventListener('scroll', () => {

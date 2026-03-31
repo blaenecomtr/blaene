@@ -162,7 +162,21 @@
             transition: color 0.15s, background-color 0.15s;
         }
         .sort-tab:hover { color: var(--foreground); }
-        .sort-tab.active { color: var(--foreground); background-color: rgba(0,0,0,0.05); border-bottom: 2px solid var(--foreground); }
+        .sort-tab.active { color: var(--foreground); }
+        .sort-tabs { position: relative; }
+        .sort-tab { position: relative; z-index: 2; }
+        .sort-tab-hover {
+            position: absolute; top: 8px; height: 30px;
+            background-color: rgba(14,15,17,0.07); border-radius: 4px;
+            transition: left 0.25s ease-out, width 0.25s ease-out, opacity 0.2s ease-out;
+            opacity: 0; pointer-events: none; z-index: 0;
+        }
+        .sort-tab-indicator {
+            position: absolute; bottom: 0; height: 2px;
+            background-color: var(--foreground);
+            transition: left 0.25s ease-out, width 0.25s ease-out;
+            pointer-events: none; z-index: 1;
+        }
         .sort-count { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.05em; }
         @media (max-width: 600px) {
             .sort-bar { padding: 0 0.75rem; }
@@ -357,8 +371,7 @@
             <p class="cat-desc">Sipariş üzerine üretilen özel metal parçalar. Lazer kesim, büküm ve kaynak teknolojisiyle kişiye özel çözümler.</p>
         </div>
         <div class="cat-header-right">
-            <!-- KATEGORİ GÖRSELİ: src kısmına görsel yolunu yazın (örn: görsel/marka/forge.JPG) -->
-            <img class="cat-banner-img" src="görsel/forge/forge banner.JPG" alt="Forge Koleksiyonu">
+            <video class="cat-banner-img" src="görsel/forge/videoforge.mp4" autoplay muted loop playsinline style="object-fit:cover;"></video>
             <div class="cat-stat-overlay">
                 <span class="cat-stat-num" id="product-count-num">3</span>
                 <span class="cat-stat-label">Ürün</span>
@@ -518,6 +531,35 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSkeletons();
     requestAnimationFrame(() => setTimeout(() => renderProducts(PRODUCTS), 80));
 });
+
+// ── VERCEL TAB ANIMATION ──────────────────────────────────────
+(function() {
+    const sortTabsEl = document.querySelector('.sort-tabs');
+    if (!sortTabsEl) return;
+    const hoverEl = document.createElement('div');
+    hoverEl.className = 'sort-tab-hover';
+    sortTabsEl.insertBefore(hoverEl, sortTabsEl.firstChild);
+    const indicatorEl = document.createElement('div');
+    indicatorEl.className = 'sort-tab-indicator';
+    sortTabsEl.appendChild(indicatorEl);
+    function updateIndicator(tab) {
+        indicatorEl.style.left = tab.offsetLeft + 'px';
+        indicatorEl.style.width = tab.offsetWidth + 'px';
+    }
+    requestAnimationFrame(() => {
+        const activeTab = sortTabsEl.querySelector('.sort-tab.active');
+        if (activeTab) updateIndicator(activeTab);
+    });
+    sortTabsEl.querySelectorAll('.sort-tab').forEach(tab => {
+        tab.addEventListener('mouseenter', () => {
+            hoverEl.style.left = tab.offsetLeft + 'px';
+            hoverEl.style.width = tab.offsetWidth + 'px';
+            hoverEl.style.opacity = '1';
+        });
+        tab.addEventListener('mouseleave', () => { hoverEl.style.opacity = '0'; });
+        tab.addEventListener('click', () => { requestAnimationFrame(() => updateIndicator(tab)); });
+    });
+})();
 
 // ── MOBILE NAV ────────────────────────────────────────────────
 (function() {
