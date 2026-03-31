@@ -109,6 +109,7 @@
             grid-template-columns: 1fr 1fr;
             min-height: 280px;
             border-bottom: 1px solid var(--border);
+            background-color: #111111;
         }
         @media (max-width: 700px) { .cat-header { grid-template-columns: 1fr; } }
         .cat-header-left {
@@ -129,13 +130,13 @@
             display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem;
         }
         .cat-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; line-height: 1; color: var(--accent); }
-        .cat-stat-label { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(0,0,0,0.4); }
-        .breadcrumb { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.9rem; }
-        .breadcrumb a { color: var(--text-3); text-decoration: none; transition: color 0.15s; }
-        .breadcrumb a:hover { color: var(--text-2); }
+        .cat-stat-label { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+        .breadcrumb { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 0.9rem; }
+        .breadcrumb a { color: rgba(255,255,255,0.35); text-decoration: none; transition: color 0.15s; }
+        .breadcrumb a:hover { color: rgba(255,255,255,0.65); }
         .breadcrumb span { margin: 0 0.4rem; }
-        .cat-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 0.9; letter-spacing: -0.01em; color: var(--foreground); }
-        .cat-desc { font-size: 0.85rem; color: var(--text-2); max-width: 380px; line-height: 1.75; margin-top: 0.8rem; }
+        .cat-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 0.9; letter-spacing: -0.01em; color: #ffffff; }
+        .cat-desc { font-size: 0.85rem; color: rgba(255,255,255,0.55); max-width: 380px; line-height: 1.75; margin-top: 0.8rem; }
 
         /* ── SORT BAR ────────────────────────────────────── */
         .sort-bar {
