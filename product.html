@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blaene — Ürün Detayı</title>
     <meta name="description" content="Blaene Bath koleksiyonu ürün detayı. 304 Paslanmaz Çelik, DFMA uyumlu metal tasarım.">
+    <link rel="icon" href="logo/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="logo/blaene-logo.png" type="image/png" sizes="any">
+    <link rel="apple-touch-icon" href="logo/blaene-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
@@ -171,7 +174,7 @@
         }
         .lightbox-close {
             position: absolute; top: 1.25rem; right: 1.25rem;
-            width: 40px; height: 40px;
+            width: 44px; height: 44px;
             background: transparent; border: 1px solid rgba(255,255,255,0.18);
             color: rgba(255,255,255,0.75); cursor: pointer; font-size: 1rem;
             display: flex; align-items: center; justify-content: center;
@@ -211,7 +214,7 @@
         }
         .info-code {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(2.4rem, 4vw, 3.4rem);
+            font-size: clamp(1.8rem, 4vw, 3.4rem);
             letter-spacing: 0.02em; line-height: 1;
             color: var(--accent); margin-bottom: 0.35rem;
         }
@@ -362,6 +365,54 @@
         }
         .wa-float:hover { background-color: #15803d; transform: scale(1.08); }
 
+        /* ── MOBILE NAV ─────────────────────────────────── */
+        .hamburger {
+            display: none; background: transparent; border: none;
+            color: var(--foreground); cursor: pointer; padding: 0.25rem;
+        }
+        @media (max-width: 860px) { .hamburger { display: block; } }
+        #mobile-nav {
+            position: fixed; inset: 0; z-index: 1500;
+            background-color: rgba(5,5,5,0.97);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s; display: flex; flex-direction: column;
+        }
+        #mobile-nav.open { opacity: 1; pointer-events: all; }
+        .mobile-nav-inner { display: flex; flex-direction: column; padding: 5.5rem 2.5rem 3rem; height: 100%; position: relative; }
+        #mobile-nav-close {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--foreground); width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1rem; line-height: 1;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+        #mobile-nav nav { display: flex; flex-direction: column; flex: 1; justify-content: center; gap: 0; }
+        #mobile-nav nav a {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.4rem, 9vw, 3.6rem);
+            color: var(--text-2); text-decoration: none;
+            letter-spacing: 0.03em; border-bottom: 1px solid var(--border);
+            padding: 0.7rem 0; transition: color 0.15s;
+        }
+        #mobile-nav nav a:hover { color: var(--accent); }
+        #mobile-nav nav a:first-child { border-top: 1px solid var(--border); }
+        .mobile-nav-footer { font-size: 0.72rem; color: var(--text-3); margin-top: 2rem; }
+        .mobile-nav-footer a { color: var(--text-3); text-decoration: none; }
+        .mobile-nav-footer a:hover { color: var(--accent); }
+
+        /* ── MOBILE FIXES ────────────────────────────────── */
+        @media (max-width: 860px) {
+            .zoom-btn { opacity: 1; width: 44px; height: 44px; }
+            .site-header { padding: 0 1.25rem; }
+        }
+        @media (max-width: 600px) {
+            .info-col { padding: 1.25rem 1rem; }
+            #lightbox-prev { left: 0.5rem; }
+            #lightbox-next { right: 0.5rem; }
+        }
+
         /* ── NOT FOUND ───────────────────────────────────── */
         .not-found {
             display: flex; flex-direction: column;
@@ -407,8 +458,29 @@
             </svg>
             Teklif Al
         </a>
+        <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 5h16M4 12h16M4 19h16"/>
+            </svg>
+        </button>
     </div>
 </header>
+
+<div id="mobile-nav" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mobil menü">
+    <div class="mobile-nav-inner">
+        <button id="mobile-nav-close" aria-label="Menüyü kapat">✕</button>
+        <nav aria-label="Mobil navigasyon">
+            <a href="bath.html">Bath</a>
+            <a href="forge.html">Forge</a>
+            <a href="industrial.html">Industrial</a>
+            <a href="index.html#why">Hakkımızda</a>
+            <a href="index.html#contact">İletişim</a>
+        </nav>
+        <div class="mobile-nav-footer">
+            <a href="https://wa.me/905320540019">0532 054 0019</a>
+        </div>
+    </div>
+</div>
 
 <nav class="breadcrumb-bar" aria-label="Sayfa yolu">
     <div class="breadcrumb">
@@ -736,6 +808,19 @@ if (!product) {
         }
     });
 }
+// ── MOBILE NAV ────────────────────────────────────────
+(function() {
+    const hamburger   = document.getElementById('hamburger');
+    const mobileNav   = document.getElementById('mobile-nav');
+    const mobileClose = document.getElementById('mobile-nav-close');
+    if (!hamburger) return;
+    function openNav()  { mobileNav.classList.add('open'); mobileNav.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; hamburger.setAttribute('aria-expanded','true'); }
+    function closeNav() { mobileNav.classList.remove('open'); mobileNav.setAttribute('aria-hidden','true'); document.body.style.overflow=''; hamburger.setAttribute('aria-expanded','false'); }
+    hamburger.addEventListener('click', openNav);
+    mobileClose.addEventListener('click', closeNav);
+    mobileNav.addEventListener('click', e => { if (e.target === mobileNav) closeNav(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+})();
 </script>
 </body>
 </html>

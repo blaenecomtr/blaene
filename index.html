@@ -6,9 +6,35 @@
     <title>Blaene — Metal. Tasarım. Endüstri.</title>
     <meta name="description" content="İç mekan, endüstriyel ve profesyonel kullanım için premium metal ürünler.">
     <meta name="author" content="Blaene">
-    <meta property="og:title" content="Blaene">
+    <meta property="og:title" content="Blaene — Metal. Tasarım. Endüstri.">
     <meta property="og:locale" content="tr_TR">
     <meta property="og:type" content="website">
+    <meta property="og:image" content="logo/blaene-logo.png">
+    <meta property="og:description" content="İç mekan, endüstriyel ve profesyonel kullanım için premium metal ürünler.">
+    <link rel="icon" href="logo/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="logo/blaene-logo.png" type="image/png" sizes="any">
+    <link rel="apple-touch-icon" href="logo/blaene-logo.png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Blaene",
+      "url": "https://blaene.com.tr",
+      "logo": "https://blaene.com.tr/logo/blaene-logo.png",
+      "description": "İç mekan, endüstriyel ve profesyonel kullanım için premium metal ürünler.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Osmancık",
+        "addressRegion": "Çorum",
+        "addressCountry": "TR"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+90-532-054-0019",
+        "contactType": "sales"
+      }
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
@@ -72,6 +98,7 @@
                 #000000 100%
             );
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 2000;
@@ -637,11 +664,12 @@
         .mobile-nav-footer a:hover { color: var(--accent); }
 
         /* ── MOBILE ────────────────────────────────── */
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .hero { flex-direction: column; height: auto; min-height: 100dvh; }
-            .panel { height: 50vh; flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .panel { height: 33.4vh; min-height: 220px; flex: none; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
             .panel:last-child { border-bottom: none; }
             .panel-cta { opacity: 1; transform: translateY(0); }
+            .site-header { padding: 0 1.25rem; }
         }
     </style>
 </head>
