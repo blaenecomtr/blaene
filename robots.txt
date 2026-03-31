@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://blaene.com.tr/sitemap.xml
