@@ -55,7 +55,7 @@
             color: var(--text-2); transition: color 0.15s;
         }
         .nav-link:hover { color: var(--foreground); }
-        .nav-link.active { color: var(--white); }
+        .nav-link.active { color: var(--foreground); }
         .header-right { display: flex; align-items: center; gap: 1.2rem; }
         .wa-header-btn {
             display: inline-flex; align-items: center; gap: 0.45rem;
@@ -370,6 +370,13 @@
             color: var(--foreground); cursor: pointer; padding: 0.25rem;
         }
         @media (max-width: 860px) { .hamburger { display: block; } }
+        .hamburger-icon { transition: transform 0.3s ease-in-out; display: block; }
+        .hamburger.is-open .hamburger-icon { transform: rotate(-45deg); }
+        .menu-path-top {
+            stroke-dasharray: 12 63; stroke-dashoffset: 0;
+            transition: stroke-dasharray 0.3s ease-in-out, stroke-dashoffset 0.3s ease-in-out;
+        }
+        .hamburger.is-open .menu-path-top { stroke-dasharray: 20 300; stroke-dashoffset: -32.42px; }
         #mobile-nav {
             position: fixed; inset: 0; z-index: 1500;
             background-color: rgba(247,247,247,0.97);
@@ -458,8 +465,9 @@
             Teklif Al
         </a>
         <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M4 5h16M4 12h16M4 19h16"/>
+            <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path class="menu-path-top" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"/>
+                <path d="M7 16 27 16"/>
             </svg>
         </button>
     </div>
@@ -813,8 +821,8 @@ if (!product) {
     const mobileNav   = document.getElementById('mobile-nav');
     const mobileClose = document.getElementById('mobile-nav-close');
     if (!hamburger) return;
-    function openNav()  { mobileNav.classList.add('open'); mobileNav.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; hamburger.setAttribute('aria-expanded','true'); }
-    function closeNav() { mobileNav.classList.remove('open'); mobileNav.setAttribute('aria-hidden','true'); document.body.style.overflow=''; hamburger.setAttribute('aria-expanded','false'); }
+    function openNav()  { mobileNav.classList.add('open'); mobileNav.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; hamburger.setAttribute('aria-expanded','true'); hamburger.classList.add('is-open'); }
+    function closeNav() { mobileNav.classList.remove('open'); mobileNav.setAttribute('aria-hidden','true'); document.body.style.overflow=''; hamburger.setAttribute('aria-expanded','false'); hamburger.classList.remove('is-open'); }
     hamburger.addEventListener('click', openNav);
     mobileClose.addEventListener('click', closeNav);
     mobileNav.addEventListener('click', e => { if (e.target === mobileNav) closeNav(); });

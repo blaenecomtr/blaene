@@ -176,13 +176,20 @@
             height: 64px;
             background-color: transparent;
             border-bottom: 1px solid transparent;
-            transition: background-color 0.3s, border-color 0.3s;
+            transition: background-color 0.3s, border-color 0.3s, top 0.35s ease, left 0.35s ease, right 0.35s ease, box-shadow 0.35s ease;
         }
         .site-header.scrolled {
             background-color: rgba(247,247,247,0.96);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-color: var(--border);
+        }
+        @media (min-width: 769px) {
+            .site-header.scrolled {
+                top: 12px;
+                left: 1rem; right: 1rem;
+                box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            }
         }
 
         .header-logo { height: 16px; filter: none; opacity: 0.88; display: block; }
@@ -227,6 +234,17 @@
             color: var(--foreground); cursor: pointer; padding: 0.25rem;
         }
         @media (max-width: 768px) { .hamburger { display: block; } }
+        .hamburger-icon { transition: transform 0.3s ease-in-out; display: block; }
+        .hamburger.is-open .hamburger-icon { transform: rotate(-45deg); }
+        .menu-path-top {
+            stroke-dasharray: 12 63;
+            stroke-dashoffset: 0;
+            transition: stroke-dasharray 0.3s ease-in-out, stroke-dashoffset 0.3s ease-in-out;
+        }
+        .hamburger.is-open .menu-path-top {
+            stroke-dasharray: 20 300;
+            stroke-dashoffset: -32.42px;
+        }
 
         /* ── HERO (3 paneli) ───────────────────────── */
         .hero {
@@ -694,8 +712,9 @@
             Teklif Al
         </a>
         <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M4 5h16M4 12h16M4 19h16"/>
+            <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path class="menu-path-top" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"/>
+                <path d="M7 16 27 16"/>
             </svg>
         </button>
     </div>
@@ -1012,6 +1031,7 @@ window.addEventListener('scroll', () => {
         mobileNav.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
         hamburger.setAttribute('aria-expanded', 'true');
+        hamburger.classList.add('is-open');
         mobileClose.focus();
     }
     function closeNav() {
@@ -1019,6 +1039,7 @@ window.addEventListener('scroll', () => {
         mobileNav.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
         hamburger.setAttribute('aria-expanded', 'false');
+        hamburger.classList.remove('is-open');
     }
 
     hamburger.addEventListener('click', openNav);
