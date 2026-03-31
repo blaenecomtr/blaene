@@ -8,7 +8,9 @@
     <link rel="icon" href="logo/sitelogo.png" type="image/png">
     <link rel="apple-touch-icon" href="logo/sitelogo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Bebas+Neue&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Bebas+Neue&display=swap"></noscript>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -371,7 +373,7 @@
             <p class="cat-desc">Sipariş üzerine üretilen özel metal parçalar. Lazer kesim, büküm ve kaynak teknolojisiyle kişiye özel çözümler.</p>
         </div>
         <div class="cat-header-right">
-            <video class="cat-banner-img" src="görsel/forge/videoforge.mp4" autoplay muted loop playsinline style="object-fit:cover;"></video>
+            <video class="cat-banner-img" src="görsel/forge/videoforge.mp4" autoplay muted loop playsinline preload="metadata" style="object-fit:cover;"></video>
             <div class="cat-stat-overlay">
                 <span class="cat-stat-num" id="product-count-num">3</span>
                 <span class="cat-stat-label">Ürün</span>
