@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blaene — Ürün Detayı</title>
-    <meta name="description" content="Blaene Bath koleksiyonu ürün detayı. 304 Paslanmaz Çelik, DFMA uyumlu metal tasarım.">
+    <meta name="description" content="Blaene BANYO koleksiyonu ürün detayı. 304 Paslanmaz Çelik, DFMA uyumlu metal tasarım.">
     <link rel="icon" href="logo/sitelogo.png" type="image/png">
     <link rel="apple-touch-icon" href="logo/sitelogo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,6 +59,20 @@
         .nav-link:hover { color: var(--foreground); }
         .nav-link.active { color: var(--foreground); }
         .header-right { display: flex; align-items: center; gap: 1.2rem; }
+        .lang-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-2);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            padding: 0.22rem 0.55rem;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .lang-toggle:hover { border-color: rgba(0,0,0,0.24); color: var(--foreground); }
+        .lang-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
         .wa-header-btn {
             display: inline-flex; align-items: center; gap: 0.45rem;
             padding: 0.42rem 0.9rem;
@@ -473,18 +487,19 @@
         <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
     </a>
     <nav class="header-center" aria-label="Ana navigasyon">
-        <a href="bath.html" class="nav-link" id="nav-bath">Bath</a>
-        <a href="forge.html" class="nav-link" id="nav-forge">Forge</a>
-        <a href="industrial.html" class="nav-link" id="nav-industrial">Industrial</a>
+        <a href="bath.html" class="nav-link" id="nav-bath">BANYO</a>
+        <a href="forge.html" class="nav-link" id="nav-forge">ATEŞ ÇUKURU</a>
+        <a href="industrial.html" class="nav-link" id="nav-industrial">MODÜLER RAF & TAKIM ARABASI</a>
         <a href="index.html#why" class="nav-link">Hakkımızda</a>
         <a href="index.html#contact" class="nav-link">İletişim</a>
     </nav>
     <div class="header-right">
+        <button class="lang-toggle" id="lang-toggle" aria-label="Dil değiştir">TR</button>
         <a href="#" class="wa-header-btn" id="header-teklif" target="_blank" rel="noopener noreferrer">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
             </svg>
-            Teklif Al
+            <span class="wa-header-btn-text">Teklif Al</span>
         </a>
         <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
             <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -499,9 +514,9 @@
     <div class="mobile-nav-inner">
         <button id="mobile-nav-close" aria-label="Menüyü kapat">✕</button>
         <nav aria-label="Mobil navigasyon">
-            <a href="bath.html">Bath</a>
-            <a href="forge.html">Forge</a>
-            <a href="industrial.html">Industrial</a>
+            <a href="bath.html">BANYO</a>
+            <a href="forge.html">ATEŞ ÇUKURU</a>
+            <a href="industrial.html">MODÜLER RAF & TAKIM ARABASI</a>
             <a href="index.html#why">Hakkımızda</a>
             <a href="index.html#contact">İletişim</a>
         </nav>
@@ -567,6 +582,71 @@
 </div>
 
 <script>
+const LANG_KEY = 'blaene_lang';
+const currentLang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'tr';
+
+function t(trText, enText) {
+    return currentLang === 'en' ? enText : trText;
+}
+
+const NAME_TRANSLATIONS = {
+    'Banyo Organizer': 'Bathroom Organizer',
+    'Havluluk': 'Towel Rack',
+    'Sabunluk': 'Soap Holder',
+    'Tuvalet Kağıdı Askısı': 'Toilet Paper Holder',
+    'Fön Makinası Askısı': 'Hair Dryer Holder',
+    'Kampcı Portatif Mangal': 'Portable Camp Grill',
+    'Çelik Raf Sistemi': 'Steel Shelving System',
+    'Kademeli Servis Arabası': 'Tiered Service Cart',
+    'Servis Takım Arabası': 'Service Tool Cart'
+};
+
+const MATERIAL_TRANSLATIONS = {
+    '304 Paslanmaz Çelik': '304 Stainless Steel',
+    'ST37 Çelik': 'ST37 Steel',
+    'Yüksek Mukavemetli Çelik': 'High Strength Steel'
+};
+
+const BADGE_TRANSLATIONS = {
+    'ST37 Çelik': 'ST37 Steel',
+    'Lazer Kesim': 'Laser Cut',
+    'Özel Üretim': 'Custom Production',
+    'Flatpack': 'Flatpack',
+    'Admiral Yanmaz Boya': 'Admiral Heat-Resistant Coating',
+    'Çelik Konstrüksiyon': 'Steel Construction',
+    'Modüler': 'Modular',
+    '1.5mm Sac': '1.5mm Sheet Metal',
+    'Tekerlekli': 'Wheeled',
+    '304 Kalite': '304 Grade',
+    'Mühendislik Onaylı': 'Engineering Approved'
+};
+
+const COLOR_TRANSLATIONS = {
+    'Siyah': 'Black',
+    'Gri': 'Gray'
+};
+
+function translatedName(name) {
+    return currentLang === 'en' ? (NAME_TRANSLATIONS[name] || name) : name;
+}
+
+function translatedMaterial(material) {
+    return currentLang === 'en' ? (MATERIAL_TRANSLATIONS[material] || material) : material;
+}
+
+function translatedBadge(badge) {
+    return currentLang === 'en' ? (BADGE_TRANSLATIONS[badge] || badge) : badge;
+}
+
+function translatedColor(color) {
+    return currentLang === 'en' ? (COLOR_TRANSLATIONS[color] || color) : color;
+}
+
+function translatedDims(dims) {
+    if (currentLang !== 'en') return dims;
+    return dims.replace('Sipariş üzeri', 'On request').replace('Katlı', 'Tier');
+}
+
 const PRODUCTS = [
     { code: 'BTH-001',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '25×25×5 cm',   images: ['bath/bath/BTH-001-304-1.5MM-28.03.2026.jpg'] },
     { code: 'BTH-002',   name: 'Banyo Organizer',         thickness: '1.5mm', dims: '25×25×2 cm',   images: ['bath/bath/BTH-002-304-1,5MM-28.03.2026.jpg'] },
@@ -609,16 +689,16 @@ const PRODUCTS = [
 
 // ── HELPERS ──────────────────────────────────────────
 function getCat(c) {
-    if (c && c.startsWith('FRG')) return { name: 'Forge Koleksiyonu',      url: 'forge.html',      label: 'Forge' };
-    if (c && c.startsWith('MDL')) return { name: 'Industrial Koleksiyonu', url: 'industrial.html', label: 'Industrial' };
-    return { name: 'Bath Koleksiyonu', url: 'bath.html', label: 'Bath' };
+    if (c && c.startsWith('FRG')) return { name: t('KAMP Koleksiyonu', 'CAMP Collection'), url: 'forge.html', label: t('ATEŞ ÇUKURU', 'FIRE PIT') };
+    if (c && c.startsWith('MDL')) return { name: t('Sanayi Koleksiyonu', 'Industry Collection'), url: 'industrial.html', label: t('MODÜLER RAF & TAKIM ARABASI', 'MODULAR SHELVING & TOOL CART') };
+    return { name: t('BANYO Koleksiyonu', 'BATHROOM Collection'), url: 'bath.html', label: t('BANYO', 'BATHROOM') };
 }
 function getBadges(c) {
-    if (c === 'FRG-001')                      return ['ST37 Çelik', 'Lazer Kesim', 'Özel Üretim'];
-    if (c === 'FRG-002' || c === 'FRG-003')   return ['ST37 Çelik', 'Flatpack', 'Admiral Yanmaz Boya'];
-    if (c === 'MDL-002')                       return ['Çelik Konstrüksiyon', 'Lazer Kesim', 'Modüler'];
-    if (c && c.startsWith('MDL'))              return ['1.5mm Sac', 'Tekerlekli', 'Lazer Kesim'];
-    return ['304 Kalite', 'Lazer Kesim', 'Mühendislik Onaylı'];
+    if (c === 'FRG-001') return ['ST37 Çelik', 'Lazer Kesim', 'Özel Üretim'].map(translatedBadge);
+    if (c === 'FRG-002' || c === 'FRG-003') return ['ST37 Çelik', 'Flatpack', 'Admiral Yanmaz Boya'].map(translatedBadge);
+    if (c === 'MDL-002') return ['Çelik Konstrüksiyon', 'Lazer Kesim', 'Modüler'].map(translatedBadge);
+    if (c && c.startsWith('MDL')) return ['1.5mm Sac', 'Tekerlekli', 'Lazer Kesim'].map(translatedBadge);
+    return ['304 Kalite', 'Lazer Kesim', 'Mühendislik Onaylı'].map(translatedBadge);
 }
 
 // ── INIT ─────────────────────────────────────────────
@@ -629,17 +709,67 @@ const cat     = getCat(code);
 
 const wa = (msg) => `https://wa.me/905320540019?text=${encodeURIComponent(msg)}`;
 
+function applyStaticLanguage() {
+    document.documentElement.lang = currentLang;
+    const langBtn = document.getElementById('lang-toggle');
+    if (langBtn) langBtn.textContent = currentLang.toUpperCase();
+    const headerTeklif = document.getElementById('header-teklif');
+    const waFloat = document.getElementById('wa-float-link');
+
+    const setText = (selector, value) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value;
+    };
+    const setAll = (selector, values) => {
+        document.querySelectorAll(selector).forEach((el, idx) => {
+            if (values[idx] !== undefined) el.textContent = values[idx];
+        });
+    };
+
+    if (currentLang === 'en') {
+        setAll('.header-center .nav-link', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'About', 'Contact']);
+        setText('.wa-header-btn-text', 'Get Quote');
+        setAll('#mobile-nav nav a', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'About', 'Contact']);
+        setText('.breadcrumb a[href="index.html"]', 'Home');
+        const footerTagline = document.querySelector('.footer-tagline');
+        if (footerTagline) footerTagline.innerHTML = '304 Stainless Steel<br>Metal Design Products';
+        setText('.footer-address', 'Corum / Osmancik, Turkiye');
+        setText('.footer-copy', '© 2026 Blaene. All rights reserved.');
+        if (headerTeklif) headerTeklif.setAttribute('href', 'https://wa.me/905320540019?text=Hello%2C%20I%20would%20like%20a%20price%20quote.');
+        if (waFloat) waFloat.setAttribute('href', 'https://wa.me/905320540019?text=Hello%2C%20I%20would%20like%20information%20about%20your%20products.');
+        if (waFloat) waFloat.setAttribute('aria-label', 'Contact via WhatsApp');
+        const lb = document.getElementById('lightbox');
+        if (lb) lb.setAttribute('aria-label', 'Image preview');
+        const lbClose = document.getElementById('lightbox-close');
+        const lbPrev = document.getElementById('lightbox-prev');
+        const lbNext = document.getElementById('lightbox-next');
+        if (lbClose) lbClose.setAttribute('aria-label', 'Close');
+        if (lbPrev) lbPrev.setAttribute('aria-label', 'Previous image');
+        if (lbNext) lbNext.setAttribute('aria-label', 'Next image');
+    } else {
+        if (headerTeklif) headerTeklif.setAttribute('href', 'https://wa.me/905320540019?text=Merhaba%2C%20fiyat%20teklifi%20almak%20istiyorum.');
+        if (waFloat) waFloat.setAttribute('href', 'https://wa.me/905320540019?text=Merhaba%2C%20%C3%BCr%C3%BCnleriniz%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.');
+    }
+}
+
+applyStaticLanguage();
+document.getElementById('lang-toggle')?.addEventListener('click', () => {
+    const next = currentLang === 'tr' ? 'en' : 'tr';
+    localStorage.setItem(LANG_KEY, next);
+    location.reload();
+});
+
 if (!product) {
     document.getElementById('main-content').innerHTML = `
         <div class="not-found">
-            <h1>Ürün Bulunamadı</h1>
-            <p>Aradığınız ürün mevcut değil veya kaldırılmış olabilir.</p>
-            <a href="${cat.url}">← ${cat.name}'na Dön</a>
+            <h1>${t('Ürün Bulunamadı', 'Product Not Found')}</h1>
+            <p>${t('Aradığınız ürün mevcut değil veya kaldırılmış olabilir.', 'The product you are looking for may not exist or may have been removed.')}</p>
+            <a href="${cat.url}">← ${t('Koleksiyona Dön', 'Back to Collection')}</a>
         </div>`;
-    document.title = 'Blaene — Ürün Bulunamadı';
+    document.title = t('Blaene — Ürün Bulunamadı', 'Blaene — Product Not Found');
 } else {
     // Update meta + breadcrumb + nav active
-    document.title = `Blaene ${product.code} — ${product.name}`;
+    document.title = `Blaene ${product.code} — ${translatedName(product.name)}`;
     document.getElementById('bc-code').textContent = product.code;
     const bcCat = document.getElementById('bc-cat');
     bcCat.textContent = cat.label;
@@ -649,10 +779,10 @@ if (!product) {
     if (activeNavId) document.getElementById(activeNavId)?.classList.add('active');
 
     // Update WA links
-    const teklifMsg = `Merhaba, ${product.code} ürünü için fiyat teklifi almak istiyorum.`;
-    const bilgiMsg  = `Merhaba, ${product.code} ürünü hakkında bilgi almak istiyorum.`;
-    const dxfMsg    = `Merhaba, ${product.code} ürünü için DXF teknik çizim dosyasını talep ediyorum.`;
-    const stepMsg   = `Merhaba, ${product.code} ürününün STEP dosyasını talep ediyorum.`;
+    const teklifMsg = t(`Merhaba, ${product.code} ürünü için fiyat teklifi almak istiyorum.`, `Hello, I would like a price quote for product ${product.code}.`);
+    const bilgiMsg  = t(`Merhaba, ${product.code} ürünü hakkında bilgi almak istiyorum.`, `Hello, I would like more information about product ${product.code}.`);
+    const dxfMsg    = t(`Merhaba, ${product.code} ürünü için DXF teknik çizim dosyasını talep ediyorum.`, `Hello, I would like to request the DXF technical drawing file for product ${product.code}.`);
+    const stepMsg   = t(`Merhaba, ${product.code} ürününün STEP dosyasını talep ediyorum.`, `Hello, I would like to request the STEP file for product ${product.code}.`);
     document.getElementById('header-teklif').href = wa(teklifMsg);
     document.getElementById('wa-float-link').href = wa(bilgiMsg);
 
@@ -660,31 +790,31 @@ if (!product) {
     const thumbsHTML = product.images.length > 1
         ? product.images.map((src, i) => `
             <div class="gallery-thumb${i === 0 ? ' active' : ''}" data-idx="${i}">
-                <img src="${src}" alt="${product.code} görsel ${i + 1}" loading="lazy">
+                <img src="${src}" alt="${product.code} ${t('görsel', 'image')} ${i + 1}" loading="lazy">
             </div>`).join('')
         : '';
 
     // Specs rows
     const specsHTML = `
-        <tr><td>Ürün</td><td>${product.name}</td></tr>
-        <tr><td>Malzeme</td><td>${product.material}</td></tr>
-        <tr><td>Kalınlık</td><td>${product.thickness}</td></tr>
-        <tr><td>Ölçüler</td><td>${product.dims}</td></tr>
-        <tr><td>Kategori</td><td>${cat.label}</td></tr>
-        <tr><td>Standart</td><td>DFMA Uyumlu</td></tr>`;
+        <tr><td>${t('Ürün', 'Product')}</td><td>${translatedName(product.name)}</td></tr>
+        <tr><td>${t('Malzeme', 'Material')}</td><td>${translatedMaterial(product.material)}</td></tr>
+        <tr><td>${t('Kalınlık', 'Thickness')}</td><td>${product.thickness}</td></tr>
+        <tr><td>${t('Ölçüler', 'Dimensions')}</td><td>${translatedDims(product.dims)}</td></tr>
+        <tr><td>${t('Kategori', 'Category')}</td><td>${cat.label}</td></tr>
+        <tr><td>${t('Standart', 'Standard')}</td><td>${t('DFMA Uyumlu', 'DFMA Compliant')}</td></tr>`;
 
     document.getElementById('main-content').innerHTML = `
         <div class="product-layout">
             <div class="img-col">
                 <div class="gallery-main" id="gallery-main-area">
                     <img class="gallery-main-img" id="gallery-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="eager">
-                    <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="Önceki görsel">
+                    <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="${t('Önceki görsel', 'Previous image')}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
                     </button>
-                    <button class="gallery-arrow gallery-arrow-next" id="gallery-next" aria-label="Sonraki görsel">
+                    <button class="gallery-arrow gallery-arrow-next" id="gallery-next" aria-label="${t('Sonraki görsel', 'Next image')}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
-                    <button class="zoom-btn" aria-label="Görseli büyüt">
+                    <button class="zoom-btn" aria-label="${t('Görseli büyüt', 'Zoom image')}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                     </button>
                 </div>
@@ -693,34 +823,34 @@ if (!product) {
             <div class="info-col">
                 <p class="info-eyebrow">${cat.name}</p>
                 <h1 class="info-code">${product.code}</h1>
-                <h2 class="info-name">${product.name}</h2>
+                <h2 class="info-name">${translatedName(product.name)}</h2>
 
                 <div class="info-divider"></div>
 
-                <p class="sub-label">${product.colorGroups ? 'Renk' : 'Yüzey'}</p>
+                <p class="sub-label">${product.colorGroups ? t('Renk', 'Color') : t('Yüzey', 'Finish')}</p>
                 <div class="variant-btns">
                     ${product.colorGroups
-                        ? Object.keys(product.colorGroups).map((c, i) => `<button class="variant-btn${i === 0 ? ' active' : ''}" data-color="${c}">${c}</button>`).join('')
+                        ? Object.keys(product.colorGroups).map((c, i) => `<button class="variant-btn${i === 0 ? ' active' : ''}" data-color="${c}">${translatedColor(c)}</button>`).join('')
                         : product.code.startsWith('FRG')
-                            ? '<button class="variant-btn active" data-variant="siyah">Siyah</button>'
-                            : '<button class="variant-btn active" data-variant="krom">Krom</button><button class="variant-btn" data-variant="siyah">Siyah</button>'
+                            ? `<button class="variant-btn active" data-variant="siyah">${t('Siyah', 'Black')}</button>`
+                            : `<button class="variant-btn active" data-variant="krom">${t('Krom', 'Chrome')}</button><button class="variant-btn" data-variant="siyah">${t('Siyah', 'Black')}</button>`
                     }
                 </div>
 
-                <table class="specs-table" aria-label="Ürün özellikleri">
+                <table class="specs-table" aria-label="${t('Ürün özellikleri', 'Product specifications')}">
                     <tbody>${specsHTML}</tbody>
                 </table>
 
                 <div class="tech-section">
-                    <p class="sub-label">Teknik Dosyalar</p>
+                    <p class="sub-label">${t('Teknik Dosyalar', 'Technical Files')}</p>
                     <div class="tech-btns">
                         <a href="${wa(dxfMsg)}" class="tech-btn" target="_blank" rel="noopener noreferrer">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><polyline points="14,2 14,8 20,8"/></svg>
-                            DXF Talep Et
+                            ${t('DXF Talep Et', 'Request DXF')}
                         </a>
                         <a href="${wa(stepMsg)}" class="tech-btn" target="_blank" rel="noopener noreferrer">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><polyline points="14,2 14,8 20,8"/></svg>
-                            STEP Talep Et
+                            ${t('STEP Talep Et', 'Request STEP')}
                         </a>
                     </div>
                 </div>
@@ -728,10 +858,10 @@ if (!product) {
                 <div class="cta-section">
                     <a href="${wa(teklifMsg)}" class="cta-primary" target="_blank" rel="noopener noreferrer">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg>
-                        Teklif Al
+                        ${t('Teklif Al', 'Get Quote')}
                     </a>
                     <a href="${wa(bilgiMsg)}" class="cta-secondary" target="_blank" rel="noopener noreferrer">
-                        Bilgi Al
+                        ${t('Bilgi Al', 'Get Info')}
                     </a>
                 </div>
 
@@ -744,7 +874,7 @@ if (!product) {
         <div class="back-section">
             <a href="${cat.url}" class="back-to-collection">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                ${cat.name}'na Dön
+                ${t('Koleksiyona Dön', 'Back to Collection')}
             </a>
         </div>`;
 
@@ -756,7 +886,7 @@ if (!product) {
         thumbsEl.style.display = '';
         thumbsEl.innerHTML = imgs.map((src, i) => `
             <div class="gallery-thumb${i === 0 ? ' active' : ''}" data-idx="${i}">
-                <img src="${src}" alt="${product.code} görsel ${i + 1}" loading="lazy">
+                <img src="${src}" alt="${product.code} ${t('görsel', 'image')} ${i + 1}" loading="lazy">
             </div>`).join('');
     }
 
@@ -815,7 +945,7 @@ if (!product) {
             buildThumbs(imgs);
             updateArrows(imgs.length);
         } else {
-            // Yüzey (Bath) — CSS filter
+            // Yüzey (BANYO) — CSS filter
             const img = document.getElementById('gallery-img');
             img.classList.toggle('siyah', btn.dataset.variant === 'siyah');
         }
@@ -887,5 +1017,8 @@ if (!product) {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/storefront.js"></script>
 </body>
 </html>

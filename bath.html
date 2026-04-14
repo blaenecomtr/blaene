@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blaene Bath — 304 Paslanmaz Çelik Banyo Aksesuarları
+    <title>Blaene BANYO — 304 Paslanmaz Çelik Banyo Aksesuarları
         
     </title>
-    <meta name="description" content="Blaene Bath Koleksiyonu: DFMA prensiplerine uygun, 304 paslanmaz çelikten üretilmiş banyo aksesuarları.">
+    <meta name="description" content="Blaene BANYO Koleksiyonu: DFMA prensiplerine uygun, 304 paslanmaz çelikten üretilmiş banyo aksesuarları.">
     <link rel="icon" href="logo/sitelogo.png" type="image/png">
     <link rel="apple-touch-icon" href="logo/sitelogo.png">
     <link rel="preload" as="image" href="görsel/marka/bath.JPG">
@@ -63,6 +63,20 @@
         .nav-link:hover { color: var(--foreground); }
         .nav-link.active { color: var(--foreground); }
         .header-right { display: flex; align-items: center; gap: 1.2rem; }
+        .lang-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-2);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            padding: 0.22rem 0.55rem;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .lang-toggle:hover { border-color: rgba(0,0,0,0.24); color: var(--foreground); }
+        .lang-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
         .wa-header-btn {
             display: inline-flex; align-items: center; gap: 0.45rem;
             padding: 0.42rem 0.9rem;
@@ -383,19 +397,20 @@
         <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
     </a>
     <nav class="header-center" aria-label="Ana navigasyon">
-        <a href="bath.html" class="nav-link active">Bath</a>
-        <a href="forge.html" class="nav-link">Forge</a>
-        <a href="industrial.html" class="nav-link">Industrial</a>
+        <a href="bath.html" class="nav-link active">BANYO</a>
+        <a href="forge.html" class="nav-link">ATEŞ ÇUKURU</a>
+        <a href="industrial.html" class="nav-link">MODÜLER RAF & TAKIM ARABASI</a>
         <a href="index.html#why" class="nav-link">Hakkımızda</a>
         <a href="index.html#contact" class="nav-link">İletişim</a>
     </nav>
     <div class="header-right">
-        <a href="https://wa.me/905320540019?text=Merhaba%2C%20Bath%20koleksiyonu%20hakkında%20fiyat%20teklifi%20almak%20istiyorum."
+        <button class="lang-toggle" id="lang-toggle" aria-label="Dil değiştir">TR</button>
+        <a href="https://wa.me/905320540019?text=Merhaba%2C%20BANYO%20koleksiyonu%20hakkında%20fiyat%20teklifi%20almak%20istiyorum."
            target="_blank" rel="noopener noreferrer" class="wa-header-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
             </svg>
-            Teklif Al
+            <span class="wa-header-btn-text">Teklif Al</span>
         </a>
         <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
             <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -410,9 +425,9 @@
     <div class="mobile-nav-inner">
         <button id="mobile-nav-close" aria-label="Menüyü kapat">✕</button>
         <nav aria-label="Mobil navigasyon">
-            <a href="bath.html">Bath</a>
-            <a href="forge.html">Forge</a>
-            <a href="industrial.html">Industrial</a>
+            <a href="bath.html">BANYO</a>
+            <a href="forge.html">ATEŞ ÇUKURU</a>
+            <a href="industrial.html">MODÜLER RAF & TAKIM ARABASI</a>
             <a href="index.html#why">Hakkımızda</a>
             <a href="index.html#contact">İletişim</a>
         </nav>
@@ -428,14 +443,14 @@
             <nav class="breadcrumb" aria-label="Sayfa yolu">
                 <a href="index.html">Ana Sayfa</a>
                 <span aria-hidden="true">/</span>
-                <span>Bath</span>
+                <span>BANYO</span>
             </nav>
-            <h1 class="cat-title">Bath<br>Koleksiyonu</h1>
+            <h1 class="cat-title">BANYO<br>Koleksiyonu</h1>
             <p class="cat-desc">304 paslanmaz çelikten üretilmiş, DFMA prensiplerine uygun banyo aksesuarları. Modern banyonun metal imzası.</p>
         </div>
         <div class="cat-header-right">
             <!-- KATEGORİ GÖRSELİ: src kısmına görsel yolunu yazın (örn: görsel/marka/bath.JPG) -->
-            <img class="cat-banner-img" src="görsel/marka/bath.JPG" alt="Bath Koleksiyonu">
+            <img class="cat-banner-img" src="görsel/marka/bath.JPG" alt="BANYO Koleksiyonu">
             <div class="cat-img-placeholder">Görsel<br>alanı</div>
             <div class="cat-stat-overlay" aria-label="Koleksiyon istatistikleri">
                 <span class="cat-stat-num" id="product-count-num">26</span>
@@ -453,7 +468,7 @@
         <span class="sort-count" id="sort-count">26 ürün</span>
     </div>
 
-    <div class="product-grid" id="product-grid" role="list" aria-label="Bath ürünleri"></div>
+    <div class="product-grid" id="product-grid" role="list" aria-label="BANYO ürünleri"></div>
 </main>
 
 <section class="packaging-section" aria-labelledby="packaging-title">
@@ -538,14 +553,14 @@
     <p class="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
 </footer>
 
-<a href="https://wa.me/905320540019?text=Merhaba%2C%20Bath%20koleksiyonu%20hakkında%20bilgi%20almak%20istiyorum."
+<a href="https://wa.me/905320540019?text=Merhaba%2C%20BANYO%20koleksiyonu%20hakkında%20bilgi%20almak%20istiyorum."
    target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp ile iletişime geç">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
         <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
     </svg>
 </a>
 
-<script type="application/ld+json" id="page-schema">{"@context":"https://schema.org","@type":"CollectionPage","name":"Blaene Bath Koleksiyonu","description":"304 Paslanmaz Çelik banyo aksesuarları","publisher":{"@type":"Organization","name":"Blaene"}}</script>
+<script type="application/ld+json" id="page-schema">{"@context":"https://schema.org","@type":"CollectionPage","name":"Blaene BANYO Koleksiyonu","description":"304 Paslanmaz Çelik banyo aksesuarları","publisher":{"@type":"Organization","name":"Blaene"}}</script>
 
 <script>
 const PRODUCTS = [
@@ -577,13 +592,42 @@ const PRODUCTS = [
     { code: 'BTH-025',   name: 'Tuvalet Kağıdı Askısı',  thickness: '1.5mm', dims: '30×11×10 cm',  images: ['bath/bath/BTH-025-304-1,5MM-28.03.2026.jpg'] },
 ].map(p => ({ ...p, material: '304 Paslanmaz Çelik' }));
 
+const LANG_KEY = 'blaene_lang';
+let currentLang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'tr';
+
+const NAME_TRANSLATIONS = {
+    'Banyo Organizer': 'Bathroom Organizer',
+    'Havluluk': 'Towel Rack',
+    'Sabunluk': 'Soap Holder',
+    'Tuvalet Kağıdı Askısı': 'Toilet Paper Holder',
+    'Fön Makinası Askısı': 'Hair Dryer Holder'
+};
+
+const BADGE_TRANSLATIONS = {
+    '304 Kalite': '304 Grade',
+    'Lazer Kesim': 'Laser Cut',
+    'Mühendislik Onaylı': 'Engineering Approved'
+};
+
+function tr(trText, enText) {
+    return currentLang === 'en' ? enText : trText;
+}
+
+function translatedName(name) {
+    return currentLang === 'en' ? (NAME_TRANSLATIONS[name] || name) : name;
+}
+
+function translatedBadge(badge) {
+    return currentLang === 'en' ? (BADGE_TRANSLATIONS[badge] || badge) : badge;
+}
+
 function renderSkeletons() {
     const grid = document.getElementById('product-grid');
     PRODUCTS.forEach(() => {
         const sk = document.createElement('div');
         sk.className = 'skeleton';
         sk.setAttribute('role', 'listitem');
-        sk.setAttribute('aria-label', 'Yükleniyor');
+        sk.setAttribute('aria-label', tr('Yükleniyor', 'Loading'));
         grid.appendChild(sk);
     });
 }
@@ -591,28 +635,29 @@ function renderSkeletons() {
 function renderProducts(list) {
     const grid = document.getElementById('product-grid');
     grid.innerHTML = '';
-    document.getElementById('sort-count').textContent = `${list.length} ürün`;
+    document.getElementById('sort-count').textContent = `${list.length} ${tr('ürün', 'products')}`;
     document.getElementById('product-count-num').textContent = list.length;
 
     list.forEach(product => {
+        const name = translatedName(product.name);
         const a = document.createElement('a');
         a.className = 'product-card';
         a.href = `product.html?code=${encodeURIComponent(product.code)}`;
         a.setAttribute('role', 'listitem');
-        a.setAttribute('aria-label', `${product.code} — ${product.name}, ${product.thickness}`);
+        a.setAttribute('aria-label', `${product.code} — ${name}, ${product.thickness}`);
         a.innerHTML = `
             <div class="card-img-wrap">
-                <img class="card-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="lazy" decoding="async">
-                <div class="card-img-overlay" aria-hidden="true"><span class="card-overlay-btn">İncele</span></div>
+                <img class="card-img" src="${product.images[0]}" alt="${product.code} — ${name}" loading="lazy" decoding="async">
+                <div class="card-img-overlay" aria-hidden="true"><span class="card-overlay-btn">${tr('İncele', 'Inspect')}</span></div>
             </div>
             <div class="card-info">
                 <p class="card-code">${product.code}</p>
-                <p class="card-name">${product.name}</p>
+                <p class="card-name">${name}</p>
                 <p class="card-dims">${product.dims} &middot; ${product.thickness}</p>
-                <div class="card-badges" aria-label="Sertifikalar">
-                    <span class="card-badge">304 Kalite</span>
-                    <span class="card-badge">Lazer Kesim</span>
-                    <span class="card-badge">Mühendislik Onaylı</span>
+                <div class="card-badges" aria-label="${tr('Sertifikalar', 'Certifications')}">
+                    <span class="card-badge">${translatedBadge('304 Kalite')}</span>
+                    <span class="card-badge">${translatedBadge('Lazer Kesim')}</span>
+                    <span class="card-badge">${translatedBadge('Mühendislik Onaylı')}</span>
                 </div>
             </div>`;
         const img = a.querySelector('.card-img');
@@ -623,7 +668,7 @@ function renderProducts(list) {
 
     document.getElementById('page-schema').textContent = JSON.stringify({
         '@context': 'https://schema.org', '@type': 'ItemList',
-        name: 'Blaene Bath Koleksiyonu', numberOfItems: list.length,
+        name: tr('Blaene BANYO Koleksiyonu', 'Blaene BATHROOM Collection'), numberOfItems: list.length,
         itemListElement: list.map((p, i) => ({
             '@type': 'ListItem', position: i + 1,
             item: { '@type': 'Product', name: `Blaene ${p.code}`, sku: p.code, material: p.material, brand: { '@type': 'Brand', name: 'Blaene' } }
@@ -631,21 +676,98 @@ function renderProducts(list) {
     }, null, 2);
 }
 
+function getSortedProducts() {
+    const sort = document.querySelector('.sort-tab.active')?.dataset.sort || 'new';
+    const sorted = [...PRODUCTS];
+    if (sort === 'az') sorted.sort((a, b) => a.code.localeCompare(b.code));
+    if (sort === 'thick') sorted.sort((a, b) => parseFloat(b.thickness) - parseFloat(a.thickness));
+    return sorted;
+}
+
+function applyStaticLanguage() {
+    document.documentElement.lang = currentLang;
+    const langBtn = document.getElementById('lang-toggle');
+    if (langBtn) langBtn.textContent = currentLang.toUpperCase();
+    const homeLink = document.querySelector('header a[aria-label]');
+    const mobileDialog = document.getElementById('mobile-nav');
+    const waFloat = document.querySelector('.wa-float');
+    const waHeader = document.querySelector('.wa-header-btn');
+
+    if (currentLang !== 'en') {
+        if (homeLink) homeLink.setAttribute('aria-label', 'Blaene anasayfa');
+        if (mobileDialog) mobileDialog.setAttribute('aria-label', 'Mobil menü');
+        if (waFloat) waFloat.setAttribute('aria-label', 'WhatsApp ile iletişime geç');
+        if (waHeader) waHeader.setAttribute('href', 'https://wa.me/905320540019?text=Merhaba%2C%20BANYO%20koleksiyonu%20hakk%C4%B1nda%20fiyat%20teklifi%20almak%20istiyorum.');
+        if (waFloat) waFloat.setAttribute('href', 'https://wa.me/905320540019?text=Merhaba%2C%20BANYO%20koleksiyonu%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.');
+        return;
+    }
+    if (homeLink) homeLink.setAttribute('aria-label', 'Blaene homepage');
+    if (mobileDialog) mobileDialog.setAttribute('aria-label', 'Mobile menu');
+    if (waFloat) waFloat.setAttribute('aria-label', 'Contact via WhatsApp');
+    if (waHeader) waHeader.setAttribute('href', 'https://wa.me/905320540019?text=Hello%2C%20I%20would%20like%20a%20price%20quote%20for%20the%20BATHROOM%20collection.');
+    if (waFloat) waFloat.setAttribute('href', 'https://wa.me/905320540019?text=Hello%2C%20I%20would%20like%20information%20about%20the%20BATHROOM%20collection.');
+
+    const setText = (selector, value) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value;
+    };
+    const setAll = (selector, values) => {
+        document.querySelectorAll(selector).forEach((el, idx) => {
+            if (values[idx] !== undefined) el.textContent = values[idx];
+        });
+    };
+
+    setAll('.header-center .nav-link', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'About', 'Contact']);
+    setText('.wa-header-btn-text', 'Get Quote');
+    setAll('#mobile-nav nav a', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'About', 'Contact']);
+    setText('.breadcrumb a[href="index.html"]', 'Home');
+    setText('.breadcrumb span:last-child', 'BATHROOM');
+    const catTitle = document.querySelector('.cat-title');
+    if (catTitle) catTitle.innerHTML = 'BATHROOM<br>Collection';
+    setText('.cat-desc', '304 stainless steel bathroom accessories designed with DFMA principles. The metal signature of modern bathrooms.');
+    const bannerImg = document.querySelector('.cat-banner-img');
+    if (bannerImg) bannerImg.alt = 'BATHROOM Collection';
+    setText('.cat-stat-label', 'Products');
+    setAll('.sort-tab', ['New', 'A-Z', 'Thickness']);
+    const sortBar = document.querySelector('.sort-bar');
+    if (sortBar) sortBar.setAttribute('aria-label', 'Sorting');
+    const productGrid = document.getElementById('product-grid');
+    if (productGrid) productGrid.setAttribute('aria-label', 'BATHROOM products');
+    setText('.packaging-eyebrow', 'Logistics & Delivery');
+    const packagingTitle = document.getElementById('packaging-title');
+    if (packagingTitle) packagingTitle.innerHTML = 'Blaene Custom<br>Protective Packaging';
+    setText('.packaging-desc', 'Packaging engineered for metal sensitivity with a zero-damage guarantee. Every product stays factory-fresh until delivery.');
+    setAll('.packaging-item h3', ['Zero Damage Guarantee', 'Metal-Safe Protection', 'Nationwide Delivery']);
+    setAll('.packaging-item p', [
+        'Each product is protected against surface scratches with multi-layer foam and specialty film packaging.',
+        'VCI protection is used to prevent oxidation and mechanical damage on stainless steel surfaces.',
+        'Fast and secure delivery across Turkiye with package tracking and support.'
+    ]);
+    const footerTagline = document.querySelector('.footer-tagline');
+    if (footerTagline) footerTagline.innerHTML = '304 Stainless Steel<br>Metal Design Products';
+    setText('.footer-address', 'Corum / Osmancik, Turkiye');
+    setText('.footer-copy', '© 2026 Blaene. All rights reserved.');
+}
+
 document.querySelectorAll('.sort-tab').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.sort-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
         btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
-        const sort = btn.dataset.sort;
-        let sorted = [...PRODUCTS];
-        if (sort === 'az')    sorted.sort((a, b) => a.code.localeCompare(b.code));
-        if (sort === 'thick') sorted.sort((a, b) => parseFloat(b.thickness) - parseFloat(a.thickness));
-        renderProducts(sorted);
+        renderProducts(getSortedProducts());
     });
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    applyStaticLanguage();
     renderSkeletons();
-    requestAnimationFrame(() => setTimeout(() => renderProducts(PRODUCTS), 80));
+    requestAnimationFrame(() => setTimeout(() => renderProducts(getSortedProducts()), 80));
+});
+
+document.getElementById('lang-toggle')?.addEventListener('click', () => {
+    currentLang = currentLang === 'tr' ? 'en' : 'tr';
+    localStorage.setItem(LANG_KEY, currentLang);
+    applyStaticLanguage();
+    renderProducts(getSortedProducts());
 });
 
 // ── VERCEL TAB ANIMATION ──────────────────────────────────────
@@ -691,5 +813,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && mobileNav.classList.contains('open')) closeNav(); });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/storefront.js"></script>
 </body>
 </html>
