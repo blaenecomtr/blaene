@@ -801,11 +801,12 @@ async function handleAnalytics(req, res, ctx) {
 
   const query = getUrl(req).searchParams;
   const range = buildDateRange(query);
-  const [orders, users, products, tickets] = await Promise.all([
+  const [orders, users, products, tickets, auditLogs] = await Promise.all([
     safeSelect(config, 'orders', { select: 'id,total,payment_status,status,created_at', order: 'created_at.desc', limit: 5000 }),
     safeSelect(config, 'user_profiles', { select: 'id,is_active,subscription_tier,created_at', limit: 5000 }),
     safeSelect(config, 'products', { select: 'id,category,stock_quantity,stock_threshold,active', limit: 5000 }),
     safeSelect(config, 'support_tickets', { select: 'id,status,priority,created_at', limit: 5000 }),
+    safeSelect(config, 'audit_logs', { select: 'action,request_path,metadata,created_at,ip_address,user_agent', order: 'created_at.desc', limit: 10000 }),
   ]);
 
   const scopedOrders = orders.filter((row) => isWithinRange(row.created_at, range.startIso, range.endIso));
@@ -855,6 +856,71 @@ async function handleAnalytics(req, res, ctx) {
     ? Math.round((paidOrders.length / scopedOrders.length) * 10000) / 100
     : 0;
 
+  const scopedTraffic = auditLogs
+    .filter((row) => String(row.action || '').startsWith('traffic.'))
+    .filter((row) => isWithinRange(row.created_at, range.startIso, range.endIso));
+
+  const sourceCounts = {};
+  const pageCounts = {};
+  const clickCounts = {};
+  const recentVisitors = [];
+  const visitorSet = new Set();
+  let pageViewCount = 0;
+  let clickCount = 0;
+
+  const resolveSource = (metadata) => {
+    const utmSource = normalizeText(metadata?.utm_source, 120).toLowerCase();
+    if (utmSource) return utmSource;
+
+    const referrer = normalizeText(metadata?.referrer, 500);
+    if (!referrer) return 'direct';
+    try {
+      return new URL(referrer).hostname.replace(/^www\./, '') || 'direct';
+    } catch {
+      return referrer.slice(0, 80).toLowerCase();
+    }
+  };
+
+  scopedTraffic.forEach((row) => {
+    const metadata = row && typeof row.metadata === 'object' && row.metadata ? row.metadata : {};
+    const action = normalizeText(row.action, 80).toLowerCase();
+    const eventType = action.startsWith('traffic.') ? action.slice('traffic.'.length) : 'custom';
+    const source = resolveSource(metadata);
+    const pagePath = normalizeText(metadata.page_path || row.request_path || '/', 220) || '/';
+    const visitorKey = normalizeText(metadata.session_id, 160) || normalizeText(row.ip_address, 160) || 'unknown';
+    visitorSet.add(visitorKey);
+
+    if (eventType === 'page_view') {
+      pageViewCount += 1;
+      sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+      pageCounts[pagePath] = (pageCounts[pagePath] || 0) + 1;
+      recentVisitors.push({
+        at: row.created_at || null,
+        source,
+        page: pagePath,
+        ip: normalizeText(row.ip_address, 160) || null,
+        referrer: normalizeText(metadata.referrer, 500) || null,
+      });
+      return;
+    }
+
+    if (eventType === 'click') {
+      clickCount += 1;
+      const clickLabel =
+        normalizeText(metadata.element_text, 140) ||
+        normalizeText(metadata.element_href, 220) ||
+        normalizeText(metadata.element_tag, 40) ||
+        'unknown';
+      clickCounts[clickLabel] = (clickCounts[clickLabel] || 0) + 1;
+    }
+  });
+
+  const sortObjectEntries = (obj, keyLabel) =>
+    Object.entries(obj)
+      .map(([key, value]) => ({ [keyLabel]: key, count: Number(value || 0) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 12);
+
   return sendSuccess(res, {
     range,
     metrics: {
@@ -866,12 +932,26 @@ async function handleAnalytics(req, res, ctx) {
       conversion_rate: conversionRate,
       low_stock_products: lowStockCount,
       open_support_tickets: tickets.filter((item) => String(item.status || '').toLowerCase() !== 'closed').length,
+      traffic_page_views: pageViewCount,
+      traffic_clicks: clickCount,
+      traffic_unique_visitors: visitorSet.size,
     },
     charts: {
       daily_sales: dailySeries,
       payment_distribution: paymentCounts,
       order_status_distribution: statusCounts,
       product_category_distribution: categoryCounts,
+    },
+    traffic: {
+      total_views: pageViewCount,
+      total_clicks: clickCount,
+      unique_visitors: visitorSet.size,
+      top_sources: sortObjectEntries(sourceCounts, 'source'),
+      top_pages: sortObjectEntries(pageCounts, 'page'),
+      top_clicks: sortObjectEntries(clickCounts, 'label'),
+      recent_visitors: recentVisitors
+        .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))
+        .slice(0, 20),
     },
   });
 }

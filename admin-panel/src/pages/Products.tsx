@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useState } from 'react'
+import { type ChangeEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import { apiRequest } from '../lib/api'
 
 type Category = 'bath' | 'forge' | 'industrial'
@@ -11,6 +11,7 @@ interface Product {
   price: number | null
   price_visible: boolean
   active: boolean
+  images?: string[]
   stock_quantity?: number | null
 }
 
@@ -45,6 +46,14 @@ function formatPrice(value: number | null): string {
   }).format(value)
 }
 
+function normalizeImages(images: unknown): string[] {
+  if (!Array.isArray(images)) return []
+  return images
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+    .slice(0, 24)
+}
+
 export default function Products() {
   const token = localStorage.getItem('admin_token')
   const [loading, setLoading] = useState(true)
@@ -57,11 +66,15 @@ export default function Products() {
   const [error, setError] = useState('')
   const [bulkText, setBulkText] = useState('')
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [imageDrafts, setImageDrafts] = useState<Record<string, string>>({})
+  const [uploadTargetId, setUploadTargetId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [newCode, setNewCode] = useState('')
   const [newName, setNewName] = useState('')
   const [newCategory, setNewCategory] = useState<Category>('bath')
   const [newPrice, setNewPrice] = useState('')
+  const [newImageUrl, setNewImageUrl] = useState('')
   const [newVisible, setNewVisible] = useState(true)
   const [newActive, setNewActive] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -80,7 +93,18 @@ export default function Products() {
       const query = params.toString()
       const path = query ? `/api/admin/products?${query}` : '/api/admin/products'
       const data = await apiRequest<Product[]>(path, { token })
-      setProducts(Array.isArray(data) ? data : [])
+      const normalized = (Array.isArray(data) ? data : []).map((item) => ({
+        ...item,
+        images: normalizeImages(item.images),
+      }))
+      setProducts(normalized)
+      setImageDrafts((prev) => {
+        const next: Record<string, string> = {}
+        normalized.forEach((item) => {
+          next[item.id] = prev[item.id] || ''
+        })
+        return next
+      })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Urunler yuklenemedi'
       setError(msg)
@@ -101,6 +125,7 @@ export default function Products() {
     const code = newCode.trim().toUpperCase()
     const name = newName.trim()
     const price = parsePrice(newPrice)
+    const imageUrl = newImageUrl.trim()
 
     if (!code || !name) {
       setError('Kod ve ad zorunlu')
@@ -120,6 +145,7 @@ export default function Products() {
           price_visible: newVisible && price !== null,
           active: newActive,
           stock_quantity: 0,
+          images: imageUrl ? [imageUrl] : [],
         },
       })
 
@@ -127,6 +153,7 @@ export default function Products() {
       setNewName('')
       setNewCategory('bath')
       setNewPrice('')
+      setNewImageUrl('')
       setNewVisible(true)
       setNewActive(true)
       setMessage('Urun eklendi')
@@ -141,6 +168,34 @@ export default function Products() {
 
   const updateLocalProduct = (id: string, patch: Partial<Product>) => {
     setProducts((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+  }
+
+  const appendProductImage = (id: string, imageValue: string) => {
+    const safe = imageValue.trim()
+    if (!safe) return
+    setProducts((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item
+        const current = normalizeImages(item.images)
+        if (current.includes(safe)) return item
+        return { ...item, images: [...current, safe].slice(0, 24) }
+      })
+    )
+  }
+
+  const removeProductImage = (id: string, index: number) => {
+    setProducts((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item
+        const current = normalizeImages(item.images)
+        const filtered = current.filter((_, idx) => idx !== index)
+        return { ...item, images: filtered }
+      })
+    )
+  }
+
+  const clearProductImages = (id: string) => {
+    setProducts((prev) => prev.map((item) => (item.id === id ? { ...item, images: [] } : item)))
   }
 
   const saveProduct = async (product: Product) => {
@@ -161,6 +216,7 @@ export default function Products() {
           price_visible: Boolean(product.price_visible),
           active: Boolean(product.active),
           stock_quantity: Number(product.stock_quantity || 0),
+          images: normalizeImages(product.images),
         },
       })
       setMessage(`${product.code} guncellendi`)
@@ -249,9 +305,48 @@ export default function Products() {
     }
   }
 
+  const addImageFromDraft = (productId: string) => {
+    const draft = String(imageDrafts[productId] || '').trim()
+    if (!draft) return
+    appendProductImage(productId, draft)
+    setImageDrafts((prev) => ({ ...prev, [productId]: '' }))
+  }
+
+  const chooseImageFile = (productId: string) => {
+    setUploadTargetId(productId)
+    fileInputRef.current?.click()
+  }
+
+  const onImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const targetId = uploadTargetId
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!targetId || !file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = String(reader.result || '').trim()
+      if (!result) return
+      appendProductImage(targetId, result)
+      setMessage('Dosya eklendi. Kaydet butonuna basin.')
+    }
+    reader.onerror = () => {
+      setError('Dosya okunamadi')
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div>
-      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Urun ve fiyat yonetimi</h2>
+      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Urun, fiyat ve foto yonetimi</h2>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={onImageFileChange}
+      />
 
       <div
         style={{
@@ -263,7 +358,7 @@ export default function Products() {
         }}
       >
         <h3 style={{ color: '#fff', fontSize: '16px', marginBottom: '12px' }}>Yeni urun ekle</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr 2fr', gap: '10px' }}>
           <input
             value={newCode}
             onChange={(evt) => setNewCode(evt.target.value)}
@@ -291,6 +386,12 @@ export default function Products() {
             value={newPrice}
             onChange={(evt) => setNewPrice(evt.target.value)}
             placeholder="Fiyat"
+            style={inputStyle}
+          />
+          <input
+            value={newImageUrl}
+            onChange={(evt) => setNewImageUrl(evt.target.value)}
+            placeholder="Ilk foto URL (opsiyonel)"
             style={inputStyle}
           />
         </div>
@@ -396,95 +497,140 @@ export default function Products() {
                   <th style={thStyle}>Ad</th>
                   <th style={thStyle}>Kategori</th>
                   <th style={thStyle}>Fiyat</th>
+                  <th style={thStyle}>Fotolar</th>
                   <th style={thStyle}>Durum</th>
                   <th style={thStyle}>Islem</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td style={tdStyle}>
-                      <input
-                        value={product.code || ''}
-                        onChange={(evt) => updateLocalProduct(product.id, { code: evt.target.value.toUpperCase() })}
-                        style={{ ...inputStyle, width: '110px' }}
-                      />
-                    </td>
-                    <td style={tdStyle}>
-                      <input
-                        value={product.name || ''}
-                        onChange={(evt) => updateLocalProduct(product.id, { name: evt.target.value })}
-                        style={{ ...inputStyle, minWidth: '220px' }}
-                      />
-                    </td>
-                    <td style={tdStyle}>
-                      <select
-                        value={normalizeCategory(product.category)}
-                        onChange={(evt) =>
-                          updateLocalProduct(product.id, { category: normalizeCategory(evt.target.value) })
-                        }
-                        style={inputStyle}
-                      >
-                        {CATEGORY_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td style={tdStyle}>
-                      <input
-                        value={product.price ?? ''}
-                        onChange={(evt) =>
-                          updateLocalProduct(product.id, {
-                            price: parsePrice(evt.target.value),
-                            price_visible: parsePrice(evt.target.value) !== null,
-                          })
-                        }
-                        style={{ ...inputStyle, width: '120px' }}
-                      />
-                      <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
-                        {formatPrice(product.price)}
-                      </div>
-                    </td>
-                    <td style={tdStyle}>
-                      <label style={checkLabelStyle}>
+                {products.map((product) => {
+                  const photos = normalizeImages(product.images)
+                  return (
+                    <tr key={product.id}>
+                      <td style={tdStyle}>
                         <input
-                          type="checkbox"
-                          checked={Boolean(product.active)}
-                          onChange={(evt) => updateLocalProduct(product.id, { active: evt.target.checked })}
+                          value={product.code || ''}
+                          onChange={(evt) => updateLocalProduct(product.id, { code: evt.target.value.toUpperCase() })}
+                          style={{ ...inputStyle, width: '110px' }}
                         />
-                        Aktif
-                      </label>
-                      <label style={checkLabelStyle}>
+                      </td>
+                      <td style={tdStyle}>
                         <input
-                          type="checkbox"
-                          checked={Boolean(product.price_visible)}
-                          onChange={(evt) => updateLocalProduct(product.id, { price_visible: evt.target.checked })}
+                          value={product.name || ''}
+                          onChange={(evt) => updateLocalProduct(product.id, { name: evt.target.value })}
+                          style={{ ...inputStyle, minWidth: '220px' }}
                         />
-                        Fiyat
-                      </label>
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={() => void saveProduct(product)}
-                          disabled={savingId === product.id}
-                          style={secondaryButton}
+                      </td>
+                      <td style={tdStyle}>
+                        <select
+                          value={normalizeCategory(product.category)}
+                          onChange={(evt) =>
+                            updateLocalProduct(product.id, { category: normalizeCategory(evt.target.value) })
+                          }
+                          style={inputStyle}
                         >
-                          {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
-                        </button>
-                        <button
-                          onClick={() => void deleteProduct(product.id, product.code)}
-                          disabled={deletingId === product.id}
-                          style={dangerButton}
-                        >
-                          {deletingId === product.id ? 'Siliniyor...' : 'Sil'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {CATEGORY_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td style={tdStyle}>
+                        <input
+                          value={product.price ?? ''}
+                          onChange={(evt) =>
+                            updateLocalProduct(product.id, {
+                              price: parsePrice(evt.target.value),
+                              price_visible: parsePrice(evt.target.value) !== null,
+                            })
+                          }
+                          style={{ ...inputStyle, width: '120px' }}
+                        />
+                        <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                          {formatPrice(product.price)}
+                        </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                          {photos.slice(0, 5).map((src, idx) => (
+                            <div key={`${product.id}-img-${idx}`} style={{ position: 'relative' }}>
+                              <img src={src} alt={`${product.code}-${idx + 1}`} style={thumbStyle} />
+                              <button
+                                type="button"
+                                onClick={() => removeProductImage(product.id, idx)}
+                                style={removeImageButtonStyle}
+                                title="Sil"
+                              >
+                                x
+                              </button>
+                            </div>
+                          ))}
+                          {!photos.length && <span style={{ color: '#64748b', fontSize: '11px' }}>Foto yok</span>}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <input
+                            value={imageDrafts[product.id] || ''}
+                            onChange={(evt) =>
+                              setImageDrafts((prev) => ({ ...prev, [product.id]: evt.target.value }))
+                            }
+                            placeholder="Foto URL"
+                            style={{ ...inputStyle, width: '170px' }}
+                          />
+                          <button type="button" onClick={() => addImageFromDraft(product.id)} style={miniButtonStyle}>
+                            URL ekle
+                          </button>
+                          <button type="button" onClick={() => chooseImageFile(product.id)} style={miniButtonStyle}>
+                            Dosya
+                          </button>
+                          <button type="button" onClick={() => clearProductImages(product.id)} style={dangerMiniStyle}>
+                            Temizle
+                          </button>
+                        </div>
+                        <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '6px' }}>
+                          {photos.length} foto
+                        </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <label style={checkLabelStyle}>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(product.active)}
+                            onChange={(evt) => updateLocalProduct(product.id, { active: evt.target.checked })}
+                          />
+                          Aktif
+                        </label>
+                        <label style={checkLabelStyle}>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(product.price_visible)}
+                            onChange={(evt) => updateLocalProduct(product.id, { price_visible: evt.target.checked })}
+                          />
+                          Fiyat
+                        </label>
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => void saveProduct(product)}
+                            disabled={savingId === product.id}
+                            style={secondaryButton}
+                          >
+                            {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
+                          </button>
+                          <button
+                            onClick={() => void deleteProduct(product.id, product.code)}
+                            disabled={deletingId === product.id}
+                            style={dangerButton}
+                          >
+                            {deletingId === product.id ? 'Siliniyor...' : 'Sil'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -531,6 +677,26 @@ const secondaryButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+const miniButtonStyle: CSSProperties = {
+  background: '#1d4ed8',
+  color: '#dbeafe',
+  border: 'none',
+  borderRadius: '6px',
+  padding: '6px 8px',
+  fontSize: '11px',
+  cursor: 'pointer',
+}
+
+const dangerMiniStyle: CSSProperties = {
+  background: '#7f1d1d',
+  color: '#fecaca',
+  border: 'none',
+  borderRadius: '6px',
+  padding: '6px 8px',
+  fontSize: '11px',
+  cursor: 'pointer',
+}
+
 const dangerButton: CSSProperties = {
   background: '#b91c1c',
   color: '#fff',
@@ -539,6 +705,30 @@ const dangerButton: CSSProperties = {
   padding: '8px 12px',
   fontSize: '12px',
   cursor: 'pointer',
+}
+
+const thumbStyle: CSSProperties = {
+  width: '48px',
+  height: '48px',
+  objectFit: 'cover',
+  borderRadius: '6px',
+  border: '1px solid #334155',
+  background: '#020617',
+}
+
+const removeImageButtonStyle: CSSProperties = {
+  position: 'absolute',
+  top: '-6px',
+  right: '-6px',
+  width: '16px',
+  height: '16px',
+  borderRadius: '999px',
+  border: 'none',
+  background: '#ef4444',
+  color: '#fff',
+  cursor: 'pointer',
+  fontSize: '10px',
+  lineHeight: 1,
 }
 
 const thStyle: CSSProperties = {
