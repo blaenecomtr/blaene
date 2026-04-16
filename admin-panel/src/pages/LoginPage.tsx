@@ -15,12 +15,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const { setToken } = useAuthStore()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
+    setInfo('')
     setLoading(true)
 
     try {
@@ -39,6 +42,30 @@ export default function LoginPage() {
       setError(message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    const normalizedEmail = email.trim()
+    if (!normalizedEmail) {
+      setError('Lutfen sifre sifirlama icin e-posta girin.')
+      return
+    }
+
+    setError('')
+    setInfo('')
+    setResetLoading(true)
+    try {
+      const data = await apiRequest<{ message?: string }>('/api/admin/forgot-password', {
+        method: 'POST',
+        body: { email: normalizedEmail },
+      })
+      setInfo(data?.message || 'Sifre sifirlama e-postasi gonderildi.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Sifre sifirlama istegi basarisiz'
+      setError(message)
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -100,6 +127,22 @@ export default function LoginPage() {
             }}
           >
             {error}
+          </div>
+        )}
+
+        {info && (
+          <div
+            style={{
+              background: 'rgba(34, 197, 94, 0.12)',
+              border: '1px solid #22c55e',
+              color: '#86efac',
+              padding: '12px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              marginBottom: '20px',
+            }}
+          >
+            {info}
           </div>
         )}
 
@@ -181,6 +224,25 @@ export default function LoginPage() {
                 }}
               >
                 {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+              <button
+                type="button"
+                onClick={() => void handleForgotPassword()}
+                disabled={resetLoading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#93c5fd',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  textDecoration: 'underline',
+                  padding: '0',
+                  opacity: resetLoading ? 0.7 : 1,
+                }}
+              >
+                {resetLoading ? 'Gonderiliyor...' : 'Sifremi unuttum'}
               </button>
             </div>
           </div>

@@ -1,7 +1,31 @@
 const { createApiHandler } = require('../../lib/api/handler');
 const { sendSuccess, sendError } = require('../../lib/api/response');
 const { readJsonBody } = require('../../lib/api/request');
-const { fetchAuthUser } = require('../../lib/api/supabase');
+const { assertSupabaseConfig } = require('../../lib/api/supabase');
+const { normalizeEmail, normalizeText } = require('../../lib/api/validation');
+
+async function signInWithPassword(config, email, password) {
+  const safeEmail = normalizeEmail(email);
+  const safePassword = normalizeText(password, 256);
+  const authApiKey = config.anonKey || config.serviceRoleKey;
+  const response = await fetch(`${config.url}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: {
+      apikey: authApiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: safeEmail,
+      password: safePassword,
+    }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload?.access_token) {
+    return false;
+  }
+  return true;
+}
 
 module.exports = createApiHandler(
   {
@@ -24,19 +48,9 @@ module.exports = createApiHandler(
     }
 
     try {
-      const { createClient } = require('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_ANON_KEY
-      );
-
-      // Re-authenticate with password
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: auth.user.email,
-        password,
-      });
-
-      if (error || !data?.session) {
+      const config = assertSupabaseConfig();
+      const valid = await signInWithPassword(config, auth.user.email, password);
+      if (!valid) {
         return sendError(res, 401, 'Invalid password', 'AUTH_INVALID_PASSWORD');
       }
 

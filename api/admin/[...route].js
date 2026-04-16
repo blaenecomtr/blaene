@@ -1957,6 +1957,35 @@ function notImplemented(res, routeKey) {
   );
 }
 
+async function authPasswordGrant(config, email, password) {
+  const safeEmail = normalizeEmail(email);
+  const safePassword = normalizeText(password, 256);
+  if (!safeEmail || !safePassword) {
+    return { ok: false, status: 400, error: 'Email and password required', code: 'VALIDATION_ERROR' };
+  }
+
+  const authApiKey = config.anonKey || config.serviceRoleKey;
+  const response = await fetch(`${config.url}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: {
+      apikey: authApiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email: safeEmail, password: safePassword }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload?.access_token || !payload?.user?.id) {
+    return { ok: false, status: 401, error: 'Invalid credentials', code: 'AUTH_INVALID' };
+  }
+
+  return {
+    ok: true,
+    token: payload.access_token,
+    user: payload.user,
+  };
+}
+
 async function handleVerifyLogout(req, res, ctx) {
   if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
   const parsed = await readJsonBody(req);
@@ -1969,13 +1998,9 @@ async function handleVerifyLogout(req, res, ctx) {
   }
 
   try {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: auth.user.email,
-      password,
-    });
-    if (error || !data?.session) {
+    const config = assertSupabaseConfig();
+    const authResult = await authPasswordGrant(config, auth.user.email, password);
+    if (!authResult.ok) {
       return sendError(res, 401, 'Invalid password', 'AUTH_INVALID_PASSWORD');
     }
     return sendSuccess(res, { ok: true });
@@ -2036,37 +2061,36 @@ const loginHandler = createApiHandler(
 
     const parsed = await readJsonBody(req);
     const body = parsed?.body || {};
-    const { email, password } = body;
+    const email = normalizeEmail(body.email);
+    const password = normalizeText(body.password, 256);
 
     if (!email || !password) {
       return sendError(res, 400, 'Email and password required', 'VALIDATION_ERROR');
     }
 
     try {
-      const { createClient } = require('@supabase/supabase-js');
-      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error || !data?.session) {
-        return sendError(res, 401, 'Invalid credentials', 'AUTH_INVALID');
+      const config = assertSupabaseConfig();
+      const authResult = await authPasswordGrant(config, email, password);
+      if (!authResult.ok) {
+        return sendError(res, authResult.status, authResult.error, authResult.code);
       }
 
-      const adminSupabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-      const { data: profile } = await adminSupabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
+      const rows = await restSelect(config, 'user_profiles', {
+        select: 'id,role,is_active',
+        id: `eq.${authResult.user.id}`,
+        limit: 1,
+      }).catch(() => []);
+      const profile = Array.isArray(rows) ? rows[0] : null;
 
       const validRoles = ['super_admin', 'admin', 'editor', 'viewer'];
-      if (!profile || !validRoles.includes(profile.role)) {
+      const role = String(profile?.role || '').toLowerCase();
+      if (!profile || !validRoles.includes(role) || profile.is_active === false) {
         return sendError(res, 403, 'Not authorized', 'AUTH_FORBIDDEN');
       }
 
       return sendSuccess(res, {
-        token: data.session.access_token,
-        user: { id: data.user.id, email: data.user.email },
+        token: authResult.token,
+        user: { id: authResult.user.id, email: authResult.user.email },
       });
     } catch (err) {
       console.error('Login error:', err);
