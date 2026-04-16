@@ -1986,6 +1986,11 @@ async function authPasswordGrant(config, email, password) {
   };
 }
 
+function hasAllowedLoginRole(roleValue) {
+  const validRoles = ['super_admin', 'admin', 'editor', 'viewer'];
+  return validRoles.includes(String(roleValue || '').toLowerCase());
+}
+
 async function handleVerifyLogout(req, res, ctx) {
   if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
   const parsed = await readJsonBody(req);
@@ -2075,16 +2080,21 @@ const loginHandler = createApiHandler(
         return sendError(res, authResult.status, authResult.error, authResult.code);
       }
 
+      const appRole = String(authResult.user?.app_metadata?.role || authResult.user?.user_metadata?.role || '').toLowerCase();
+      if (hasAllowedLoginRole(appRole)) {
+        return sendSuccess(res, {
+          token: authResult.token,
+          user: { id: authResult.user.id, email: authResult.user.email },
+        });
+      }
+
       const rows = await restSelect(config, 'user_profiles', {
         select: 'id,role,is_active',
         id: `eq.${authResult.user.id}`,
         limit: 1,
       }).catch(() => []);
       const profile = Array.isArray(rows) ? rows[0] : null;
-
-      const validRoles = ['super_admin', 'admin', 'editor', 'viewer'];
-      const role = String(profile?.role || '').toLowerCase();
-      if (!profile || !validRoles.includes(role) || profile.is_active === false) {
+      if (!profile || !hasAllowedLoginRole(profile.role) || profile.is_active === false) {
         return sendError(res, 403, 'Not authorized', 'AUTH_FORBIDDEN');
       }
 

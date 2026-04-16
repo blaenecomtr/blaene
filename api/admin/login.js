@@ -38,16 +38,22 @@ async function signInWithPassword(config, email, password) {
   };
 }
 
-async function isAuthorizedStaff(config, userId) {
+function hasAllowedRole(roleValue) {
+  return VALID_ROLES.includes(String(roleValue || '').toLowerCase());
+}
+
+async function isAuthorizedStaff(config, user) {
+  const appRole = String(user?.app_metadata?.role || user?.user_metadata?.role || '').toLowerCase();
+  if (hasAllowedRole(appRole)) return true;
+
   const rows = await restSelect(config, 'user_profiles', {
     select: 'id,role,is_active',
-    id: `eq.${userId}`,
+    id: `eq.${user.id}`,
     limit: 1,
   }).catch(() => []);
 
   const profile = Array.isArray(rows) ? rows[0] : null;
-  const role = String(profile?.role || '').toLowerCase();
-  if (!profile || !VALID_ROLES.includes(role)) return false;
+  if (!profile || !hasAllowedRole(profile.role)) return false;
   if (profile.is_active === false) return false;
   return true;
 }
@@ -74,7 +80,7 @@ module.exports = createApiHandler(
         return sendError(res, authResult.status, authResult.error, authResult.code);
       }
 
-      const allowed = await isAuthorizedStaff(config, authResult.user.id);
+      const allowed = await isAuthorizedStaff(config, authResult.user);
       if (!allowed) {
         return sendError(res, 403, 'Not authorized', 'AUTH_FORBIDDEN');
       }
