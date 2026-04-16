@@ -1,10 +1,9 @@
 import { type FormEvent, useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useAdminContext } from '../../context/AdminContext';
 import { useUiStore } from '../../store/uiStore';
 
 export function LogoutModal() {
-  const { profile, signOut } = useAdminContext();
+  const { signOut } = useAdminContext();
   const logoutModalOpen = useUiStore((state) => state.logoutModalOpen);
   const closeLogoutModal = useUiStore((state) => state.closeLogoutModal);
   const [password, setPassword] = useState('');
@@ -15,7 +14,8 @@ export function LogoutModal() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!profile?.email || !password) {
+
+    if (!password.trim()) {
       setError('Lütfen şifrenizi girin.');
       return;
     }
@@ -24,15 +24,21 @@ export function LogoutModal() {
     setError(null);
 
     try {
-      // Şifre doğrulaması için Supabase'de re-auth yap
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: profile.email,
-        password,
+      // Admin paneli API'sine şifre doğrulama isteği gönder
+      const response = await fetch('/api/admin/verify-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('blaene_admin_access_token')}`,
+        },
+        body: JSON.stringify({ password }),
       });
 
-      if (authError) {
-        console.error('Auth error:', authError);
-        setError('Şifre yanlış veya oturum hatası. Tekrar deneyin.');
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        setError('Şifre yanlış. Tekrar deneyin.');
+        setPassword('');
         setLoading(false);
         return;
       }
@@ -55,26 +61,39 @@ export function LogoutModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={handleCancel}>
-      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={handleCancel}
+      onKeyDown={(e) => e.key === 'Escape' && handleCancel()}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
           Çıkışı Onayla
         </h2>
         <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
-          Devam etmek için şifrenizi girin.
+          Devam etmek için yönetici şifresini girin.
         </p>
 
         <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            autoFocus
-            disabled={loading}
-          />
+          <div>
+            <label htmlFor="logout-password" className="block text-xs font-medium text-gray-600 dark:text-zinc-300 mb-1">
+              Şifre
+            </label>
+            <input
+              id="logout-password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-blue-400"
+              autoFocus
+              disabled={loading}
+            />
+          </div>
 
           {error && (
             <p className="text-xs text-red-600 dark:text-red-400">{error}</p>

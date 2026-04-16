@@ -514,6 +514,41 @@ async function handleMe(req, res, ctx) {
   });
 }
 
+async function handleVerifyPassword(req, res, ctx) {
+  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+
+  const { config, auth } = ctx;
+  const parsed = await readJsonBody(req);
+  const body = parsed?.body || {};
+  const password = body.password;
+
+  if (!password || typeof password !== 'string') {
+    return sendError(res, 400, 'Password required', 'VALIDATION_PASSWORD_REQUIRED');
+  }
+
+  try {
+    const supabase = require('@supabase/supabase-js').createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Şifre doğrulaması: user'ı email ve password ile yeniden doğrula
+    const { data, error } = await supabase.auth.admin.signInWithPassword(
+      auth.user.email,
+      password
+    );
+
+    if (error || !data?.user) {
+      return sendError(res, 401, 'Invalid password', 'AUTH_INVALID_PASSWORD');
+    }
+
+    return sendSuccess(res, { ok: true });
+  } catch (err) {
+    console.error('Password verification error:', err);
+    return sendError(res, 500, 'Password verification failed', 'AUTH_VERIFY_ERROR');
+  }
+}
+
 async function handleProducts(req, res, ctx) {
   const { config, auth } = ctx;
   const query = getUrl(req).searchParams;
@@ -1966,6 +2001,7 @@ module.exports = createApiHandler(
   },
   async (req, res, ctx) => {
     const routeKey = getRouteKey(req);
+    if (routeKey === 'verify-password') return handleVerifyPassword(req, res, ctx);
     if (routeKey === 'me') return handleMe(req, res, ctx);
     if (routeKey === 'products') return handleProducts(req, res, ctx);
     if (routeKey === 'product-variants') return handleProductVariants(req, res, ctx);
