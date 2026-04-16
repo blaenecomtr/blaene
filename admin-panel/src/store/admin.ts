@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useAuthStore } from './auth'
+import { apiRequest } from '../lib/api'
 
 interface AdminState {
   currentPage: string
@@ -19,17 +20,10 @@ export const useAdminStore = create<AdminState>((set) => ({
     if (!token) return
 
     try {
-      // Load admin data here if needed
-      // For now, just verify auth is still valid
-      const res = await fetch('/api/admin/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (!res.ok) {
-        useAuthStore.getState().logout()
-      }
+      await apiRequest('/api/admin/me', { token })
     } catch (err) {
       console.error('Failed to initialize data:', err)
+      useAuthStore.getState().logout()
     }
   }
 }))

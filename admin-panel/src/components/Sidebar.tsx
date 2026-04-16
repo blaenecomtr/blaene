@@ -3,35 +3,41 @@ interface SidebarProps {
   onNavigate: (page: string) => void
 }
 
-export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
-  const menuItems = [
-    { id: 'dashboard', label: '📊 Dashboard' },
-    { id: 'products', label: '📦 Ürünler' },
-    { id: 'orders', label: '📋 Siparişler' },
-    { id: 'users', label: '👥 Kullanıcılar' },
-  ]
+const menuItems = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'products', label: 'Urunler' },
+  { id: 'orders', label: 'Siparisler' },
+  { id: 'users', label: 'Musteriler' },
+]
 
+export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   return (
-    <aside style={{
-      width: '260px',
-      background: '#1e293b',
-      borderRight: '1px solid #334155',
-      padding: '20px',
-      overflowY: 'auto',
-      position: 'fixed',
-      height: '100vh',
-      left: 0,
-      top: 0
-    }}>
-      <div style={{
-        fontSize: '18px',
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: '30px'
-      }}>Blaene Admin</div>
+    <aside
+      style={{
+        width: '260px',
+        background: '#1e293b',
+        borderRight: '1px solid #334155',
+        padding: '20px',
+        overflowY: 'auto',
+        position: 'fixed',
+        height: '100vh',
+        left: 0,
+        top: 0,
+      }}
+    >
+      <div
+        style={{
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#fff',
+          marginBottom: '30px',
+        }}
+      >
+        Blaene Admin
+      </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-        {menuItems.map(item => (
+        {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
@@ -44,7 +50,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               textAlign: 'left',
               fontSize: '14px',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
             }}
           >
             {item.label}

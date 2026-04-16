@@ -669,6 +669,24 @@
         #mobile-nav nav a:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
         #mobile-nav nav a:first-child { border-top: 1px solid var(--border); }
 
+        .mobile-nav-auth {
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 1.2rem;
+        }
+        .mobile-nav-auth a {
+            flex: 1;
+            text-align: center;
+            border: 1px solid var(--border);
+            padding: 0.55rem 0.65rem;
+            color: var(--foreground);
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .mobile-nav-auth a:hover { border-color: var(--accent); color: var(--accent); }
+
         .mobile-nav-footer {
             font-size: 0.72rem; color: var(--text-3);
             letter-spacing: 0.06em;
@@ -755,6 +773,10 @@
             <a href="#why" data-i18n="nav-about">Hakkımızda</a>
             <a href="#contact" data-i18n="nav-contact">İletişim</a>
         </nav>
+        <div class="mobile-nav-auth">
+            <a id="mobile-account-link" href="/account.html" data-i18n="account-btn-txt" style="display: none;">Hesabım</a>
+            <a id="mobile-login-link" href="/auth.html" data-i18n="login-btn-txt">Giriş</a>
+        </div>
         <div class="mobile-nav-footer">
             <a href="https://wa.me/905320540019">0532 054 0019</a>
             <span data-i18n="mobile-location">Çorum / Osmancık, Türkiye</span>
@@ -1028,6 +1050,8 @@ const TRANSLATIONS = {
     'nav-about': 'About',
     'nav-contact': 'Contact',
     'mobile-location': 'Corum / Osmancik, Turkiye',
+    'login-btn-txt': 'Login',
+    'account-btn-txt': 'Account',
     'teklif-btn-txt': 'Get Quote',
     'panel-bath-title': 'Bathroom',
     'panel-bath-sub': 'Stainless Bathroom',
@@ -1203,11 +1227,17 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
             const user = await window.BlaeneAuth.getCurrentUser();
             const accountLink = document.getElementById('user-account-link');
             const loginLink = document.getElementById('user-login-link');
+            const mobileAccountLink = document.getElementById('mobile-account-link');
+            const mobileLoginLink = document.getElementById('mobile-login-link');
             const adminLink = document.getElementById('footer-admin-link');
 
             if (user && accountLink && loginLink) {
                 accountLink.style.display = '';
                 loginLink.style.display = 'none';
+            }
+            if (user && mobileAccountLink && mobileLoginLink) {
+                mobileAccountLink.style.display = '';
+                mobileLoginLink.style.display = 'none';
             }
 
             // Show admin link if user has admin role

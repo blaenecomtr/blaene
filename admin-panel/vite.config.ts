@@ -5,7 +5,7 @@ export default defineConfig({
   base: '/admin/',
   build: {
     outDir: '../admin',
-    emptyOutDir: false,
+    emptyOutDir: true,
   },
   plugins: [react()],
 })

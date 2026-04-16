@@ -17,23 +17,25 @@ export default function App() {
       }
       setLoading(false)
     }
-    init()
+    void init()
   }, [])
 
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            display: 'inline-block',
-            width: '30px',
-            height: '30px',
-            border: '3px solid #334155',
-            borderTopColor: '#3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite'
-          }}></div>
-          <p style={{ marginTop: '15px', color: '#94a3b8' }}>Yükleniyor...</p>
+          <div
+            style={{
+              display: 'inline-block',
+              width: '30px',
+              height: '30px',
+              border: '3px solid #334155',
+              borderTopColor: '#3b82f6',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }}
+          />
+          <p style={{ marginTop: '15px', color: '#94a3b8' }}>Yukleniyor...</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
