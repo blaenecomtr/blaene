@@ -8,7 +8,10 @@
       "Bash(rm -rf .vercel)",
       "Bash(vercel logout:*)",
       "Bash(vercel login:*)",
-      "Bash(vercel link:*)"
+      "Bash(vercel link:*)",
+      "Bash(vercel env *)",
+      "Bash(vercel redeploy *)",
+      "Bash(curl -s \"https://blaene-o2ye0dboe-blaenes-projects-b043caf5.vercel.app/admin/\")"
     ]
   }
 }

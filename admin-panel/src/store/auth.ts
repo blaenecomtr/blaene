@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         isAuthenticated: true,
         token,
-        userEmail: data.user?.email
+        userEmail: data.data?.user?.email
       })
       return true
     } catch (err) {

@@ -23,11 +23,11 @@ export default function LoginPage() {
 
       const data = await res.json()
 
-      if (!res.ok || !data.token) {
-        throw new Error(data.message || 'Giriş başarısız')
+      if (!res.ok || !data.data?.token) {
+        throw new Error(data.error || 'Giriş başarısız')
       }
 
-      setToken(data.token)
+      setToken(data.data.token)
     } catch (err: any) {
       setError(err.message || 'E-posta veya şifre yanlış.')
     } finally {

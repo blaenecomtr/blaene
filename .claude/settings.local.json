@@ -8,7 +8,10 @@
       "Read(//c/Users/DELL/Desktop/yazılımblaene/ecommerce-admin/src/pages/**)",
       "Bash(cat)",
       "Read(//tmp/**)",
-      "Bash(npm create *)"
+      "Bash(npm create *)",
+      "WebFetch(domain:vercel.com)",
+      "Bash(vercel logs *)",
+      "WebFetch(domain:www.blaene.com.tr)"
     ],
     "additionalDirectories": [
       "c:\\Users\\DELL\\Desktop\\yazılım\\blaene\\admin-panel\\src\\components"
