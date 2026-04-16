@@ -1,0 +1,537 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaene Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <h1>BLAENE ADMIN</h1>
+      <p>Urun yonetim paneli</p>
+      <nav>
+        <a href="./dashboard.html" class="active">Dashboard</a>
+        <a href="./orders.html">Siparisler</a>
+        <a href="./members.html">Üyeler</a>
+        <a href="./product.html">Yeni urun</a>
+        <a href="./seed.html">Seed aktarimi</a>
+        <a href="../index.html" target="_blank" rel="noopener">Siteyi ac</a>
+      </nav>
+      <button id="logout-btn" class="logout-btn btn">Cikis yap</button>
+    </aside>
+
+    <main class="main">
+      <section class="panel">
+        <div class="top-row">
+          <h2>Urunler</h2>
+          <div class="inline-actions">
+            <a class="btn" href="./orders.html">Siparisler</a>
+            <a class="btn" href="./seed.html">Seed aktar</a>
+            <a class="btn primary" href="./product.html">+ Yeni urun</a>
+          </div>
+        </div>
+
+        <div id="config-warning" class="alert warning" style="display:none; margin-top:0.7rem;"></div>
+        <div id="page-alert" style="margin-top:0.7rem;"></div>
+
+        <div class="filters" style="margin-top:0.7rem;">
+          <div>
+            <label for="category-filter">Kategori</label>
+            <select id="category-filter">
+              <option value="all">Tum kategoriler</option>
+              <option value="bath">Banyo</option>
+              <option value="forge">Ates cukuru</option>
+              <option value="industrial">Moduler raf</option>
+            </select>
+          </div>
+
+          <div style="min-width:220px; flex:1;">
+            <label for="search-input">Ara (kod / isim)</label>
+            <input id="search-input" type="search" placeholder="ornek: BTH-001" />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="top-row">
+          <h2>Genel Durum</h2>
+          <span id="stats-updated" class="helper">-</span>
+        </div>
+        <div id="stats-grid" class="stats-grid" style="margin-top:0.65rem;"></div>
+        <div id="category-bars" class="stats-grid compact" style="margin-top:0.65rem;"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Toplu Fiyat Guncelleme</h2>
+        <p class="helper" style="margin-top:0.35rem;">
+          Her satira `URUN_KODU,FIYAT` yazin. Ornek: `BTH-001,1299.90`
+        </p>
+        <textarea id="bulk-price-input" style="min-height:120px; margin-top:0.6rem;" placeholder="BTH-001,1299.90&#10;BTH-002,999"></textarea>
+        <div class="filters" style="margin-top:0.6rem;">
+          <label class="toggle">
+            <input id="bulk-price-visible" type="checkbox" checked />
+            <span>Bu satirlar icin fiyat gorunur olsun</span>
+          </label>
+          <div class="inline-actions">
+            <button id="bulk-price-apply" class="btn primary" type="button">Toplu Fiyat Uygula</button>
+            <a class="btn" href="./seed.html">Urunleri toplu aktar (seed)</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="top-row" style="margin-bottom:0.6rem;">
+          <p id="summary" class="helper" style="margin:0;">Yukleniyor...</p>
+          <button id="refresh-btn" class="btn small">Yenile</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Urun</th>
+                <th>Kategori</th>
+                <th>Fiyat</th>
+                <th>Fiyat gorunur</th>
+                <th>Yayinda</th>
+                <th>Sira</th>
+                <th>Guncelleme</th>
+                <th>Islem</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      supabase,
+      isSupabaseConfigured,
+      mapDbProductToUi,
+      formatPrice,
+    } from './supabase-client.js';
+    import {
+      checkAuth,
+      attachLogoutHandler,
+      initThemeToggle,
+      showToast,
+      apiFetch,
+    } from './admin-utils.js';
+
+    const pageAlert = document.getElementById('page-alert');
+    const configWarning = document.getElementById('config-warning');
+    const tbody = document.getElementById('products-tbody');
+    const summary = document.getElementById('summary');
+    const statsGrid = document.getElementById('stats-grid');
+    const categoryBars = document.getElementById('category-bars');
+    const statsUpdated = document.getElementById('stats-updated');
+    const categoryFilter = document.getElementById('category-filter');
+    const searchInput = document.getElementById('search-input');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const bulkPriceInput = document.getElementById('bulk-price-input');
+    const bulkPriceVisible = document.getElementById('bulk-price-visible');
+    const bulkPriceApplyBtn = document.getElementById('bulk-price-apply');
+
+    let authState = null;
+    let allProducts = [];
+
+    function showAlert(message, type = 'error') {
+      pageAlert.innerHTML = `<div class="alert ${type}">${message}</div>`;
+      if (type === 'success') {
+        setTimeout(() => {
+          pageAlert.innerHTML = '';
+        }, 3000);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function categoryLabel(category) {
+      if (category === 'bath') return 'Banyo';
+      if (category === 'forge') return 'Ates cukuru';
+      if (category === 'industrial') return 'Moduler raf';
+      return category || '-';
+    }
+
+    function getFilteredProducts() {
+      const selectedCategory = categoryFilter.value;
+      const keyword = searchInput.value.trim().toLowerCase();
+
+      return allProducts.filter((product) => {
+        const categoryMatches = selectedCategory === 'all' || product.category === selectedCategory;
+        const keywordMatches =
+          !keyword ||
+          product.code.toLowerCase().includes(keyword) ||
+          product.name.toLowerCase().includes(keyword);
+        return categoryMatches && keywordMatches;
+      });
+    }
+
+    function renderTable() {
+      const list = getFilteredProducts();
+      summary.textContent = `${list.length} urun listeleniyor (toplam ${allProducts.length})`;
+      renderStats();
+
+      if (!list.length) {
+        const emptyMessage = allProducts.length
+          ? 'Bu filtrede urun bulunamadi.'
+          : 'Henuz urun yok. Seed ekranindan mevcut urunleri tek tikla aktarabilirsiniz.';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="helper">${emptyMessage}</div>
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list
+        .map((product) => {
+          const image = product.images[0] || 'logo/sitelogo.png';
+          const priceText = product.price === null ? '-' : formatPrice(product.price);
+          const updatedAt = product.updatedAt ? new Date(product.updatedAt).toLocaleString('tr-TR') : '-';
+
+          return `
+            <tr data-id="${escapeHtml(product.id)}">
+              <td>
+                <div style="display:flex; gap:0.55rem; align-items:center;">
+                  <img class="thumb" src="${escapeHtml(image)}" alt="${escapeHtml(product.code)}" />
+                  <div>
+                    <span class="code-badge">${escapeHtml(product.code)}</span>
+                    <div style="margin-top:0.25rem; font-weight:600;">${escapeHtml(product.name)}</div>
+                  </div>
+                </div>
+              </td>
+              <td>${escapeHtml(categoryLabel(product.category))}</td>
+              <td>${escapeHtml(priceText)}</td>
+              <td>
+                <label class="toggle">
+                  <input type="checkbox" data-toggle="price_visible" ${product.priceVisible ? 'checked' : ''} />
+                  <span>${product.priceVisible ? 'Acik' : 'Kapali'}</span>
+                </label>
+              </td>
+              <td>
+                <label class="toggle">
+                  <input type="checkbox" data-toggle="active" ${product.active ? 'checked' : ''} />
+                  <span>${product.active ? 'Evet' : 'Hayir'}</span>
+                </label>
+              </td>
+              <td>${Number.isFinite(product.displayOrder) ? product.displayOrder : 0}</td>
+              <td>${escapeHtml(updatedAt)}</td>
+              <td>
+                <div class="inline-actions">
+                  <a class="btn small" href="./product.html?id=${encodeURIComponent(product.id)}">Duzenle</a>
+                  <button class="btn small danger" data-delete="${escapeHtml(product.id)}">Sil</button>
+                </div>
+              </td>
+            </tr>`;
+        })
+        .join('');
+    }
+
+    function renderStats() {
+      const total = allProducts.length;
+      const active = allProducts.filter((item) => item.active).length;
+      const visiblePrice = allProducts.filter((item) => item.priceVisible).length;
+      const hiddenPrice = total - visiblePrice;
+      const purchasable = allProducts.filter((item) => Number(item.price) > 0).length;
+      const totalValue = allProducts
+        .filter((item) => Number.isFinite(Number(item.price)) && Number(item.price) > 0)
+        .reduce((sum, item) => sum + Number(item.price), 0);
+
+      const cards = [
+        { label: 'Toplam urun', value: String(total) },
+        { label: 'Yayinda urun', value: `${active} / ${total || 0}` },
+        { label: 'Fiyati gorunen', value: `${visiblePrice} / ${total || 0}` },
+        { label: 'Fiyati gizli', value: String(hiddenPrice) },
+        { label: 'Satin alinabilir', value: String(purchasable) },
+        { label: 'Toplam fiyat havuzu', value: formatPrice(totalValue) },
+      ];
+
+      statsGrid.innerHTML = cards
+        .map((card) => `
+          <article class="stat-card">
+            <span class="label">${escapeHtml(card.label)}</span>
+            <strong class="value">${escapeHtml(card.value)}</strong>
+          </article>
+        `)
+        .join('');
+
+      const categoryMeta = [
+        { key: 'bath', title: 'Banyo' },
+        { key: 'forge', title: 'Ates cukuru' },
+        { key: 'industrial', title: 'Moduler raf' },
+      ];
+
+      categoryBars.innerHTML = categoryMeta
+        .map((meta) => {
+          const count = allProducts.filter((item) => item.category === meta.key).length;
+          const ratio = total ? Math.round((count / total) * 100) : 0;
+          return `
+            <article class="stat-card">
+              <span class="label">${escapeHtml(meta.title)}</span>
+              <strong class="value">${count} urun</strong>
+              <div class="progress-track"><div class="progress-fill" style="width:${ratio}%;"></div></div>
+              <span class="helper">${ratio}%</span>
+            </article>
+          `;
+        })
+        .join('');
+
+      statsUpdated.textContent = `Son guncelleme: ${new Date().toLocaleTimeString('tr-TR')}`;
+    }
+
+    async function loadProducts() {
+      if (!supabase) {
+        return;
+      }
+
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = 'Yukleniyor...';
+
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = 'Yenile';
+
+      if (!authState?.ok) {
+        showAlert('Oturum bilgisi alinamadi.', 'error');
+        return;
+      }
+
+      const { response, data } = await apiFetch('/api/admin/products?page=1&page_size=1000', {
+        method: 'GET',
+      }, authState);
+
+      if (!response.ok || !data?.success) {
+        showAlert(`Urunler yuklenemedi: ${data?.error || 'Bilinmeyen hata'}`, 'error');
+        return;
+      }
+
+      allProducts = (data.data || []).map(mapDbProductToUi);
+      renderTable();
+    }
+
+    async function updateToggle(productId, field, value) {
+      if (!authState?.ok) return;
+
+      const payload = field === 'price_visible'
+        ? { id: productId, price_visible: value }
+        : { id: productId, active: value };
+
+      const { response, data } = await apiFetch('/api/admin/products', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      }, authState);
+
+      if (!response.ok || !data?.success) {
+        showAlert(`Kayit guncellenemedi: ${data?.error || 'Bilinmeyen hata'}`, 'error');
+        await loadProducts();
+        return;
+      }
+
+      const product = allProducts.find((item) => item.id === productId);
+      if (product) {
+        if (field === 'price_visible') product.priceVisible = value;
+        if (field === 'active') product.active = value;
+      }
+      renderTable();
+    }
+
+    async function deleteProduct(productId) {
+      if (!authState?.ok) return;
+      const confirmDelete = confirm('Bu urunu silmek istediginize emin misiniz? Bu islem geri alinmaz.');
+      if (!confirmDelete) return;
+
+      const { response, data } = await apiFetch(`/api/admin/products?id=${encodeURIComponent(productId)}`, {
+        method: 'DELETE',
+      }, authState);
+
+      if (!response.ok || !data?.success) {
+        showAlert(`Silme basarisiz: ${data?.error || 'Bilinmeyen hata'}`, 'error');
+        return;
+      }
+
+      allProducts = allProducts.filter((item) => item.id !== productId);
+      renderTable();
+      showAlert('Urun silindi.', 'success');
+    }
+
+    function parseBulkPriceLines(rawText) {
+      const updates = [];
+      const invalidLines = [];
+      const lines = String(rawText || '').split(/\r?\n/);
+
+      lines.forEach((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) return;
+
+        const parts = trimmed.split(/[,\t;]+/).map((part) => part.trim()).filter(Boolean);
+        if (parts.length < 2) {
+          invalidLines.push(index + 1);
+          return;
+        }
+
+        const code = parts[0].toUpperCase();
+        const numericRaw = parts[1].replace(/\s+/g, '').replace(',', '.');
+        const price = Number(numericRaw);
+        if (!code || !Number.isFinite(price) || price < 0) {
+          invalidLines.push(index + 1);
+          return;
+        }
+
+        updates.push({ code, price });
+      });
+
+      const deduped = [];
+      const byCode = new Map();
+      updates.forEach((row) => {
+        byCode.set(row.code, row.price);
+      });
+      byCode.forEach((price, code) => {
+        deduped.push({ code, price });
+      });
+
+      return { updates: deduped, invalidLines };
+    }
+
+    async function applyBulkPrices() {
+      if (!authState?.ok) return;
+
+      const { updates, invalidLines } = parseBulkPriceLines(bulkPriceInput.value);
+      if (!updates.length) {
+        showAlert('Uygulanacak gecerli satir bulunamadi.', 'error');
+        return;
+      }
+
+      bulkPriceApplyBtn.disabled = true;
+      bulkPriceApplyBtn.textContent = 'Uygulaniyor...';
+
+      const setVisible = bulkPriceVisible.checked;
+      const results = await Promise.all(
+        updates.map(async (row) => {
+          const product = allProducts.find((item) => item.code === row.code);
+          if (!product?.id) {
+            return { ...row, found: false, error: null };
+          }
+          const payload = { id: product.id, price: row.price };
+          if (setVisible) payload.price_visible = true;
+          const { response, data } = await apiFetch('/api/admin/products', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          }, authState);
+          return {
+            ...row,
+            error: (!response.ok || !data?.success) ? (data?.error || 'Bilinmeyen hata') : null,
+            found: true,
+          };
+        })
+      );
+
+      bulkPriceApplyBtn.disabled = false;
+      bulkPriceApplyBtn.textContent = 'Toplu Fiyat Uygula';
+
+      let successCount = 0;
+      let missingCount = 0;
+      let errorCount = 0;
+
+      results.forEach((result) => {
+        if (result.error) {
+          errorCount += 1;
+          return;
+        }
+        if (!result.found) {
+          missingCount += 1;
+          return;
+        }
+        successCount += 1;
+        const product = allProducts.find((item) => item.code === result.code);
+        if (product) {
+          product.price = result.price;
+          if (setVisible) product.priceVisible = true;
+        }
+      });
+
+      renderTable();
+
+      const info = [
+        `${successCount} kayit guncellendi`,
+        missingCount ? `${missingCount} kod bulunamadi` : null,
+        errorCount ? `${errorCount} satirda hata var` : null,
+        invalidLines.length ? `gecersiz satirlar: ${invalidLines.join(', ')}` : null,
+      ].filter(Boolean).join(' | ');
+
+      if (errorCount) {
+        showAlert(info, 'error');
+        showToast(info, 'error');
+      } else {
+        showAlert(info, 'success');
+        showToast(info, 'success');
+      }
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      configWarning.style.display = 'block';
+      configWarning.textContent = 'Supabase ayari eksik. admin/supabase-client.js dosyasini duzenleyin.';
+      summary.textContent = 'Supabase baglantisi bekleniyor.';
+      statsGrid.innerHTML = '<article class="stat-card"><span class="label">Durum</span><strong class="value">Ayar eksik</strong></article>';
+      categoryBars.innerHTML = '';
+      tbody.innerHTML = '<tr><td colspan="8">Ayar eksik.</td></tr>';
+    } else {
+      authState = await checkAuth({
+        requiredRoles: ['super_admin', 'admin', 'editor', 'viewer'],
+      });
+      if (authState.ok) {
+        await loadProducts();
+      }
+    }
+
+    initThemeToggle();
+    attachLogoutHandler('#logout-btn');
+
+    categoryFilter.addEventListener('change', renderTable);
+    searchInput.addEventListener('input', renderTable);
+    refreshBtn.addEventListener('click', loadProducts);
+    bulkPriceApplyBtn.addEventListener('click', applyBulkPrices);
+
+    tbody.addEventListener('change', async (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      const toggleField = input.dataset.toggle;
+      if (!toggleField) return;
+
+      const row = input.closest('tr');
+      const productId = row?.dataset?.id;
+      if (!productId) return;
+      await updateToggle(productId, toggleField, input.checked);
+    });
+
+    tbody.addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-delete]');
+      if (!button) return;
+      const productId = button.dataset.delete;
+      if (!productId) return;
+      await deleteProduct(productId);
+    });
+  </script>
+</body>
+</html>

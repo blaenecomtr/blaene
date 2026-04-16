@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -l \"F2C94C\\\\|d4a520\\\\|242,201,76\" \"c:/Users/DELL/Desktop/blaene/\"*.html)",
+      "Bash(vercel --version)",
+      "Bash(npm install:*)",
+      "Bash(vercel --prod)",
+      "Bash(rm -rf .vercel)",
+      "Bash(vercel logout:*)",
+      "Bash(vercel login:*)",
+      "Bash(vercel link:*)"
+    ]
+  }
+}

@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaene Hesabım</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #dbe1ea;
+      --accent: #111827;
+      --danger: #b91c1c;
+      --success: #166534;
+      --shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 0.8rem;
+    }
+    .topbar h1 { margin: 0; font-size: 1.15rem; }
+    .topbar a {
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .topbar a:hover {
+      background: var(--bg);
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { margin: 0 0 0.8rem; font-size: 1rem; }
+    p { margin: 0; }
+    .user-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .user-info {
+      flex: 1;
+    }
+    .user-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .user-email {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .btn {
+      padding: 0.5rem 0.8rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #1f2937;
+    }
+    .btn.danger {
+      background: var(--danger);
+    }
+    .btn.danger:hover {
+      background: #991b1b;
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .profile-field {
+      padding: 0.8rem;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+    .profile-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3rem;
+    }
+    .profile-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .alert {
+      padding: 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      font-size: 0.85rem;
+    }
+    .alert.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .alert.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .alert.info {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #7dd3fc;
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.7rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+    td {
+      padding: 0.7rem;
+      border: 1px solid var(--border);
+    }
+    tr:hover {
+      background: var(--bg);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-paid {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-failed {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .status-processing {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .status-shipped {
+      background: #ddd6fe;
+      color: #5b21b6;
+    }
+    .status-delivered {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-cancelled {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .tracking-line {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      word-break: break-word;
+    }
+    .empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 0.8rem; }
+      .panel { padding: 1rem; }
+      .topbar { flex-direction: column; align-items: stretch; }
+      .topbar a { text-align: center; }
+      .user-header { flex-direction: column; align-items: flex-start; }
+      .profile-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.75rem; }
+      th, td { padding: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Hesabım</h1>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="index.html">Ana sayfaya dön</a>
+        <a href="/admin/" id="admin-link" style="display: none; background: #f59e0b; color: white;">Admin Paneli</a>
+      </div>
+    </div>
+
+    <!-- AUTH CHECK -->
+    <div id="auth-required" style="display: none;">
+      <div class="panel">
+        <div class="alert info">
+          Bu sayfaya erişmek için giriş yapmalısınız.
+          <a href="/auth.html?redirect=/account.html" style="margin-left: 0.5rem;">Giriş yap</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE SECTION -->
+    <div id="profile-section" style="display: none;">
+      <div class="panel">
+        <div id="alert-box"></div>
+
+        <div class="user-header">
+          <div class="user-info">
+            <div class="user-name" id="user-name">—</div>
+            <div class="user-email" id="user-email">—</div>
+          </div>
+          <button class="btn danger" id="logout-btn">Çıkış Yap</button>
+        </div>
+
+        <h2>Profil Bilgileri</h2>
+        <div class="profile-grid">
+          <div class="profile-field">
+            <div class="profile-label">Telefon</div>
+            <div class="profile-value" id="profile-phone">—</div>
+          </div>
+          <div class="profile-field">
+            <div class="profile-label">Şehir</div>
+            <div class="profile-value" id="profile-city">—</div>
+          </div>
+        </div>
+        <div class="profile-grid" style="grid-template-columns: 1fr;">
+          <div class="profile-field">
+            <div class="profile-label">Varsayılan Adres</div>
+            <div class="profile-value" id="profile-address" style="word-break: break-word;">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS SECTION -->
+    <div id="orders-section" style="display: none;">
+      <div class="panel">
+        <h2>Sipariş Geçmişi</h2>
+        <p class="muted" style="margin-bottom: 1rem;">Tüm siparişleriniz aşağıda listelenmektedir.</p>
+
+        <div id="orders-container">
+          <div class="empty">Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase JS -->
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- User Auth -->
+  <script src="./assets/js/user-auth.js"></script>
+
+  <script>
+    (function () {
+      const authRequired = document.getElementById('auth-required');
+      const profileSection = document.getElementById('profile-section');
+      const ordersSection = document.getElementById('orders-section');
+      const alertBox = document.getElementById('alert-box');
+      const logoutBtn = document.getElementById('logout-btn');
+      const ordersContainer = document.getElementById('orders-container');
+
+      function formatPrice(value) {
+        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
+      }
+
+      function formatDate(dateStr) {
+        return new Date(dateStr).toLocaleDateString('tr-TR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+      }
+
+      function getPaymentBadge(status) {
+        const badges = {
+          pending: 'Beklemede',
+          paid: 'Odendi',
+          failed: 'Basarisiz',
+        };
+        return badges[status] || (status || 'Bilinmiyor');
+      }
+
+      function getShippingBadge(status) {
+        const badges = {
+          pending: 'Hazirlaniyor',
+          processing: 'Hazirlaniyor',
+          shipped: 'Kargoda',
+          delivered: 'Teslim Edildi',
+          cancelled: 'Iptal',
+        };
+        return badges[status] || (status || 'Hazirlaniyor');
+      }
+
+      function getStatusClass(status) {
+        return `status-badge status-${status}`;
+      }
+
+      function showAlert(message, type = 'info') {
+        alertBox.innerHTML = `<div class="alert ${type}">${message}</div>`;
+      }
+
+      async function loadProfile() {
+        try {
+          const user = await window.BlaeneAuth.getCurrentUser();
+          if (!user) {
+            authRequired.style.display = '';
+            profileSection.style.display = 'none';
+            ordersSection.style.display = 'none';
+            return;
+          }
+
+          const profile = await window.BlaeneAuth.getCustomerProfile();
+
+          document.getElementById('user-name').textContent = profile?.full_name || '—';
+          document.getElementById('user-email').textContent = user.email || '—';
+          document.getElementById('profile-phone').textContent = profile?.phone || '—';
+          document.getElementById('profile-city').textContent = profile?.default_city || '—';
+          document.getElementById('profile-address').textContent = profile?.default_address || '—';
+
+          // Check if user is admin
+          const isAdmin = user.user_metadata?.role &&
+            ['super_admin', 'admin', 'editor'].includes(user.user_metadata.role);
+          const adminLink = document.getElementById('admin-link');
+          if (isAdmin && adminLink) {
+            adminLink.style.display = '';
+          }
+
+          authRequired.style.display = 'none';
+          profileSection.style.display = '';
+          ordersSection.style.display = '';
+        } catch (error) {
+          console.error('Profile load error:', error);
+          authRequired.style.display = '';
+          profileSection.style.display = 'none';
+          ordersSection.style.display = 'none';
+        }
+      }
+
+      async function loadOrders() {
+        try {
+          const orders = await window.BlaeneAuth.getCustomerOrders();
+
+          if (!orders.length) {
+            ordersContainer.innerHTML = '<div class="empty">Henüz bir siparişiniz yok.</div>';
+            return;
+          }
+
+          let html = `
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Siparis No</th>
+                    <th>Tarih</th>
+                    <th>Urun</th>
+                    <th>Tutar</th>
+                    <th>Odeme</th>
+                    <th>Kargo Takip</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          orders.forEach((order) => {
+            const items = order.order_items || [];
+            const itemsText = items.map((i) => `${i.product_name} (x${i.quantity})`).join(', ');
+            const paymentClass = getStatusClass(order.payment_status);
+            const paymentLabel = getPaymentBadge(order.payment_status);
+            const shippingState = order.status || 'pending';
+            const shippingClass = getStatusClass(shippingState);
+            const shippingLabel = getShippingBadge(shippingState);
+            const trackingLine = order.tracking_code
+              ? `<span class="tracking-line">${order.shipping_provider || 'Kargo'}: ${order.tracking_code}</span>`
+              : '';
+
+            html += `
+              <tr>
+                <td><strong>${order.order_no}</strong></td>
+                <td>${formatDate(order.created_at)}</td>
+                <td style="font-size: 0.8rem; max-width: 300px; word-break: break-word;">${itemsText}</td>
+                <td>${formatPrice(order.total)}</td>
+                <td><span class="${paymentClass}">${paymentLabel}</span></td>
+                <td><span class="${shippingClass}">${shippingLabel}</span>${trackingLine}</td>
+              </tr>
+            `;
+          });
+
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+
+          ordersContainer.innerHTML = html;
+        } catch (error) {
+          console.error('Orders load error:', error);
+          ordersContainer.innerHTML =
+            '<div class="alert error">Siparişler yüklenemedi. Lütfen daha sonra tekrar deneyin.</div>';
+        }
+      }
+
+      logoutBtn.addEventListener('click', async () => {
+        logoutBtn.disabled = true;
+        try {
+          await window.BlaeneAuth.signOut();
+          window.location.href = '/';
+        } catch (error) {
+          showAlert(error.message || 'Çıkış başarısız', 'error');
+          logoutBtn.disabled = false;
+        }
+      });
+
+      // Initialize
+      window.BlaeneAuth.initSupabase();
+      loadProfile();
+      loadOrders();
+    })();
+  </script>
+</body>
+</html>

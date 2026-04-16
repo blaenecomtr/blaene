@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaene Üye Girişi & Kayıt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #dbe1ea;
+      --accent: #111827;
+      --danger: #b91c1c;
+      --success: #166534;
+      --shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.9rem;
+      gap: 0.8rem;
+    }
+    .topbar a {
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .topbar a:hover {
+      background: var(--bg);
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+    }
+    h1 { margin: 0; font-size: 1.15rem; }
+    h2 { margin: 0; font-size: 0.97rem; }
+    p { margin: 0; }
+    .muted {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 0.4rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs button {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0.8rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tabs button.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 0.9rem;
+    }
+    label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    input[type="email"], input[type="password"] {
+      background: white;
+      color: var(--text);
+    }
+    .btn {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.6rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #1f2937;
+    }
+    .btn:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+    .btn.secondary:hover {
+      background: var(--bg);
+    }
+    .alert {
+      padding: 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 0.9rem;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .alert.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .alert.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .alert.info {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #7dd3fc;
+    }
+    .form-link {
+      text-align: center;
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+    }
+    .form-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .form-link a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 0.8rem; }
+      .panel { padding: 1rem; }
+      .topbar { flex-direction: column; align-items: stretch; }
+      .topbar a { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Blaene Hesabı</h1>
+      <a href="index.html">Ana sayfaya dön</a>
+    </div>
+
+    <div class="panel">
+      <div id="alert-box"></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="login">Giriş Yap</button>
+        <button class="tab-btn" data-tab="signup">Hesap Oluştur</button>
+      </div>
+
+      <!-- LOGIN TAB -->
+      <div id="login" class="tab-content active">
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-email">E-posta</label>
+            <input id="login-email" type="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Şifre</label>
+            <input id="login-password" type="password" required />
+          </div>
+          <button type="submit" class="btn" id="login-btn">Giriş Yap</button>
+        </form>
+      </div>
+
+      <!-- SIGNUP TAB -->
+      <div id="signup" class="tab-content">
+        <form id="signup-form">
+          <div class="form-group">
+            <label for="signup-name">Ad Soyad *</label>
+            <input id="signup-name" type="text" required />
+          </div>
+          <div class="form-group">
+            <label for="signup-email">E-posta *</label>
+            <input id="signup-email" type="email" required />
+          </div>
+          <div class="form-group">
+            <label for="signup-phone">Telefon *</label>
+            <input id="signup-phone" type="tel" placeholder="05xx xxx xx xx" required />
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Şifre *</label>
+            <input id="signup-password" type="password" required />
+          </div>
+          <button type="submit" class="btn" id="signup-btn">Hesap Oluştur</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase JS -->
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- User Auth -->
+  <script src="./assets/js/user-auth.js"></script>
+
+  <script>
+    (function () {
+      const alertBox = document.getElementById('alert-box');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const loginForm = document.getElementById('login-form');
+      const signupForm = document.getElementById('signup-form');
+      const loginBtn = document.getElementById('login-btn');
+      const signupBtn = document.getElementById('signup-btn');
+
+      function showAlert(message, type = 'info') {
+        alertBox.innerHTML = `<div class="alert ${type}">${message}</div>`;
+        setTimeout(() => {
+          if (alertBox.textContent === message) alertBox.innerHTML = '';
+        }, 5000);
+      }
+
+      function switchTab(tabName) {
+        tabBtns.forEach((btn) => btn.classList.remove('active'));
+        tabContents.forEach((content) => content.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+      }
+
+      tabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Login handler
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.innerHTML = '';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Giriş yapılıyor...';
+
+        try {
+          const email = document.getElementById('login-email').value.trim();
+          const password = document.getElementById('login-password').value;
+
+          await window.BlaeneAuth.signIn(email, password);
+          showAlert('Başarıyla giriş yapıldı!', 'success');
+
+          // Redirect
+          const redirect = new URLSearchParams(location.search).get('redirect');
+          setTimeout(() => {
+            window.location.href = redirect || '/account.html';
+          }, 800);
+        } catch (error) {
+          showAlert(error.message || 'Giriş başarısız', 'error');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Giriş Yap';
+        }
+      });
+
+      // Signup handler
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.innerHTML = '';
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'Hesap oluşturuluyor...';
+
+        try {
+          const name = document.getElementById('signup-name').value.trim();
+          const email = document.getElementById('signup-email').value.trim();
+          const phone = document.getElementById('signup-phone').value.trim();
+          const password = document.getElementById('signup-password').value;
+
+          await window.BlaeneAuth.signUp(email, password, name, phone);
+          showAlert('Hesap başarıyla oluşturuldu! Yönlendiriliyorsunuz...', 'success');
+
+          // Auto-login and redirect
+          setTimeout(() => {
+            window.location.href = '/account.html';
+          }, 1500);
+        } catch (error) {
+          showAlert(error.message || 'Hesap oluşturulamadı', 'error');
+          signupBtn.disabled = false;
+          signupBtn.textContent = 'Hesap Oluştur';
+        }
+      });
+
+      // Initialize Supabase
+      window.BlaeneAuth.initSupabase();
+    })();
+  </script>
+</body>
+</html>

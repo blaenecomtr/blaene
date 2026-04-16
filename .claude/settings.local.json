@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(grep -n \"orders\" \"c:\\\\\\\\Users\\\\\\\\DELL\\\\\\\\Desktop\\\\\\\\yazılım\\\\\\\\blaene\\\\\\\\api\\\\\\\\admin\\\\\\\\[...route].js\")",
+      "Bash(npm run:*)",
+      "Bash(npm list:*)",
+      "Read(//c/Users/DELL/Desktop/yazılımblaene/ecommerce-admin/src/pages/**)",
+      "Bash(cat)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

@@ -1,0 +1,722 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaene Checkout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #dbe1ea;
+      --accent: #111827;
+      --danger: #b91c1c;
+      --success: #166534;
+      --shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.9rem;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .topbar a {
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 1rem;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 0.95rem;
+    }
+    h1 { margin: 0; font-size: 1.15rem; }
+    h2 { margin: 0; font-size: 0.97rem; }
+    p { margin: 0; }
+    .muted {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 0.4rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-top: 0.9rem;
+    }
+    label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.28rem;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.55rem 0.62rem;
+      font: inherit;
+      font-size: 0.87rem;
+      background: #fff;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .full { grid-column: 1 / -1; }
+    .account-box {
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #fbfcff;
+      padding: 0.7rem;
+    }
+    .inline-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      color: #374151;
+    }
+    .inline-check input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    .account-hint {
+      margin-top: 0.35rem;
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+    .actions {
+      margin-top: 0.9rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      padding: 0.55rem 0.85rem;
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    button.secondary {
+      border-color: var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .alert {
+      margin-top: 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.58rem 0.65rem;
+      font-size: 0.82rem;
+      background: #fff;
+    }
+    .alert.error { border-color: #fecaca; background: #fff1f2; color: var(--danger); }
+    .alert.success { border-color: #bbf7d0; background: #f0fdf4; color: var(--success); }
+    .summary-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.7rem;
+    }
+    .item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.54rem;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 0.55rem;
+    }
+    .item img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .item .line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      gap: 0.5rem;
+    }
+    .totals {
+      margin-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      padding-top: 0.7rem;
+      display: grid;
+      gap: 0.45rem;
+      font-size: 0.84rem;
+    }
+    .totals .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .totals .grand {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .iframe-wrap {
+      margin-top: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      min-height: 620px;
+    }
+    iframe {
+      border: 0;
+      width: 100%;
+      min-height: 620px;
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>Odeme</h1>
+      <a href="index.html">Ana sayfaya don</a>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Musteri Bilgileri</h2>
+        <p class="muted">Kart bilgileri bu sayfada tutulmaz. Odeme PayTR guvenli iFrame penceresinde tamamlanir.</p>
+
+        <div id="checkout-alert"></div>
+
+        <!-- AUTH BANNER -->
+        <div id="auth-banner" style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:0.8rem;margin-bottom:0.8rem;display:none;">
+          <div id="auth-logged-in" style="display:none;">
+            <strong>Hoş geldiniz!</strong> <span id="auth-user-name"></span> —
+            <a href="#" id="auth-logout-link" style="color:#0369a1;text-decoration:none;font-weight:600;">Çıkış yap</a>
+          </div>
+          <div id="auth-not-logged-in" style="display:none;font-size:0.9rem;">
+            Sipariş geçmişinizi kaydetmek ister misiniz?
+            <a href="/auth.html?redirect=/checkout.html" style="color:#0369a1;text-decoration:none;font-weight:600;">Giriş yap</a> ·
+            <a href="/auth.html?redirect=/checkout.html" style="color:#0369a1;text-decoration:none;font-weight:600;">Hesap oluştur</a>
+            veya misafir olarak devam edin.
+          </div>
+        </div>
+
+        <form id="checkout-form">
+          <div class="form-grid">
+            <div>
+              <label for="name">Ad Soyad *</label>
+              <input id="name" required />
+            </div>
+            <div>
+              <label for="email">E-posta *</label>
+              <input id="email" type="email" required />
+            </div>
+            <div>
+              <label for="phone">Telefon *</label>
+              <input id="phone" placeholder="05xx xxx xx xx" required />
+            </div>
+            <div>
+              <label for="city">Sehir</label>
+              <input id="city" />
+            </div>
+            <div class="full">
+              <label for="address">Adres *</label>
+              <textarea id="address" required></textarea>
+            </div>
+            <div class="full">
+              <label for="note">Siparis notu</label>
+              <textarea id="note" placeholder="Opsiyonel"></textarea>
+            </div>
+            <div class="full account-box">
+              <label class="inline-check" for="create-account">
+                <input id="create-account" type="checkbox" />
+                <span>Siparisle birlikte hesap olustur (kargo takibi icin)</span>
+              </label>
+              <div id="account-password-wrap" style="display:none;margin-top:0.55rem;">
+                <label for="account-password">Hesap sifresi *</label>
+                <input id="account-password" type="password" minlength="6" placeholder="En az 6 karakter" />
+              </div>
+              <p class="account-hint">Hesap olusturursaniz siparisinizi <a href="/account.html">Hesabim</a> sayfasindan takip edebilirsiniz.</p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="pay-btn" type="submit">PayTR ile ode</button>
+            <button id="clear-cart-btn" type="button" class="secondary">Sepeti temizle</button>
+          </div>
+        </form>
+
+        <div id="payment-shell" style="display:none;">
+          <div class="alert success" id="order-created-message"></div>
+          <div class="iframe-wrap" id="iframe-wrap"></div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h2>Siparis Ozeti</h2>
+        <p class="muted" id="summary-note">Sepetinizdeki urunler</p>
+        <div id="summary-list" class="summary-list"></div>
+        <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border);">
+          <label style="margin-bottom: 0.4rem;">İndirim Kodu</label>
+          <div style="display: flex; gap: 0.4rem;">
+            <input type="text" id="promo-code" placeholder="Kod girin..." style="flex: 1; margin: 0;" />
+            <button type="button" id="apply-promo-btn" style="flex: 0 0 auto; padding: 0.55rem 0.65rem;">Uygula</button>
+          </div>
+          <div id="promo-message" style="margin-top: 0.3rem; font-size: 0.75rem; display: none;"></div>
+        </div>
+        <div class="totals">
+          <div class="row"><span>Ara toplam</span><strong id="subtotal">0 TL</strong></div>
+          <div id="discount-row" class="row" style="display: none; color: var(--success);"><span>İndirim</span><strong id="discount-amount">-0 TL</strong></div>
+          <div class="row"><span>Kargo</span><span id="shipping">0 TL</span></div>
+          <div class="row grand"><span>Toplam</span><strong id="grand-total">0 TL</strong></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/user-auth.js"></script>
+  <script>
+    (function () {
+      const cart = window.BlaeneCart;
+      const form = document.getElementById('checkout-form');
+      const payBtn = document.getElementById('pay-btn');
+      const clearCartBtn = document.getElementById('clear-cart-btn');
+      const alertBox = document.getElementById('checkout-alert');
+      const summaryList = document.getElementById('summary-list');
+      const subtotalEl = document.getElementById('subtotal');
+      const shippingEl = document.getElementById('shipping');
+      const grandTotalEl = document.getElementById('grand-total');
+      const summaryNote = document.getElementById('summary-note');
+      const paymentShell = document.getElementById('payment-shell');
+      const iframeWrap = document.getElementById('iframe-wrap');
+      const orderCreatedMessage = document.getElementById('order-created-message');
+      const createAccountEl = document.getElementById('create-account');
+      const accountPasswordWrap = document.getElementById('account-password-wrap');
+      const accountPasswordEl = document.getElementById('account-password');
+      const promoCodeInput = document.getElementById('promo-code');
+      const applyPromoBtn = document.getElementById('apply-promo-btn');
+      const promoMessage = document.getElementById('promo-message');
+      const discountRow = document.getElementById('discount-row');
+      const discountAmount = document.getElementById('discount-amount');
+      const urlParams = new URLSearchParams(window.location.search);
+
+      let appliedPromo = null;
+
+      if (!cart) {
+        alertBox.innerHTML = '<div class="alert error">Sepet modulu yuklenemedi.</div>';
+        payBtn.disabled = true;
+      }
+
+      // Auth initialization and pre-fill
+      if (window.BlaeneAuth) {
+        window.BlaeneAuth.initSupabase();
+
+        (async function initAuth() {
+          try {
+            const user = await window.BlaeneAuth.getCurrentUser();
+            const authBanner = document.getElementById('auth-banner');
+            const authLoggedIn = document.getElementById('auth-logged-in');
+            const authNotLoggedIn = document.getElementById('auth-not-logged-in');
+            const authLogoutLink = document.getElementById('auth-logout-link');
+            const authUserName = document.getElementById('auth-user-name');
+
+            if (user) {
+              // User is logged in - pre-fill form
+              authBanner.style.display = '';
+              authLoggedIn.style.display = '';
+              authNotLoggedIn.style.display = 'none';
+              authUserName.textContent = user.user_metadata?.full_name || user.email || 'Üye';
+
+              // Pre-fill form from user profile
+              const profile = await window.BlaeneAuth.getCustomerProfile();
+              if (profile) {
+                document.getElementById('name').value = profile.full_name || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('city').value = profile.default_city || '';
+                document.getElementById('address').value = profile.default_address || '';
+              } else {
+                document.getElementById('name').value = user.user_metadata?.full_name || '';
+                document.getElementById('email').value = user.email || '';
+              }
+
+              // Hide account creation section if already logged in
+              const accountBox = document.querySelector('.account-box');
+              if (accountBox) {
+                accountBox.style.display = 'none';
+              }
+
+              // Logout handler
+              authLogoutLink.addEventListener('click', async function(e) {
+                e.preventDefault();
+                try {
+                  await window.BlaeneAuth.signOut();
+                  location.reload();
+                } catch (err) {
+                  console.error('Logout error:', err);
+                }
+              });
+            } else {
+              // User not logged in
+              authBanner.style.display = '';
+              authLoggedIn.style.display = 'none';
+              authNotLoggedIn.style.display = '';
+            }
+          } catch (error) {
+            console.error('Auth init error:', error);
+          }
+        })();
+      }
+
+      function formatPrice(value) {
+        if (cart && typeof cart.formatPrice === 'function') {
+          return cart.formatPrice(value);
+        }
+        return Number(value || 0).toFixed(2) + ' TL';
+      }
+
+      function showAlert(message, type) {
+        alertBox.innerHTML = '<div class="alert ' + type + '">' + message + '</div>';
+      }
+
+      function mapCheckoutError(rawMessage) {
+        const message = String(rawMessage || '').trim();
+        if (!message) return 'Odeme baslatilamadi. Lutfen tekrar deneyin.';
+
+        const normalized = message.toLowerCase();
+
+        if (normalized.includes('eksik ortam degiskenleri')) {
+          return 'Odeme servisi ayarlari eksik. Teknik ekiple iletisime gecin.';
+        }
+        if (normalized.includes('paytr modu secili')) {
+          return 'Sistem su anda PayTR modunda ancak anahtarlar eksik. Gecici olarak mock moda gecin veya PayTR bilgilerini tanimlayin.';
+        }
+        if (normalized.includes('paytr_ok_url') || normalized.includes('mutlak bir url')) {
+          return 'Odeme yonlendirme ayarlari hatali. Teknik ekibe bildiriniz.';
+        }
+        if (normalized.includes('musteri alanlari eksik')) {
+          return 'Lutfen ad soyad, e-posta, telefon ve adres alanlarini doldurun.';
+        }
+        if (normalized.includes('sepet bos')) {
+          return 'Sepetiniz bos. Urun ekleyip tekrar deneyin.';
+        }
+        if (normalized.includes('sepet gecersiz')) {
+          return 'Sepet bilgileriniz guncel degil. Urunleri yeniden ekleyip tekrar deneyin.';
+        }
+        if (
+          normalized.includes('urunu bulunamadi') ||
+          normalized.includes('aktif degil') ||
+          normalized.includes('satin alima acik degil')
+        ) {
+          return 'Sepetinizdeki urunlerden biri su anda satisa uygun degil. Sepeti guncelleyip tekrar deneyin.';
+        }
+        if (normalized.includes('paytr') && (normalized.includes('token') || normalized.includes('alinamadi'))) {
+          return 'Odeme saglayicisina baglanirken sorun olustu. Lutfen biraz sonra tekrar deneyin.';
+        }
+        if (
+          normalized.includes('failed to fetch') ||
+          normalized.includes('networkerror') ||
+          normalized.includes('network error')
+        ) {
+          return 'Sunucuya erisilemiyor. Internet baglantinizi kontrol edip tekrar deneyin.';
+        }
+        return message;
+      }
+
+      function getCartState() {
+        if (!cart) return { items: [], subtotal: 0, totalItems: 0 };
+        return cart.getSummary();
+      }
+
+      function updatePayButtonState() {
+        const state = getCartState();
+        payBtn.disabled = !state.items.length;
+      }
+
+      function renderSummary() {
+        const state = getCartState();
+        const items = state.items || [];
+
+        let total = state.subtotal || 0;
+        let discountAmount_val = 0;
+
+        if (appliedPromo && appliedPromo.discount_value && appliedPromo.discount_type) {
+          if (appliedPromo.discount_type === 'percent') {
+            discountAmount_val = (total * (appliedPromo.discount_value / 100));
+          } else if (appliedPromo.discount_type === 'fixed') {
+            discountAmount_val = appliedPromo.discount_value;
+          }
+          total = Math.max(0, total - discountAmount_val);
+        }
+
+        subtotalEl.textContent = formatPrice(state.subtotal || 0);
+        if (appliedPromo && discountAmount_val > 0) {
+          discountRow.style.display = '';
+          discountAmount.textContent = '-' + formatPrice(discountAmount_val);
+        } else {
+          discountRow.style.display = 'none';
+        }
+        shippingEl.textContent = formatPrice(0);
+        grandTotalEl.textContent = formatPrice(total);
+
+        if (!items.length) {
+          summaryList.innerHTML = '<div class="alert">Sepetiniz bos. Urun ekleyip tekrar deneyin.</div>';
+          summaryNote.textContent = 'Sepetinizde urun bulunmuyor';
+          updatePayButtonState();
+          return;
+        }
+
+        summaryNote.textContent = state.totalItems + ' adet urun';
+        summaryList.innerHTML = items
+          .map(function (item) {
+            return (
+              '<div class="item">' +
+                '<img src="' + (item.image || 'logo/sitelogo.png') + '" alt="' + item.code + '" />' +
+                '<div>' +
+                  '<div style="font-size:0.72rem;font-weight:600;">' + item.name + '</div>' +
+                  '<div style="font-size:0.67rem;color:#6b7280;margin:0.2rem 0;">' + item.code + '</div>' +
+                  '<div class="line">' +
+                    '<span>' + item.qty + ' x ' + formatPrice(item.price) + '</span>' +
+                    '<strong>' + formatPrice(item.price * item.qty) + '</strong>' +
+                  '</div>' +
+                '</div>' +
+              '</div>'
+            );
+          })
+          .join('');
+
+        updatePayButtonState();
+      }
+
+      async function createPaymentToken(payload, authToken) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) {
+          headers['Authorization'] = 'Bearer ' + authToken;
+        }
+        const response = await fetch('/api/public/checkout-init', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json().catch(function () { return {}; });
+        if (!response.ok || data?.ok !== true) {
+          const message = data?.error || 'Odeme baslatilamadi.';
+          throw new Error(message);
+        }
+        return data;
+      }
+
+      function showPaytrIframe(token, orderNo) {
+        paymentShell.style.display = '';
+        orderCreatedMessage.textContent = 'Siparis olusturuldu (' + orderNo + '). Odemeyi asagidaki guvenli PayTR penceresinden tamamlayin.';
+        iframeWrap.innerHTML = '<iframe src="https://www.paytr.com/odeme/guvenli/' + token + '" title="PayTR odeme penceresi"></iframe>';
+      }
+
+      function showMockOrderInfo(orderNo, message) {
+        paymentShell.style.display = '';
+        orderCreatedMessage.textContent = message || ('Siparis olusturuldu (' + orderNo + ').');
+        iframeWrap.innerHTML =
+          '<div class="alert" style="margin:0;border:0;border-radius:0;min-height:220px;display:flex;align-items:center;">' +
+          'Odeme entegrasyonu henuz aktif degil. Siparisiniz kaydedildi ve durum <strong style="margin-left:4px;">pending</strong> olarak gorunur.' +
+          '</div>';
+      }
+
+      function accountResultMessage(account) {
+        if (!account || !account.requested) return '';
+        if (account.created) {
+          return ' Hesap basariyla olusturuldu. Siparisinizi Hesabim sayfasindan takip edebilirsiniz.';
+        }
+        if (account.existing) {
+          return ' Bu e-posta ile mevcut hesap bulundu ve siparisiniz hesaba baglandi.';
+        }
+        return '';
+      }
+
+      applyPromoBtn.addEventListener('click', async function (e) {
+        e.preventDefault();
+        const code = promoCodeInput.value.trim().toUpperCase();
+        if (!code) {
+          promoMessage.style.display = '';
+          promoMessage.textContent = 'Indirim kodu giriniz.';
+          promoMessage.className = 'error';
+          return;
+        }
+
+        promoMessage.style.display = '';
+        promoMessage.textContent = 'Kontrol ediliyor...';
+        promoMessage.className = '';
+
+        try {
+          const response = await fetch('/api/admin/promotions?code=' + encodeURIComponent(code), {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Bearer ' + (window.BlaeneAuth ? await window.BlaeneAuth.getAccessToken() : ''),
+            },
+          });
+          const data = await response.json().catch(() => ({ data: [] }));
+          const promotions = data?.data || data || [];
+          const promo = Array.isArray(promotions) ? promotions.find(p => String(p.code || '').toUpperCase() === code) : null;
+
+          if (!promo || !promo.is_active) {
+            promoMessage.textContent = 'Gecersiz veya pasif indirim kodu.';
+            promoMessage.className = 'error';
+            appliedPromo = null;
+          } else {
+            const now = new Date();
+            if (promo.starts_at && new Date(promo.starts_at) > now) {
+              promoMessage.textContent = 'Bu indirim kodu henuz gecerli degil.';
+              promoMessage.className = 'error';
+              appliedPromo = null;
+            } else if (promo.ends_at && new Date(promo.ends_at) < now) {
+              promoMessage.textContent = 'Bu indirim kodunun gecerliligi sona ermis.';
+              promoMessage.className = 'error';
+              appliedPromo = null;
+            } else if (promo.usage_limit && (promo.usage_count || 0) >= promo.usage_limit) {
+              promoMessage.textContent = 'Bu indirim kodu kullanim limitine ulasmis.';
+              promoMessage.className = 'error';
+              appliedPromo = null;
+            } else {
+              appliedPromo = promo;
+              promoMessage.textContent = promo.title + ' (' + (promo.discount_type === 'percent' ? promo.discount_value + '%' : promo.discount_value + ' TL') + ' indirim) uyguland
+i.';
+              promoMessage.className = 'success';
+            }
+          }
+          renderSummary();
+        } catch (error) {
+          promoMessage.textContent = 'Indirim kodu kontrol edilemedi.';
+          promoMessage.className = 'error';
+          appliedPromo = null;
+        }
+      });
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        alertBox.innerHTML = '';
+
+        const state = getCartState();
+        if (!state.items.length) {
+          showAlert('Sepetiniz bos.', 'error');
+          return;
+        }
+
+        const payload = {
+          customer: {
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim().toLowerCase(),
+            phone: document.getElementById('phone').value.trim(),
+            city: document.getElementById('city').value.trim(),
+            address: document.getElementById('address').value.trim(),
+            note: document.getElementById('note').value.trim(),
+          },
+          cart: state.items.map(function (item) {
+            return { code: item.code, quantity: item.qty };
+          }),
+          account: {
+            create: Boolean(createAccountEl && createAccountEl.checked),
+            password: accountPasswordEl ? accountPasswordEl.value : '',
+          },
+          promo_code: appliedPromo ? appliedPromo.code : undefined,
+        };
+
+        if (!payload.customer.name || !payload.customer.email || !payload.customer.phone || !payload.customer.address) {
+          showAlert('Lutfen zorunlu alanlari doldurun.', 'error');
+          return;
+        }
+
+        if (payload.account.create && (!payload.account.password || payload.account.password.length < 6)) {
+          showAlert('Hesap olusturmak icin en az 6 karakterli sifre girin.', 'error');
+          return;
+        }
+
+        payBtn.disabled = true;
+        payBtn.textContent = 'Odeme hazirlaniyor...';
+
+        try {
+          const authToken = window.BlaeneAuth ? await window.BlaeneAuth.getAccessToken() : null;
+          const result = await createPaymentToken(payload, authToken);
+          const accountMessage = accountResultMessage(result.account);
+          if (result.mode === 'mock') {
+            showMockOrderInfo(result.order_no, result.message);
+            showAlert('Siparis alindi (' + result.order_no + '). Odeme altyapisi aktif oldugunda bu adim otomatik PayTR\'a yonlenecek.' + accountMessage, 'success');
+            if (cart) cart.clear();
+          } else {
+            showPaytrIframe(result.iframe_token, result.order_no);
+            showAlert('Odeme penceresi hazirlandi.' + accountMessage, 'success');
+          }
+        } catch (error) {
+          showAlert(mapCheckoutError(error?.message), 'error');
+        } finally {
+          payBtn.textContent = 'PayTR ile ode';
+          updatePayButtonState();
+        }
+      });
+
+      clearCartBtn.addEventListener('click', function () {
+        if (!cart) return;
+        cart.clear();
+      });
+
+      if (createAccountEl) {
+        createAccountEl.addEventListener('change', function () {
+          const enabled = Boolean(createAccountEl.checked);
+          accountPasswordWrap.style.display = enabled ? '' : 'none';
+          accountPasswordEl.required = enabled;
+          if (!enabled) {
+            accountPasswordEl.value = '';
+          }
+        });
+      }
+
+      const payStatus = urlParams.get('pay');
+      if (payStatus === 'ok') {
+        showAlert('Odeme sonucu basarili olarak dondu. Kesin durum webhook ile siparis kaydina islenir.', 'success');
+        if (cart) cart.clear();
+      } else if (payStatus === 'fail') {
+        showAlert('Odeme basarisiz veya iptal edildi. Tekrar deneyebilirsiniz.', 'error');
+      }
+
+      window.addEventListener('blaene:cart:updated', renderSummary);
+      renderSummary();
+    })();
+  </script>
+</body>
+</html>

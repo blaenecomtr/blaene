@@ -1,0 +1,746 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaene Admin Seed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <h1>BLAENE ADMIN</h1>
+      <p>Urun yonetim paneli</p>
+      <nav>
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./orders.html">Siparisler</a>
+        <a href="./members.html">Üyeler</a>
+        <a href="./product.html">Yeni urun</a>
+        <a href="./seed.html" class="active">Seed aktarimi</a>
+        <a href="../index.html" target="_blank" rel="noopener">Siteyi ac</a>
+      </nav>
+      <button id="logout-btn" class="logout-btn btn">Cikis yap</button>
+    </aside>
+
+    <main class="main">
+      <section class="panel">
+        <h2>Toplu Urun Aktarimi (Seed)</h2>
+        <p class="helper" style="margin-top:0.35rem;">
+          JSON liste formatinda urun kayitlarini tek seferde Supabase'e aktarir. `code` alanina gore upsert yapar.
+        </p>
+
+        <div id="config-warning" class="alert warning" style="display:none; margin-top:0.7rem;"></div>
+        <div id="page-alert" style="margin-top:0.7rem;"></div>
+
+        <label for="seed-json" style="margin-top:0.7rem;">JSON</label>
+        <textarea id="seed-json" style="min-height:340px;"></textarea>
+
+        <div class="form-actions">
+          <button id="load-sample-btn" type="button" class="btn">Ornek JSON yukle</button>
+          <button id="import-btn" type="button" class="primary">Supabase'e aktar</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase, isSupabaseConfigured } from './supabase-client.js';
+    import {
+      checkAuth,
+      attachLogoutHandler,
+      initThemeToggle,
+      showToast,
+      apiFetch,
+    } from './admin-utils.js';
+
+    const sampleProducts = [
+  {
+    "code": "BTH-001",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "25×25×5 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-001-304-1.5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 1,
+    "active": true
+  },
+  {
+    "code": "BTH-002",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "25×25×2 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-002-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 2,
+    "active": true
+  },
+  {
+    "code": "BTH-003",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "40×10 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-003-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 3,
+    "active": true
+  },
+  {
+    "code": "BTH-004",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "40×13×15 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-004-304-1.5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 4,
+    "active": true
+  },
+  {
+    "code": "BTH-005",
+    "name": "Havluluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "40×12×6 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-005-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 5,
+    "active": true
+  },
+  {
+    "code": "BTH-006",
+    "name": "Havluluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "13×9×12 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-006-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 6,
+    "active": true
+  },
+  {
+    "code": "BTH-007",
+    "name": "Sabunluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "10×10×3 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-007-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 7,
+    "active": true
+  },
+  {
+    "code": "BTH-008",
+    "name": "Havluluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "50×10×4 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-008-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 8,
+    "active": true
+  },
+  {
+    "code": "BTH-009",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "35×10×5 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-009-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 9,
+    "active": true
+  },
+  {
+    "code": "BTH-010",
+    "name": "Sabunluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "12×10×3 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-010-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 10,
+    "active": true
+  },
+  {
+    "code": "BTH-011",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "15×10×13 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-011-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 11,
+    "active": true
+  },
+  {
+    "code": "BTH-012",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "10×18×5 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-012-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 12,
+    "active": true
+  },
+  {
+    "code": "BTH-013",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "25 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-013-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 13,
+    "active": true
+  },
+  {
+    "code": "BTH-014",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "10×12 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-014-304-1,5MM-27.03.2026.jpg",
+      "bath/bath/BTH-014-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 14,
+    "active": true
+  },
+  {
+    "code": "BTH-014-A",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "10×12 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-014-A-304-1,5MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 15,
+    "active": true
+  },
+  {
+    "code": "BTH-015",
+    "name": "Havluluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "2mm",
+    "dims": "33×6×5 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-015-304-2MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 16,
+    "active": true
+  },
+  {
+    "code": "BTH-016",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "2mm",
+    "dims": "8×14×4 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-016-304-2MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 17,
+    "active": true
+  },
+  {
+    "code": "BTH-017",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "40×10×5 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-017-304-1,5MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 18,
+    "active": true
+  },
+  {
+    "code": "BTH-018",
+    "name": "Havluluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "32×12×15 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-018-304-1,5MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 19,
+    "active": true
+  },
+  {
+    "code": "BTH-019",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "28×10×8 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-019-304-1,5MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 20,
+    "active": true
+  },
+  {
+    "code": "BTH-020",
+    "name": "Fön Makinası Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "2mm",
+    "dims": "12×12×4 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-020-304-2MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 21,
+    "active": true
+  },
+  {
+    "code": "BTH-021",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "50×12×4 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-021-304-1,5MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 22,
+    "active": true
+  },
+  {
+    "code": "BTH-022",
+    "name": "Havluluk",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "2mm",
+    "dims": "7×30×7 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-022-304-2MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 23,
+    "active": true
+  },
+  {
+    "code": "BTH-023",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "14×8 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-023-304-1,5MM-27.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 24,
+    "active": true
+  },
+  {
+    "code": "BTH-024",
+    "name": "Banyo Organizer",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "35×10×5 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-024-304-1,5MM-27.03.2026 .jpg"
+    ],
+    "variants": [],
+    "display_order": 25,
+    "active": true
+  },
+  {
+    "code": "BTH-025",
+    "name": "Tuvalet Kağıdı Askısı",
+    "category": "bath",
+    "material": "304 Paslanmaz Celik",
+    "thickness": "1.5mm",
+    "dims": "30×11×10 cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "bath/bath/BTH-025-304-1,5MM-28.03.2026.jpg"
+    ],
+    "variants": [],
+    "display_order": 26,
+    "active": true
+  },
+  {
+    "code": "FRG-001",
+    "name": "Kampcı Portatif Mangal",
+    "category": "forge",
+    "material": "ST37 Çelik",
+    "thickness": "3mm",
+    "dims": "Sipariş üzeri",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "görsel/forge/frg-001/IMG_0237.JPG",
+      "görsel/forge/frg-001/IMG_0068.JPG",
+      "görsel/forge/frg-001/IMG_0167.JPG",
+      "görsel/forge/frg-001/IMG_0180.JPG"
+    ],
+    "variants": [],
+    "display_order": 27,
+    "active": true
+  },
+  {
+    "code": "FRG-002",
+    "name": "Kampcı Portatif Mangal",
+    "category": "forge",
+    "material": "ST37 Çelik",
+    "thickness": "3mm",
+    "dims": "Sipariş üzeri",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "görsel/forge/frg-002/IMG_0160.JPG",
+      "görsel/forge/frg-002/IMG_0161.JPG",
+      "görsel/forge/frg-002/IMG_0164.JPG",
+      "görsel/forge/frg-002/IMG_0187.JPG",
+      "görsel/forge/frg-002/IMG_0253.JPG"
+    ],
+    "variants": [],
+    "display_order": 28,
+    "active": true
+  },
+  {
+    "code": "FRG-003",
+    "name": "Kampcı Portatif Mangal",
+    "category": "forge",
+    "material": "ST37 Çelik",
+    "thickness": "3mm",
+    "dims": "Sipariş üzeri",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "görsel/forge/frg-003/IMG_0182.JPG",
+      "görsel/forge/frg-003/IMG_0183.JPG",
+      "görsel/forge/frg-003/IMG_0186.JPG",
+      "görsel/forge/frg-003/IMG_0190.JPG",
+      "görsel/forge/frg-003/IMG_0195.JPG"
+    ],
+    "variants": [],
+    "display_order": 29,
+    "active": true
+  },
+  {
+    "code": "MDL-002",
+    "name": "Çelik Raf Sistemi",
+    "category": "industrial",
+    "material": "Yuksek Mukavemetli Celik",
+    "thickness": "—",
+    "dims": "Sipariş üzeri",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "görsel/industrial/mdl-002/IMG_0278.JPG",
+      "görsel/industrial/mdl-002/IMG_0279.JPG",
+      "görsel/industrial/mdl-002/IMG_0280.JPG",
+      "görsel/industrial/mdl-002/IMG_0281.JPG",
+      "görsel/industrial/mdl-002/IMG_0282.JPG"
+    ],
+    "variants": [],
+    "display_order": 30,
+    "active": true
+  },
+  {
+    "code": "MDL-003",
+    "name": "Kademeli Servis Arabası",
+    "category": "industrial",
+    "material": "Yuksek Mukavemetli Celik",
+    "thickness": "1.5mm",
+    "dims": "600-700-800 × 450mm · 100cm",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "görsel/industrial/mdl-003/mdl-003 (1)SİYAH.JPG",
+      "görsel/industrial/mdl-003/mdl-003 (2)SİYAH.JPG",
+      "görsel/industrial/mdl-003/mdl-003 (1)GRİ.png",
+      "görsel/industrial/mdl-003/mdl-003 (3)GRİ.JPG"
+    ],
+    "variants": [],
+    "display_order": 31,
+    "active": true
+  },
+  {
+    "code": "MDL-004",
+    "name": "Servis Takım Arabası",
+    "category": "industrial",
+    "material": "Yuksek Mukavemetli Celik",
+    "thickness": "1.5mm",
+    "dims": "55×45 cm · 3 Katlı",
+    "description": "",
+    "price": null,
+    "price_visible": false,
+    "images": [
+      "görsel/industrial/mdl-004/mdl-004 (1) SİYAH.JPG",
+      "görsel/industrial/mdl-004/mdl-004 (2) SİYAH.JPG",
+      "görsel/industrial/mdl-004/mdl-004 (3)GRİ.JPG",
+      "görsel/industrial/mdl-004/mdl-004 (4)GRİ.JPG"
+    ],
+    "variants": [],
+    "display_order": 32,
+    "active": true
+  }
+];
+
+    const seedJson = document.getElementById('seed-json');
+    const configWarning = document.getElementById('config-warning');
+    const pageAlert = document.getElementById('page-alert');
+    const importBtn = document.getElementById('import-btn');
+    let authState = null;
+
+    function showAlert(message, type = 'error') {
+      pageAlert.innerHTML = `<div class="alert ${type}">${message}</div>`;
+      if (type === 'success') {
+        setTimeout(() => {
+          pageAlert.innerHTML = '';
+        }, 3000);
+      }
+    }
+
+    function normalizeRecord(item, index) {
+      if (!item || typeof item !== 'object') {
+        throw new Error(`Kayit #${index + 1} nesne degil.`);
+      }
+
+      const code = String(item.code || '').trim().toUpperCase();
+      const name = String(item.name || '').trim();
+      const category = String(item.category || '').trim();
+
+      if (!code || !name || !category) {
+        throw new Error(`Kayit #${index + 1} icin code/name/category zorunlu.`);
+      }
+
+      return {
+        code,
+        name,
+        category,
+        material: item.material ? String(item.material).trim() : null,
+        thickness: item.thickness ? String(item.thickness).trim() : null,
+        dims: item.dims ? String(item.dims).trim() : null,
+        description: item.description ? String(item.description).trim() : null,
+        price: item.price === null || item.price === undefined || item.price === '' ? null : Number(item.price),
+        price_visible: Boolean(item.price_visible),
+        images: Array.isArray(item.images) ? item.images : [],
+        variants: Array.isArray(item.variants) ? item.variants : [],
+        display_order: Number.isFinite(Number(item.display_order)) ? Number(item.display_order) : 0,
+        active: item.active === undefined ? true : Boolean(item.active),
+      };
+    }
+
+    async function importSeed() {
+      if (!authState?.ok) return;
+
+      let parsed = null;
+      try {
+        parsed = JSON.parse(seedJson.value);
+      } catch {
+        showAlert('JSON formati gecersiz.', 'error');
+        return;
+      }
+
+      if (!Array.isArray(parsed) || !parsed.length) {
+        showAlert('JSON liste olmali ve en az bir kayit icermeli.', 'error');
+        return;
+      }
+
+      let records = null;
+      try {
+        records = parsed.map(normalizeRecord);
+      } catch (error) {
+        showAlert(error.message, 'error');
+        return;
+      }
+
+      importBtn.disabled = true;
+      importBtn.textContent = 'Aktariliyor...';
+      try {
+        const { response, data } = await apiFetch('/api/admin/products-bulk', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ records }),
+        }, authState);
+
+        if (!response.ok || !data?.success) {
+          showAlert(`Seed aktarimi basarisiz: ${data?.error || 'Bilinmeyen hata'}`, 'error');
+          showToast(`Seed aktarimi basarisiz: ${data?.error || 'Bilinmeyen hata'}`, 'error');
+          return;
+        }
+
+        showAlert(`${records.length} kayit aktarıldı/guncellendi.`, 'success');
+        showToast(`${records.length} kayit aktarildi/guncellendi.`, 'success');
+      } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = 'Supabase\'e aktar';
+      }
+    }
+
+    document.getElementById('load-sample-btn').addEventListener('click', () => {
+      seedJson.value = JSON.stringify(sampleProducts, null, 2);
+    });
+
+    initThemeToggle();
+    attachLogoutHandler('#logout-btn');
+
+    if (!isSupabaseConfigured || !supabase) {
+      configWarning.style.display = 'block';
+      configWarning.textContent = 'Supabase ayari eksik. admin/supabase-client.js dosyasini duzenleyin.';
+      importBtn.disabled = true;
+      seedJson.value = JSON.stringify(sampleProducts, null, 2);
+    } else {
+      authState = await checkAuth({
+        requiredRoles: ['super_admin', 'admin', 'editor'],
+      });
+      if (authState.ok) {
+        seedJson.value = JSON.stringify(sampleProducts, null, 2);
+      }
+    }
+
+    importBtn.addEventListener('click', importSeed);
+  </script>
+</body>
+</html>

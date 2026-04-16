@@ -713,6 +713,21 @@
             </span>
             <button class="lang-toggle" id="lang-toggle" aria-label="Dil değiştir">TR</button>
         </div>
+        <a id="user-account-link" href="/account.html" class="teklif-btn" style="display: none;" aria-label="Hesabım">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
+            </svg>
+            <span data-i18n="account-btn-txt">Hesabım</span>
+        </a>
+        <a id="user-login-link" href="/auth.html" class="teklif-btn" aria-label="Giriş yap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            <span data-i18n="login-btn-txt">Giriş</span>
+        </a>
         <a href="https://wa.me/905320540019?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum."
            target="_blank" rel="noopener noreferrer" class="teklif-btn">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -942,7 +957,12 @@
             </div>
         </div>
     </div>
-    <div class="footer-bottom"><p data-i18n="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p></div>
+    <div class="footer-bottom">
+        <p data-i18n="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem;">
+            <a href="/admin/" id="footer-admin-link" style="display: none; color: inherit; text-decoration: none; opacity: 0.6; font-weight: 600;">🔑 Admin Panel</a>
+        </p>
+    </div>
 </footer>
 
 <!-- FLOATING WHATSAPP -->
@@ -1138,7 +1158,72 @@ const observer = new IntersectionObserver(entries => {
 
 document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').forEach(el => observer.observe(el));
 
+// ── USER AUTH HEADER ────────────────────────────────────────────────
+// Load Supabase and user-auth.js dynamically
+(async function initHeaderAuth() {
+    // Create script tags for Supabase and user-auth
+    if (!window.supabase) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.async = true;
+        document.head.appendChild(script);
+
+        // Wait for Supabase to load
+        await new Promise(resolve => {
+            const checkSupabase = setInterval(() => {
+                if (window.supabase) {
+                    clearInterval(checkSupabase);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+
+    // Load user-auth.js
+    if (!window.BlaeneAuth) {
+        const userAuthScript = document.createElement('script');
+        userAuthScript.src = 'assets/js/user-auth.js';
+        document.head.appendChild(userAuthScript);
+
+        await new Promise(resolve => {
+            const checkAuth = setInterval(() => {
+                if (window.BlaeneAuth) {
+                    clearInterval(checkAuth);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+
+    // Now handle auth state
+    if (window.BlaeneAuth) {
+        window.BlaeneAuth.initSupabase();
+
+        try {
+            const user = await window.BlaeneAuth.getCurrentUser();
+            const accountLink = document.getElementById('user-account-link');
+            const loginLink = document.getElementById('user-login-link');
+            const adminLink = document.getElementById('footer-admin-link');
+
+            if (user && accountLink && loginLink) {
+                accountLink.style.display = '';
+                loginLink.style.display = 'none';
+            }
+
+            // Show admin link if user has admin role
+            if (user && adminLink) {
+                const isAdmin = user.user_metadata?.role &&
+                    ['super_admin', 'admin', 'editor'].includes(user.user_metadata.role);
+                if (isAdmin) {
+                    adminLink.style.display = '';
+                }
+            }
+        } catch (error) {
+            console.error('Auth header init error:', error);
+        }
+    }
+})();
+
 </script>
-<script src="assets/js/cart.js"></script>
 </body>
 </html>
