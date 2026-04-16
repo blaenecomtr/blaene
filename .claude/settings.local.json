@@ -7,7 +7,11 @@
       "Bash(npm list:*)",
       "Read(//c/Users/DELL/Desktop/yazılımblaene/ecommerce-admin/src/pages/**)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(npm create *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\DELL\\Desktop\\yazılım\\blaene\\admin-panel\\src\\components"
     ]
   }
 }

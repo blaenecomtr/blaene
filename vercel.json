@@ -1,26 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/admin/:path*",
+      "source": "/admin/((?!api|login\\.html).*)",
       "destination": "/admin/index.html"
     }
   ],
   "redirects": [
-    {
-      "source": "/admin",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/admin/",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/admin/reset-password",
-      "destination": "/admin/reset-password.html",
-      "permanent": false
-    },
     {
       "source": "/auth",
       "destination": "/auth.html",
