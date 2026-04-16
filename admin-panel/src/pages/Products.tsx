@@ -7,6 +7,7 @@ interface Product {
   id: string
   code: string
   name: string
+  description?: string | null
   category: Category | string
   price: number | null
   price_visible: boolean
@@ -19,6 +20,10 @@ interface BulkResult {
   inserted: number
   updated: number
   total: number
+}
+
+interface UploadImageResult {
+  url: string
 }
 
 const CATEGORY_OPTIONS: Category[] = ['bath', 'forge', 'industrial']
@@ -68,10 +73,12 @@ export default function Products() {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [imageDrafts, setImageDrafts] = useState<Record<string, string>>({})
   const [uploadTargetId, setUploadTargetId] = useState<string | null>(null)
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [newCode, setNewCode] = useState('')
   const [newName, setNewName] = useState('')
+  const [newDescription, setNewDescription] = useState('')
   const [newCategory, setNewCategory] = useState<Category>('bath')
   const [newPrice, setNewPrice] = useState('')
   const [newImageUrl, setNewImageUrl] = useState('')
@@ -124,6 +131,7 @@ export default function Products() {
 
     const code = newCode.trim().toUpperCase()
     const name = newName.trim()
+    const description = newDescription.trim()
     const price = parsePrice(newPrice)
     const imageUrl = newImageUrl.trim()
 
@@ -140,6 +148,7 @@ export default function Products() {
         body: {
           code,
           name,
+          description: description || null,
           category: newCategory,
           price,
           price_visible: newVisible && price !== null,
@@ -151,6 +160,7 @@ export default function Products() {
 
       setNewCode('')
       setNewName('')
+      setNewDescription('')
       setNewCategory('bath')
       setNewPrice('')
       setNewImageUrl('')
@@ -211,6 +221,7 @@ export default function Products() {
           id: product.id,
           code: product.code?.trim().toUpperCase(),
           name: product.name?.trim(),
+          description: String(product.description || '').trim() || null,
           category: normalizeCategory(product.category),
           price: product.price,
           price_visible: Boolean(product.price_visible),
@@ -317,28 +328,66 @@ export default function Products() {
     fileInputRef.current?.click()
   }
 
-  const onImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const readFileAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result || ''))
+      reader.onerror = () => reject(new Error('Dosya okunamadi'))
+      reader.readAsDataURL(file)
+    })
+
+  const onImageFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const targetId = uploadTargetId
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!targetId || !file) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = String(reader.result || '').trim()
-      if (!result) return
-      appendProductImage(targetId, result)
-      setMessage('Dosya eklendi. Kaydet butonuna basin.')
+    if (!token) {
+      setError('Oturum bulunamadi. Lutfen tekrar giris yapin.')
+      return
     }
-    reader.onerror = () => {
-      setError('Dosya okunamadi')
+
+    if (file.size > 6 * 1024 * 1024) {
+      setError('Dosya 6MB ustunde. Daha kucuk bir gorsel secin.')
+      return
     }
-    reader.readAsDataURL(file)
+
+    const product = products.find((item) => item.id === targetId)
+    if (!product) {
+      setError('Urun bulunamadi')
+      return
+    }
+
+    setUploadingImageId(targetId)
+    setError('')
+    setMessage('')
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      const uploaded = await apiRequest<UploadImageResult>('/api/admin/upload-image', {
+        method: 'POST',
+        token,
+        body: {
+          data_url: dataUrl,
+          filename: file.name,
+          product_code: product.code,
+        },
+      })
+      if (!uploaded?.url) throw new Error('Yukleme URL donmedi')
+      appendProductImage(targetId, uploaded.url)
+      setMessage('Foto yuklendi. Kaydet butonuna basin.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Dosya yuklenemedi'
+      setError(msg)
+    } finally {
+      setUploadingImageId(null)
+    }
   }
 
   return (
     <div>
-      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Urun, fiyat ve foto yonetimi</h2>
+      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>
+        Urun, fiyat, aciklama ve foto yonetimi
+      </h2>
 
       <input
         ref={fileInputRef}
@@ -395,6 +444,18 @@ export default function Products() {
             style={inputStyle}
           />
         </div>
+        <textarea
+          value={newDescription}
+          onChange={(evt) => setNewDescription(evt.target.value)}
+          placeholder="Urun aciklamasi (opsiyonel)"
+          style={{
+            ...inputStyle,
+            width: '100%',
+            minHeight: '78px',
+            resize: 'vertical',
+            marginTop: '10px',
+          }}
+        />
         <div style={{ display: 'flex', gap: '14px', marginTop: '10px', alignItems: 'center' }}>
           <label style={checkLabelStyle}>
             <input
@@ -495,6 +556,7 @@ export default function Products() {
                 <tr>
                   <th style={thStyle}>Kod</th>
                   <th style={thStyle}>Ad</th>
+                  <th style={thStyle}>Aciklama</th>
                   <th style={thStyle}>Kategori</th>
                   <th style={thStyle}>Fiyat</th>
                   <th style={thStyle}>Fotolar</th>
@@ -519,6 +581,18 @@ export default function Products() {
                           value={product.name || ''}
                           onChange={(evt) => updateLocalProduct(product.id, { name: evt.target.value })}
                           style={{ ...inputStyle, minWidth: '220px' }}
+                        />
+                      </td>
+                      <td style={tdStyle}>
+                        <textarea
+                          value={String(product.description || '')}
+                          onChange={(evt) => updateLocalProduct(product.id, { description: evt.target.value })}
+                          style={{
+                            ...inputStyle,
+                            minWidth: '220px',
+                            minHeight: '74px',
+                            resize: 'vertical',
+                          }}
                         />
                       </td>
                       <td style={tdStyle}>
@@ -581,8 +655,13 @@ export default function Products() {
                           <button type="button" onClick={() => addImageFromDraft(product.id)} style={miniButtonStyle}>
                             URL ekle
                           </button>
-                          <button type="button" onClick={() => chooseImageFile(product.id)} style={miniButtonStyle}>
-                            Dosya
+                          <button
+                            type="button"
+                            onClick={() => chooseImageFile(product.id)}
+                            style={miniButtonStyle}
+                            disabled={uploadingImageId === product.id}
+                          >
+                            {uploadingImageId === product.id ? 'Yukleniyor...' : 'Dosya'}
                           </button>
                           <button type="button" onClick={() => clearProductImages(product.id)} style={dangerMiniStyle}>
                             Temizle

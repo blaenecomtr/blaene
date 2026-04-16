@@ -37,6 +37,13 @@ const TICKET_PRIORITY_ALLOWED = ['low', 'medium', 'high', 'urgent'];
 const SENDER_TYPE_ALLOWED = ['customer', 'agent', 'system'];
 const FINANCIAL_TYPE_ALLOWED = ['income', 'expense'];
 const MAX_PAGE_SIZE = 200;
+const MAX_IMAGE_UPLOAD_BYTES = 6 * 1024 * 1024;
+const IMAGE_MIME_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 
 function getUrl(req) {
   return new URL(req.url, 'http://localhost');
@@ -261,6 +268,28 @@ async function safeSelect(config, table, query, fallback = []) {
 
 function parseBodySafe(req) {
   return readJsonBody(req).catch(() => ({ body: null }));
+}
+
+function normalizeStorageToken(input, fallback = 'asset') {
+  const value = normalizeText(input, 120).toLowerCase();
+  const cleaned = value.replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return cleaned || fallback;
+}
+
+function parseImageDataUrl(input) {
+  const value = normalizeText(input, 16 * 1024 * 1024);
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/.exec(value);
+  if (!match) return null;
+  const mime = String(match[1] || '').toLowerCase();
+  if (!IMAGE_MIME_EXT[mime]) return null;
+  let binary;
+  try {
+    binary = Buffer.from(match[2], 'base64');
+  } catch {
+    return null;
+  }
+  if (!binary || !binary.length) return null;
+  return { mime, binary };
 }
 
 function normalizeProductPayload(input) {
@@ -512,6 +541,59 @@ async function handleMe(req, res, ctx) {
     user: { id: auth.user.id, email: auth.user.email || null },
     profile: auth.profile,
   });
+}
+
+async function handleUploadImage(req, res, ctx) {
+  const { config, auth } = ctx;
+  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+  if (!hasRole(auth.profile.role, WRITER_ROLES)) return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+
+  const parsed = await parseBodySafe(req);
+  const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+  const dataUrl = body.data_url;
+  const productCode = normalizeStorageToken(body.product_code, 'product');
+  const parsedImage = parseImageDataUrl(dataUrl);
+  if (!parsedImage) {
+    return sendError(res, 400, 'Gecersiz gorsel formati', 'VALIDATION_IMAGE_FORMAT');
+  }
+  if (parsedImage.binary.length > MAX_IMAGE_UPLOAD_BYTES) {
+    return sendError(res, 400, 'Gorsel boyutu 6MB ustunde', 'VALIDATION_IMAGE_SIZE');
+  }
+
+  const ext = IMAGE_MIME_EXT[parsedImage.mime];
+  const filenameToken = normalizeStorageToken(body.filename, 'upload');
+  const randomToken = crypto.randomBytes(6).toString('hex');
+  const objectPathRaw = `products/${productCode}/${Date.now()}-${filenameToken}-${randomToken}.${ext}`;
+  const encodedPath = objectPathRaw
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  const uploadUrl = `${config.url}/storage/v1/object/product-images/${encodedPath}`;
+  const uploadResponse = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      ...buildServiceHeaders(config),
+      'Content-Type': parsedImage.mime,
+      'x-upsert': 'false',
+    },
+    body: parsedImage.binary,
+  });
+
+  if (!uploadResponse.ok) {
+    const details = await uploadResponse.text().catch(() => '');
+    return sendError(res, 500, details || 'Gorsel yukleme basarisiz', 'UPLOAD_FAILED');
+  }
+
+  const publicUrl = `${config.url}/storage/v1/object/public/product-images/${encodedPath}`;
+  await writeAuditLog(
+    config,
+    req,
+    auth,
+    'product.image_upload',
+    { product_code: productCode, object_path: objectPathRaw },
+    { entityType: 'product' }
+  );
+  return sendSuccess(res, { url: publicUrl });
 }
 
 async function handleProducts(req, res, ctx) {
@@ -2124,6 +2206,7 @@ const authenticatedHandler = createApiHandler(
     if (routeKey === 'audit-logs') return handleAuditLogs(req, res, ctx);
     if (routeKey === 'shipping') return handleShipping(req, res, ctx);
     if (routeKey === 'verify-logout') return handleVerifyLogout(req, res, ctx);
+    if (routeKey === 'upload-image') return handleUploadImage(req, res, ctx);
 
     if (routeKey === 'rbac' || routeKey === 'payments' || routeKey === 'feature-flags') {
       return notImplemented(res, routeKey);
