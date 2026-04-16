@@ -1957,7 +1957,35 @@ function notImplemented(res, routeKey) {
   );
 }
 
-module.exports = createApiHandler(
+async function handleVerifyLogout(req, res, ctx) {
+  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+  const parsed = await readJsonBody(req);
+  const body = parsed?.body || {};
+  const { password } = body;
+  const { auth } = ctx;
+
+  if (!password || typeof password !== 'string') {
+    return sendError(res, 400, 'Password required', 'VALIDATION_ERROR');
+  }
+
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: auth.user.email,
+      password,
+    });
+    if (error || !data?.session) {
+      return sendError(res, 401, 'Invalid password', 'AUTH_INVALID_PASSWORD');
+    }
+    return sendSuccess(res, { ok: true });
+  } catch (err) {
+    console.error('Verify logout error:', err);
+    return sendError(res, 500, 'Verification failed', 'AUTH_ERROR');
+  }
+}
+
+const authenticatedHandler = createApiHandler(
   {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     requireAuth: true,
@@ -1985,6 +2013,7 @@ module.exports = createApiHandler(
     if (routeKey === 'ai-support-reply') return handleAiSupportReply(req, res, ctx);
     if (routeKey === 'audit-logs') return handleAuditLogs(req, res, ctx);
     if (routeKey === 'shipping') return handleShipping(req, res, ctx);
+    if (routeKey === 'verify-logout') return handleVerifyLogout(req, res, ctx);
 
     if (routeKey === 'rbac' || routeKey === 'payments' || routeKey === 'feature-flags') {
       return notImplemented(res, routeKey);
@@ -1993,3 +2022,61 @@ module.exports = createApiHandler(
     return sendError(res, 404, `Unknown admin route: ${routeKey || '(root)'}`, 'ADMIN_ROUTE_NOT_FOUND');
   }
 );
+
+const loginHandler = createApiHandler(
+  {
+    methods: ['POST'],
+    requireAuth: false,
+    rateLimit: 10,
+  },
+  async (req, res) => {
+    if (req.method !== 'POST') {
+      return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+    }
+
+    const parsed = await readJsonBody(req);
+    const body = parsed?.body || {};
+    const { email, password } = body;
+
+    if (!email || !password) {
+      return sendError(res, 400, 'Email and password required', 'VALIDATION_ERROR');
+    }
+
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error || !data?.session) {
+        return sendError(res, 401, 'Invalid credentials', 'AUTH_INVALID');
+      }
+
+      const adminSupabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { data: profile } = await adminSupabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      const validRoles = ['super_admin', 'admin', 'editor', 'viewer'];
+      if (!profile || !validRoles.includes(profile.role)) {
+        return sendError(res, 403, 'Not authorized', 'AUTH_FORBIDDEN');
+      }
+
+      return sendSuccess(res, {
+        token: data.session.access_token,
+        user: { id: data.user.id, email: data.user.email },
+      });
+    } catch (err) {
+      console.error('Login error:', err);
+      return sendError(res, 500, 'Login failed', 'AUTH_ERROR');
+    }
+  }
+);
+
+module.exports = async function adminRouteHandler(req, res) {
+  const routeKey = getRouteKey(req);
+  if (routeKey === 'login') return loginHandler(req, res);
+  return authenticatedHandler(req, res);
+};
