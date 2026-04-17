@@ -404,6 +404,12 @@
       const signupCity = document.getElementById('signup-city');
       const signupDistrict = document.getElementById('signup-district');
       const signupCustomerTypeInputs = document.querySelectorAll('input[name="signup-customer-type"]');
+      const redirectAfterAuth = (function sanitizeRedirectPath(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '/account.html';
+        if (!raw.startsWith('/') || raw.startsWith('//')) return '/account.html';
+        return raw;
+      })(new URLSearchParams(location.search).get('redirect'));
 
       function showAlert(message, type) {
         alertBox.innerHTML = '<div class="alert ' + type + '">' + message + '</div>';
@@ -465,7 +471,7 @@
         button.disabled = true;
         button.textContent = 'Google yönlendirmesi...';
         try {
-          await window.BlaeneAuth.signInWithGoogle('/account.html');
+          await window.BlaeneAuth.signInWithGoogle(redirectAfterAuth);
         } catch (error) {
           showAlert((error && error.message) || fallbackMessage, 'error');
           button.disabled = false;
@@ -502,9 +508,8 @@
           const password = document.getElementById('login-password').value;
           await window.BlaeneAuth.signIn(email, password);
           showAlert('Başarıyla giriş yapıldı. Yönlendiriliyorsunuz...', 'success');
-          const redirect = new URLSearchParams(location.search).get('redirect');
           setTimeout(function () {
-            window.location.href = redirect || '/account.html';
+            window.location.href = redirectAfterAuth;
           }, 700);
         } catch (error) {
           showAlert((error && error.message) || 'Giriş başarısız.', 'error');
@@ -556,7 +561,7 @@
 
           showAlert('Hesabınız başarıyla oluşturuldu. Yönlendiriliyorsunuz...', 'success');
           setTimeout(function () {
-            window.location.href = '/account.html';
+            window.location.href = redirectAfterAuth;
           }, 1100);
         } catch (error) {
           showAlert((error && error.message) || 'Hesap oluşturulamadı.', 'error');

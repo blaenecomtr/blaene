@@ -1,4 +1,4 @@
-import { type ChangeEvent, type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { type ChangeEvent, type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { apiRequest } from '../lib/api'
 
 type Category = 'bath' | 'forge' | 'industrial'
@@ -17,6 +17,9 @@ interface Product {
   id: string
   code: string
   name: string
+  material?: string | null
+  thickness?: string | null
+  dims?: string | null
   description?: string | null
   category: Category | string
   price: number | null
@@ -28,6 +31,8 @@ interface Product {
   seo_description?: string | null
   seo_slug?: string | null
   variants?: ProductVariant[]
+  discount_percent?: number | null
+  discount_promo_id?: string | null
 }
 
 interface UploadImageResult {
@@ -41,6 +46,7 @@ interface ColorDraft {
   label: string
   imageUrl: string
   file: File | null
+  files: File[]
 }
 
 interface VariantDraft {
@@ -49,13 +55,29 @@ interface VariantDraft {
   label: string
   imageUrl: string
   file: File | null
+  files: File[]
+  existingImages: string[]
+  editingVariantId: string | null
 }
 
 interface PriceBulkResult {
   updated: number
 }
 
+interface PromotionRow {
+  id: string
+  code?: string | null
+  target_scope?: string | null
+  target_value?: string | null
+  discount_type?: string | null
+  discount_value?: number | string | null
+  is_active?: boolean
+}
+
 const CATEGORY_OPTIONS: Category[] = ['bath', 'forge', 'industrial']
+const MATERIAL_OPTIONS = ['304 Paslanmaz Krom', 'Dkp', 'Galvaniz Çelik']
+const THICKNESS_OPTIONS = ['1mm', '1.2mm', '1.5mm', '2mm', '2.5mm', '3mm', '4mm']
+const COLOR_OPTIONS = ['Inox', 'Beyaz', 'Siyah']
 const MAX_UPLOAD_SOURCE_BYTES = 6 * 1024 * 1024
 const MAX_SAFE_DATAURL_LENGTH = 3_800_000
 
@@ -64,6 +86,21 @@ function normalizeCategory(input: string): Category {
   if (value === 'forge') return 'forge'
   if (value === 'industrial') return 'industrial'
   return 'bath'
+}
+
+function optionListWithCurrent(options: string[], current: string): string[] {
+  const value = String(current || '').trim()
+  if (!value) return options
+  const exists = options.some((option) => option.toLowerCase() === value.toLowerCase())
+  return exists ? options : [value, ...options]
+}
+
+function parseColorPrimary(input: string): string {
+  const parts = String(input || '')
+    .split('/')
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return parts[0] || ''
 }
 
 function parsePrice(input: string): number | null {
@@ -77,6 +114,21 @@ function parseStock(input: string): number {
   const parsed = Number(String(input || '').trim())
   if (!Number.isFinite(parsed)) return 0
   return Math.max(0, Math.floor(parsed))
+}
+
+function normalizeDiscountPercent(input: unknown): number | null {
+  const parsed = Number(String(input ?? '').trim().replace(',', '.'))
+  if (!Number.isFinite(parsed)) return null
+  if (parsed <= 0) return null
+  return Math.min(95, Math.max(0, Math.round(parsed * 100) / 100))
+}
+
+function calculateDiscountedPrice(price: number | null, discountPercent: number | null): number | null {
+  if (!Number.isFinite(Number(price)) || Number(price) <= 0) return null
+  const percent = normalizeDiscountPercent(discountPercent)
+  if (!percent) return null
+  const discounted = Number(price) * (1 - percent / 100)
+  return Math.max(0, Math.round(discounted * 100) / 100)
 }
 
 function formatPrice(value: number | null): string {
@@ -123,6 +175,47 @@ function createEmptyColorDraft(): ColorDraft {
     label: '',
     imageUrl: '',
     file: null,
+    files: [],
+  }
+}
+
+function buildProductDiscountMap(rows: PromotionRow[]): Record<string, { id: string; percent: number }> {
+  const map: Record<string, { id: string; percent: number }> = {}
+  for (const row of rows || []) {
+    if (!row || row.is_active === false) continue
+    if (String(row.discount_type || '').toLowerCase() !== 'percent') continue
+    const percent = normalizeDiscountPercent(row.discount_value)
+    if (!percent) continue
+
+    const scope = String(row.target_scope || '').trim().toLowerCase()
+    const targetValue = String(row.target_value || '').trim().toUpperCase()
+    const codeValue = String(row.code || '').trim().toUpperCase()
+
+    let key = ''
+    if (scope === 'product_code' && targetValue) {
+      key = targetValue
+    } else if (codeValue.startsWith('PRD-')) {
+      key = codeValue.replace(/^PRD-/, '')
+    }
+    if (!key) continue
+
+    if (!map[key]) {
+      map[key] = { id: String(row.id || ''), percent }
+    }
+  }
+  return map
+}
+
+function createEmptyVariantDraft(): VariantDraft {
+  return {
+    color: '',
+    color2: '',
+    label: '',
+    imageUrl: '',
+    file: null,
+    files: [],
+    existingImages: [],
+    editingVariantId: null,
   }
 }
 
@@ -135,6 +228,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<'all' | Category>('all')
@@ -154,12 +248,15 @@ export default function Products() {
 
   const [newCode, setNewCode] = useState('')
   const [newName, setNewName] = useState('')
-  const [newDescription, setNewDescription] = useState('')
-  const [newCategory, setNewCategory] = useState<Category>('bath')
+  const [newMaterial, setNewMaterial] = useState('')
+  const [newThickness, setNewThickness] = useState('')
+  const [newDims, setNewDims] = useState('')
+  const [newCategory, setNewCategory] = useState<Category | ''>('')
   const [newPrice, setNewPrice] = useState('')
   const [newStockQuantity, setNewStockQuantity] = useState('0')
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageFile, setNewImageFile] = useState<File | null>(null)
+  const [newMainImageColor, setNewMainImageColor] = useState('')
   const [newSeoTitle, setNewSeoTitle] = useState('')
   const [newSeoDescription, setNewSeoDescription] = useState('')
   const [newSeoSlug, setNewSeoSlug] = useState('')
@@ -184,11 +281,25 @@ export default function Products() {
       params.set('_t', String(Date.now()))
       const path = `/api/admin/products?${params.toString()}`
       const data = await apiRequest<Product[]>(path, { token })
-      const normalized = (Array.isArray(data) ? data : []).map((item) => ({
+      let discountMap: Record<string, { id: string; percent: number }> = {}
+      try {
+        const promotions = await apiRequest<PromotionRow[]>('/api/admin/promotions?page_size=5000', { token })
+        discountMap = buildProductDiscountMap(Array.isArray(promotions) ? promotions : [])
+      } catch {
+        discountMap = {}
+      }
+
+      const normalized = (Array.isArray(data) ? data : []).map((item) => {
+        const codeKey = String(item.code || '').trim().toUpperCase()
+        const discountEntry = discountMap[codeKey]
+        return {
         ...item,
         images: normalizeImages(item.images),
         variants: normalizeVariants(item.variants),
-      }))
+        discount_percent: discountEntry?.percent ?? null,
+        discount_promo_id: discountEntry?.id || null,
+      }
+      })
       setProducts(normalized)
 
       setImageDrafts((prev) => {
@@ -202,7 +313,7 @@ export default function Products() {
       setVariantDrafts((prev) => {
         const next: Record<string, VariantDraft> = {}
         normalized.forEach((item) => {
-          next[item.id] = prev[item.id] || { color: '', color2: '', label: '', imageUrl: '', file: null }
+          next[item.id] = prev[item.id] || createEmptyVariantDraft()
         })
         return next
       })
@@ -289,12 +400,15 @@ export default function Products() {
   const resetNewProductForm = () => {
     setNewCode('')
     setNewName('')
-    setNewDescription('')
-    setNewCategory('bath')
+    setNewMaterial('')
+    setNewThickness('')
+    setNewDims('')
+    setNewCategory('')
     setNewPrice('')
     setNewStockQuantity('0')
     setNewImageUrl('')
     setNewImageFile(null)
+    setNewMainImageColor('')
     setNewSeoTitle('')
     setNewSeoDescription('')
     setNewSeoSlug('')
@@ -310,12 +424,15 @@ export default function Products() {
 
     const code = newCode.trim().toUpperCase()
     const name = newName.trim()
-    const description = newDescription.trim()
+    const material = newMaterial.trim()
+    const thickness = newThickness.trim()
+    const dims = newDims.trim()
     const price = parsePrice(newPrice)
     const imageUrl = newImageUrl.trim()
+    const mainImageColor = newMainImageColor.trim()
 
-    if (!code || !name) {
-      setError('Kod ve ad zorunlu')
+    if (!code || !name || !material || !thickness || !dims || !newCategory) {
+      setError('Kod, urun, malzeme, kalinlik, olculer ve kategori zorunlu')
       return
     }
 
@@ -336,7 +453,9 @@ export default function Products() {
           body: {
             code,
             name,
-            description: description || null,
+            material,
+            thickness,
+            dims,
             category: newCategory,
             price,
             price_visible: newVisible && price !== null,
@@ -356,33 +475,68 @@ export default function Products() {
 
       const productId = String(created?.id || '').trim()
       const targetDrafts = newColorDrafts.filter((draft) => {
-        const colorCombined = [draft.color.trim(), draft.color2.trim()].filter(Boolean).join(' / ')
-        const label = draft.label.trim() || colorCombined
-        return Boolean(colorCombined || label)
+        const colorName = draft.color.trim()
+        return Boolean(colorName)
       })
+
+      if (images.length > 0 && mainImageColor) {
+        const hasMainColorDraft = targetDrafts.some((draft) => {
+          const colorName = draft.color.trim().toLowerCase()
+          const probe = mainImageColor.toLowerCase()
+          return colorName === probe
+        })
+        if (!hasMainColorDraft) {
+          targetDrafts.unshift({
+            id: `main-image-${Date.now()}`,
+            color: mainImageColor,
+            color2: '',
+            label: mainImageColor,
+            imageUrl: images[0],
+            file: null,
+            files: [],
+          })
+        } else {
+          targetDrafts.forEach((draft) => {
+            const colorName = draft.color.trim().toLowerCase()
+            const probe = mainImageColor.toLowerCase()
+            const isTarget = colorName === probe
+            if (isTarget && !draft.file && !(draft.files || []).length && !draft.imageUrl.trim()) {
+              draft.imageUrl = images[0]
+            }
+          })
+        }
+      }
 
       let createdColorCount = 0
       const variantFailures: string[] = []
       if (productId) {
         for (const draft of targetDrafts) {
-          const colorPrimary = draft.color.trim()
-          const colorSecondary = draft.color2.trim()
-          const colorCombined = [colorPrimary, colorSecondary].filter(Boolean).join(' / ')
-          const label = draft.label.trim() || colorCombined
+          const colorName = draft.color.trim()
           const url = draft.imageUrl.trim()
           try {
-            let variantImageUrl = url
-            if (draft.file) {
-              variantImageUrl = await uploadImage(draft.file, code)
+            const variantImages: string[] = []
+            if (url) variantImages.push(url)
+            const filesToUpload = (draft.files || []).length > 0
+              ? (draft.files || [])
+              : draft.file
+                ? [draft.file]
+                : []
+            for (const item of filesToUpload) {
+              const uploaded = await uploadImage(item, code)
+              variantImages.push(uploaded)
+            }
+            const mergedImages = Array.from(new Set(variantImages.filter(Boolean))).slice(0, 24)
+            if (!mergedImages.length) {
+              throw new Error('Foto gerekli')
             }
             await apiRequest('/api/admin/product-variants', {
               method: 'POST',
               token,
               body: {
                 product_id: productId,
-                label: label || 'Renk',
-                color: colorCombined || null,
-                images: variantImageUrl ? [variantImageUrl] : [],
+                label: colorName || 'Renk',
+                color: colorName || null,
+                images: mergedImages,
                 stock: 0,
                 active: true,
               },
@@ -390,7 +544,7 @@ export default function Products() {
             createdColorCount += 1
           } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'bilinmeyen hata'
-            variantFailures.push(`${label || colorCombined || 'Renk'}: ${msg}`)
+            variantFailures.push(`${colorName || 'Renk'}: ${msg}`)
           }
         }
       }
@@ -471,10 +625,74 @@ export default function Products() {
     }
   }
 
+  const upsertProductDiscount = async (product: Product, code: string, name: string) => {
+    if (!token) return
+    const discountPercent = normalizeDiscountPercent(product.discount_percent)
+    const promoId = String(product.discount_promo_id || '').trim()
+
+    if (!discountPercent) {
+      if (promoId) {
+        await apiRequest('/api/admin/promotions', {
+          method: 'DELETE',
+          token,
+          body: { id: promoId },
+        })
+      }
+      return
+    }
+
+    const payload = {
+      code: `PRD-${code}`,
+      title: `${name} urun indirimi`,
+      description: `${code} urunu icin otomatik tanimlanan indirim`,
+      discount_type: 'percent',
+      discount_value: discountPercent,
+      is_active: true,
+      target_scope: 'product_code',
+      target_value: code,
+    }
+
+    if (promoId) {
+      await apiRequest('/api/admin/promotions', {
+        method: 'PUT',
+        token,
+        body: {
+          id: promoId,
+          ...payload,
+        },
+      })
+      return
+    }
+
+    const created = await apiRequest<PromotionRow>('/api/admin/promotions', {
+      method: 'POST',
+      token,
+      body: payload,
+    })
+    if (created?.id) {
+      updateLocalProduct(product.id, { discount_promo_id: String(created.id) })
+    }
+  }
+
   const saveProduct = async (product: Product) => {
     if (!token) return
     setError('')
     setMessage('')
+
+    const requiredFieldState = {
+      code: String(product.code || '').trim().toUpperCase(),
+      name: String(product.name || '').trim(),
+      material: String(product.material || '').trim(),
+      thickness: String(product.thickness || '').trim(),
+      dims: String(product.dims || '').trim(),
+      category: normalizeCategory(String(product.category || '')),
+    }
+
+    if (!requiredFieldState.code || !requiredFieldState.name || !requiredFieldState.material || !requiredFieldState.thickness || !requiredFieldState.dims) {
+      setError(`${String(product.code || '').trim() || 'Urun'} icin urun, malzeme, kalinlik, olculer ve kategori zorunlu`)
+      return
+    }
+
     setSavingId(product.id)
     try {
       await apiRequest('/api/admin/products', {
@@ -482,10 +700,12 @@ export default function Products() {
         token,
         body: {
           id: product.id,
-          code: product.code?.trim().toUpperCase(),
-          name: product.name?.trim(),
-          description: String(product.description || '').trim() || null,
-          category: normalizeCategory(product.category),
+          code: requiredFieldState.code,
+          name: requiredFieldState.name,
+          material: requiredFieldState.material,
+          thickness: requiredFieldState.thickness,
+          dims: requiredFieldState.dims,
+          category: requiredFieldState.category,
           price: product.price,
           price_visible: Boolean(product.price_visible),
           active: Boolean(product.active),
@@ -496,7 +716,20 @@ export default function Products() {
           seo_slug: String(product.seo_slug || '').trim() || null,
         },
       })
-      setMessage(`${product.code} guncellendi`)
+
+      let discountSaveError = ''
+      try {
+        await upsertProductDiscount(product, requiredFieldState.code, requiredFieldState.name)
+      } catch (discountErr: unknown) {
+        discountSaveError = discountErr instanceof Error ? discountErr.message : 'indirim kaydedilemedi'
+      }
+
+      if (discountSaveError) {
+        setError(`${requiredFieldState.code} guncellendi, fakat indirim kaydi basarisiz: ${discountSaveError}`)
+      } else {
+        setMessage(`${requiredFieldState.code} guncellendi`)
+      }
+      if (editingProductId === product.id) setEditingProductId(null)
       await loadProducts()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Kayit guncellenemedi'
@@ -621,20 +854,43 @@ export default function Products() {
         label: prev[productId]?.label || '',
         imageUrl: prev[productId]?.imageUrl || '',
         file: prev[productId]?.file || null,
+        files: prev[productId]?.files || [],
+        existingImages: prev[productId]?.existingImages || [],
+        editingVariantId: prev[productId]?.editingVariantId || null,
         ...patch,
       },
     }))
   }
 
+  const startVariantEdit = (product: Product, variant: ProductVariant) => {
+    const colorPrimary = parseColorPrimary(String(variant.color || ''))
+    const existingImages = normalizeImages(variant.images)
+    const imageUrl = existingImages[0] || ''
+    updateVariantDraft(product.id, {
+      color: colorPrimary,
+      color2: '',
+      label: colorPrimary || String(variant.label || '').trim(),
+      imageUrl,
+      file: null,
+      files: [],
+      existingImages,
+      editingVariantId: variant.id,
+    })
+    setEditingProductId(product.id)
+    setMessage(`${product.code} icin ${getVariantLabel(variant)} duzenleme moduna alindi`)
+  }
+
+  const clearVariantDraft = (productId: string) => {
+    updateVariantDraft(productId, createEmptyVariantDraft())
+  }
+
   const addVariantForProduct = async (product: Product) => {
     if (!token) return
-    const draft = variantDrafts[product.id] || { color: '', color2: '', label: '', imageUrl: '', file: null }
-    const colorPrimary = draft.color.trim()
-    const colorSecondary = draft.color2.trim()
-    const colorCombined = [colorPrimary, colorSecondary].filter(Boolean).join(' / ')
-    const label = draft.label.trim() || colorCombined
-    if (!colorCombined && !label) {
-      setError('Renk adi veya etiket girin')
+    const draft = variantDrafts[product.id] || createEmptyVariantDraft()
+    const colorName = draft.color.trim()
+    const isEditMode = Boolean(draft.editingVariantId)
+    if (!colorName) {
+      setError('Lutfen en az bir renk secin')
       return
     }
 
@@ -642,27 +898,56 @@ export default function Products() {
     setError('')
     setMessage('')
     try {
-      let imageUrl = draft.imageUrl.trim()
-      if (draft.file) {
-        imageUrl = await uploadImage(draft.file, product.code)
+      const imageUrls: string[] = []
+      if (isEditMode) {
+        imageUrls.push(...normalizeImages(draft.existingImages))
+      }
+
+      const manualUrl = draft.imageUrl.trim()
+      if (manualUrl) {
+        imageUrls.push(manualUrl)
+      }
+
+      const filesToUpload = (draft.files || []).length > 0
+        ? (draft.files || [])
+        : draft.file
+          ? [draft.file]
+          : []
+      for (const item of filesToUpload) {
+        const uploaded = await uploadImage(item, product.code)
+        imageUrls.push(uploaded)
+      }
+
+      const mergedImages = Array.from(new Set(imageUrls.filter(Boolean))).slice(0, 24)
+      if (!mergedImages.length) {
+        setError('Renk icin foto ekleyin')
+        return
       }
       await apiRequest('/api/admin/product-variants', {
-        method: 'POST',
+        method: isEditMode ? 'PUT' : 'POST',
         token,
-        body: {
-          product_id: product.id,
-          label: label || 'Renk',
-          color: colorCombined || null,
-          images: imageUrl ? [imageUrl] : [],
-          stock: 0,
-          active: true,
-        },
+        body: isEditMode
+          ? {
+              id: draft.editingVariantId,
+              label: colorName || 'Renk',
+              color: colorName || null,
+              images: mergedImages,
+              active: true,
+            }
+          : {
+              product_id: product.id,
+              label: colorName || 'Renk',
+              color: colorName || null,
+              images: mergedImages,
+              stock: 0,
+              active: true,
+            },
       })
-      updateVariantDraft(product.id, { color: '', color2: '', label: '', imageUrl: '', file: null })
-      setMessage(`${product.code} icin yeni renk eklendi`)
+      clearVariantDraft(product.id)
+      setMessage(isEditMode ? `${product.code} renk secenegi guncellendi` : `${product.code} icin yeni renk kaydedildi`)
       await loadProducts()
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Renk eklenemedi'
+      const msg = err instanceof Error ? err.message : (isEditMode ? 'Renk guncellenemedi' : 'Renk eklenemedi')
       setError(msg)
     } finally {
       setVariantActionLoading(null)
@@ -753,13 +1038,44 @@ export default function Products() {
       <div style={panelStyle}>
         <h3 style={panelTitleStyle}>Yeni urun ekle</h3>
         <div style={newGridStyle}>
-          <input value={newCode} onChange={(evt) => setNewCode(evt.target.value)} placeholder="Kod" style={inputStyle} />
-          <input value={newName} onChange={(evt) => setNewName(evt.target.value)} placeholder="Urun adi" style={inputStyle} />
+          <input value={newCode} onChange={(evt) => setNewCode(evt.target.value)} placeholder="Kod *" style={inputStyle} />
+          <input value={newName} onChange={(evt) => setNewName(evt.target.value)} placeholder="Urun *" style={inputStyle} />
           <select
-            value={newCategory}
-            onChange={(evt) => setNewCategory(normalizeCategory(evt.target.value))}
+            value={newMaterial}
+            onChange={(evt) => setNewMaterial(evt.target.value)}
             style={inputStyle}
           >
+            <option value="">Malzeme secin *</option>
+            {MATERIAL_OPTIONS.map((option) => (
+              <option key={`new-material-${option}`} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <select
+            value={newThickness}
+            onChange={(evt) => setNewThickness(evt.target.value)}
+            style={inputStyle}
+          >
+            <option value="">Kalinlik secin *</option>
+            {THICKNESS_OPTIONS.map((option) => (
+              <option key={`new-thickness-${option}`} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <input
+            value={newDims}
+            onChange={(evt) => setNewDims(evt.target.value)}
+            placeholder="Olculer *"
+            style={inputStyle}
+          />
+          <select
+            value={newCategory}
+            onChange={(evt) => setNewCategory(evt.target.value ? normalizeCategory(evt.target.value) : '')}
+            style={inputStyle}
+          >
+            <option value="">Kategori secin *</option>
             {CATEGORY_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -804,13 +1120,6 @@ export default function Products() {
           />
         </div>
 
-        <textarea
-          value={newDescription}
-          onChange={(evt) => setNewDescription(evt.target.value)}
-          placeholder="Urun aciklamasi (opsiyonel)"
-          style={{ ...inputStyle, width: '100%', minHeight: '78px', resize: 'vertical', marginTop: '10px' }}
-        />
-
         <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <label style={checkLabelStyle}>
             Ilk foto dosya:
@@ -822,6 +1131,18 @@ export default function Products() {
             />
           </label>
           {newImageFile && <span style={mutedMiniText}>{newImageFile.name}</span>}
+          <select
+            value={newMainImageColor}
+            onChange={(evt) => setNewMainImageColor(evt.target.value)}
+            style={{ ...inputStyle, minWidth: '170px' }}
+          >
+            <option value="">Ilk fotonun rengi (opsiyonel)</option>
+            {COLOR_OPTIONS.map((option) => (
+              <option key={`main-color-${option}`} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div
@@ -846,43 +1167,43 @@ export default function Products() {
 
         <div style={{ marginTop: '14px', border: '1px dashed #334155', borderRadius: '8px', padding: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h4 style={{ margin: 0, color: '#e2e8f0', fontSize: '13px' }}>Renk secenekleri ve renge gore foto</h4>
+            <h4 style={{ margin: 0, color: '#e2e8f0', fontSize: '13px' }}>Renk sec + Foto ekle</h4>
             <button type="button" onClick={addColorDraftRow} style={miniButtonStyle}>
               + Renk satiri
             </button>
           </div>
+          <div style={{ ...mutedMiniText, marginBottom: '8px' }}>
+            Not: Bir renk icin birden fazla foto secmek icin dosya secicisinde coklu secim yapabilirsiniz.
+          </div>
           {newColorDrafts.map((draft) => (
             <div key={draft.id} style={colorRowStyle}>
-              <input
+              <select
                 value={draft.color}
                 onChange={(evt) => updateColorDraft(draft.id, { color: evt.target.value })}
-                placeholder="Renk (or: Siyah)"
                 style={inputStyle}
-              />
-              <input
-                value={draft.color2}
-                onChange={(evt) => updateColorDraft(draft.id, { color2: evt.target.value })}
-                placeholder="2. Renk (opsiyonel, or: Gri)"
-                style={inputStyle}
-              />
-              <input
-                value={draft.label}
-                onChange={(evt) => updateColorDraft(draft.id, { label: evt.target.value })}
-                placeholder="Etiket (opsiyonel)"
-                style={inputStyle}
-              />
-              <input
-                value={draft.imageUrl}
-                onChange={(evt) => updateColorDraft(draft.id, { imageUrl: evt.target.value })}
-                placeholder="Renk foto URL (opsiyonel)"
-                style={inputStyle}
-              />
+              >
+                <option value="">Renk sec *</option>
+                {COLOR_OPTIONS.map((option) => (
+                  <option key={`${draft.id}-color-${option}`} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               <input
                 type="file"
                 accept="image/*"
-                onChange={(evt) => updateColorDraft(draft.id, { file: evt.target.files?.[0] || null })}
+                multiple
+                onChange={(evt) =>
+                  updateColorDraft(draft.id, {
+                    file: evt.target.files?.[0] || null,
+                    files: Array.from(evt.target.files || []),
+                  })
+                }
                 style={inputStyle}
               />
+              <div style={mutedMiniText}>
+                {draft.files?.length ? `${draft.files.length} foto secildi` : 'Foto ekle *'}
+              </div>
               <button type="button" onClick={() => removeColorDraft(draft.id)} style={dangerMiniStyle}>
                 Kaldir
               </button>
@@ -986,9 +1307,14 @@ export default function Products() {
                 {products.map((product) => {
                   const photos = normalizeImages(product.images)
                   const variants = normalizeVariants(product.variants)
-                  const variantDraft = variantDrafts[product.id] || { color: '', color2: '', label: '', imageUrl: '', file: null }
+                  const variantDraft = variantDrafts[product.id] || createEmptyVariantDraft()
+                  const isEditingProduct = editingProductId === product.id
+                  const materialOptions = optionListWithCurrent(MATERIAL_OPTIONS, String(product.material || ''))
+                  const thicknessOptions = optionListWithCurrent(THICKNESS_OPTIONS, String(product.thickness || ''))
+                  const discountPercent = normalizeDiscountPercent(product.discount_percent)
+                  const discountedPrice = calculateDiscountedPrice(product.price, discountPercent)
                   return (
-                    <tr key={product.id}>
+                    <tr key={product.id} style={isEditingProduct ? activeRowStyle : undefined}>
                       <td style={tdStyle}>
                         <input
                           value={product.code || ''}
@@ -1011,10 +1337,35 @@ export default function Products() {
                             </option>
                           ))}
                         </select>
-                        <textarea
-                          value={String(product.description || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { description: evt.target.value })}
-                          style={{ ...inputStyle, width: '240px', minHeight: '64px', resize: 'vertical' }}
+                        <select
+                          value={String(product.material || '')}
+                          onChange={(evt) => updateLocalProduct(product.id, { material: evt.target.value })}
+                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
+                        >
+                          <option value="">Malzeme sec *</option>
+                          {materialOptions.map((option) => (
+                            <option key={`${product.id}-material-${option}`} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={String(product.thickness || '')}
+                          onChange={(evt) => updateLocalProduct(product.id, { thickness: evt.target.value })}
+                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
+                        >
+                          <option value="">Kalinlik sec *</option>
+                          {thicknessOptions.map((option) => (
+                            <option key={`${product.id}-thickness-${option}`} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          value={String(product.dims || '')}
+                          onChange={(evt) => updateLocalProduct(product.id, { dims: evt.target.value })}
+                          placeholder="Olculer *"
+                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
                         />
                       </td>
                       <td style={tdStyle}>
@@ -1045,6 +1396,25 @@ export default function Products() {
                         />
                         <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '8px' }}>
                           Stok: {Number(product.stock_quantity || 0)}
+                        </div>
+                        <input
+                          value={product.discount_percent ?? ''}
+                          onChange={(evt) =>
+                            updateLocalProduct(product.id, {
+                              discount_percent: normalizeDiscountPercent(evt.target.value),
+                            })
+                          }
+                          placeholder="Indirim % (or: 30)"
+                          type="number"
+                          min={0}
+                          max={95}
+                          step={0.1}
+                          style={{ ...inputStyle, width: '220px', marginBottom: '6px' }}
+                        />
+                        <div style={{ color: '#fca5a5', fontSize: '11px', marginBottom: '8px' }}>
+                          {discountedPrice !== null && discountPercent
+                            ? `Indirimli fiyat: ${formatPrice(discountedPrice)} (eski: ${formatPrice(product.price)}, %${discountPercent})`
+                            : 'Indirim yok (0 ise kayitta kaldirilir)'}
                         </div>
                         <input
                           value={String(product.seo_slug || '')}
@@ -1139,58 +1509,80 @@ export default function Products() {
                         </div>
                       </td>
                       <td style={tdStyle}>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
                           {variants.map((variant) => (
-                            <button
-                              key={variant.id}
-                              type="button"
-                              onClick={() => void removeVariant(variant.id, product.code)}
-                              style={variantTagStyle}
-                              title="Sil"
-                            >
-                              {getVariantLabel(variant)} x
-                            </button>
+                            <div key={variant.id} style={variantRowStyle}>
+                              <span style={variantTagStyle}>{getVariantLabel(variant)}</span>
+                              <button
+                                type="button"
+                                onClick={() => startVariantEdit(product, variant)}
+                                style={variantEditButtonStyle}
+                                disabled={variantActionLoading === variant.id || variantActionLoading === product.id}
+                              >
+                                Duzenle
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void removeVariant(variant.id, product.code)}
+                                style={variantDeleteButtonStyle}
+                                title="Sil"
+                                disabled={variantActionLoading === variant.id || variantActionLoading === product.id}
+                              >
+                                {variantActionLoading === variant.id ? 'Siliniyor...' : 'Sil'}
+                              </button>
+                            </div>
                           ))}
                           {!variants.length && <span style={{ color: '#64748b', fontSize: '11px' }}>Renk yok</span>}
                         </div>
-                        <input
+                        <select
                           value={variantDraft.color}
                           onChange={(evt) => updateVariantDraft(product.id, { color: evt.target.value })}
-                          placeholder="Renk adi"
                           style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
-                        />
-                        <input
-                          value={variantDraft.color2}
-                          onChange={(evt) => updateVariantDraft(product.id, { color2: evt.target.value })}
-                          placeholder="2. renk (opsiyonel)"
-                          style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
-                        />
-                        <input
-                          value={variantDraft.label}
-                          onChange={(evt) => updateVariantDraft(product.id, { label: evt.target.value })}
-                          placeholder="Etiket (opsiyonel)"
-                          style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
-                        />
-                        <input
-                          value={variantDraft.imageUrl}
-                          onChange={(evt) => updateVariantDraft(product.id, { imageUrl: evt.target.value })}
-                          placeholder="Renk foto URL"
-                          style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
-                        />
+                        >
+                          <option value="">Renk sec *</option>
+                          {COLOR_OPTIONS.map((option) => (
+                            <option key={`${product.id}-variant-color-${option}`} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(evt) => updateVariantDraft(product.id, { file: evt.target.files?.[0] || null })}
+                          multiple
+                          onChange={(evt) =>
+                            updateVariantDraft(product.id, {
+                              file: evt.target.files?.[0] || null,
+                              files: Array.from(evt.target.files || []),
+                            })
+                          }
                           style={{ ...inputStyle, width: '170px', marginBottom: '6px' }}
                         />
+                        <div style={mutedMiniText}>
+                          {variantDraft.files?.length
+                            ? `${variantDraft.files.length} foto secildi`
+                            : (variantDraft.editingVariantId
+                                ? `${(variantDraft.existingImages || []).length} mevcut foto`
+                                : 'Foto ekle *')}
+                        </div>
                         <button
                           type="button"
                           onClick={() => void addVariantForProduct(product)}
                           style={miniButtonStyle}
                           disabled={variantActionLoading === product.id}
                         >
-                          {variantActionLoading === product.id ? 'Ekleniyor...' : 'Renk ekle'}
+                          {variantActionLoading === product.id ? 'Kaydediliyor...' : (variantDraft.editingVariantId ? 'Renk guncelle' : 'Renk kaydet')}
                         </button>
+                        {variantDraft.editingVariantId && (
+                          <button
+                            type="button"
+                            onClick={() => clearVariantDraft(product.id)}
+                            style={dangerMiniStyle}
+                            disabled={variantActionLoading === product.id}
+                          >
+                            Duzenlemeyi iptal et
+                          </button>
+                        )}
                       </td>
                       <td style={tdStyle}>
                         <label style={checkLabelStyle}>
@@ -1212,6 +1604,13 @@ export default function Products() {
                       </td>
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setEditingProductId((prev) => (prev === product.id ? null : product.id))}
+                            style={primaryButton}
+                          >
+                            {isEditingProduct ? 'Duzenlemeyi Kapat' : 'Duzenle'}
+                          </button>
                           <button onClick={() => void saveProduct(product)} disabled={savingId === product.id} style={secondaryButton}>
                             {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
                           </button>
@@ -1262,7 +1661,7 @@ const inputStyle: CSSProperties = {
 
 const newGridStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '1fr 2fr 1fr 1fr 1fr 2fr',
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
   gap: '10px',
 }
 
@@ -1387,9 +1786,20 @@ const errorAlertStyle: CSSProperties = {
 
 const colorRowStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '1fr 1fr 1fr 1.4fr 1.2fr auto',
+  gridTemplateColumns: '1fr 1.6fr auto auto',
   gap: '8px',
   marginBottom: '8px',
+}
+
+const activeRowStyle: CSSProperties = {
+  background: 'rgba(37, 99, 235, 0.08)',
+}
+
+const variantRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  flexWrap: 'wrap',
 }
 
 const variantTagStyle: CSSProperties = {
@@ -1399,6 +1809,25 @@ const variantTagStyle: CSSProperties = {
   borderRadius: '999px',
   padding: '4px 8px',
   fontSize: '11px',
+}
+
+const variantEditButtonStyle: CSSProperties = {
+  background: '#0f766e',
+  color: '#ccfbf1',
+  border: 'none',
+  borderRadius: '6px',
+  padding: '4px 8px',
+  fontSize: '11px',
+  cursor: 'pointer',
+}
+
+const variantDeleteButtonStyle: CSSProperties = {
+  background: '#7f1d1d',
+  color: '#fecaca',
+  border: 'none',
+  borderRadius: '6px',
+  padding: '4px 8px',
+  fontSize: '11px',
   cursor: 'pointer',
 }
 
@@ -1406,3 +1835,4 @@ const mutedMiniText: CSSProperties = {
   color: '#94a3b8',
   fontSize: '11px',
 }
+

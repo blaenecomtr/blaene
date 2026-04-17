@@ -89,6 +89,7 @@ async function main() {
         active: true,
         images: ['https://example.com/forge.jpg'],
         category: 'forge',
+        stock_quantity: 50,
       },
     ],
     orders: [],

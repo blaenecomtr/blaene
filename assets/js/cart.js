@@ -4,6 +4,27 @@
   const FAB_BOTTOM_GAP = 18;
   const FAB_STACK_GAP = 12;
 
+  function normalizeColor(value) {
+    return String(value || '').trim();
+  }
+
+  function getLineId(code, color) {
+    return `${String(code || '').trim()}::${normalizeColor(color).toLowerCase()}`;
+  }
+
+  function resolveLineId(item) {
+    const explicit = String(item?.line_id || '').trim();
+    if (explicit) return explicit;
+    return getLineId(item?.code, item?.color);
+  }
+
+  function matchesLineRef(item, lineRef) {
+    const target = String(lineRef || '').trim();
+    if (!target) return false;
+    const lineId = resolveLineId(item);
+    return lineId === target || String(item?.code || '').trim() === target;
+  }
+
   function readCart() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -19,6 +40,8 @@
           image: String(item.image || '').trim(),
           category: String(item.category || '').trim(),
           stock: normalizeStock(item.stock),
+          color: normalizeColor(item.color),
+          line_id: resolveLineId(item),
         }))
         .filter((item) => item.code && item.name && Number.isFinite(item.price) && item.price > 0);
     } catch {
@@ -51,7 +74,9 @@
     }
 
     const items = readCart();
-    const existing = items.find((item) => item.code === product.code);
+    const productColor = normalizeColor(product.color);
+    const lineId = getLineId(product.code, productColor);
+    const existing = items.find((item) => resolveLineId(item) === lineId);
     const productStock = normalizeStock(product.stock);
 
     if (productStock !== null && productStock <= 0) {
@@ -66,6 +91,7 @@
       const prevImage = existing.image;
       const prevCategory = existing.category;
       const prevStock = normalizeStock(existing.stock);
+      const prevColor = normalizeColor(existing.color);
       const nextStock = productStock !== null ? productStock : normalizeStock(existing.stock);
       let nextQty = prevQty + normalizedQty;
       if (nextStock !== null) {
@@ -79,13 +105,16 @@
       existing.image = String(product.image || existing.image || '');
       existing.category = String(product.category || existing.category || '');
       existing.stock = nextStock;
+      existing.color = productColor || prevColor;
+      existing.line_id = lineId;
       if (
         existing.qty !== prevQty ||
         existing.price !== prevPrice ||
         existing.name !== prevName ||
         existing.image !== prevImage ||
         existing.category !== prevCategory ||
-        normalizeStock(existing.stock) !== prevStock
+        normalizeStock(existing.stock) !== prevStock ||
+        normalizeColor(existing.color) !== prevColor
       ) {
         changed = true;
       }
@@ -103,6 +132,8 @@
         image: String(product.image || ''),
         category: String(product.category || ''),
         stock: productStock,
+        color: productColor,
+        line_id: lineId,
       });
       changed = true;
     }
@@ -112,28 +143,28 @@
     return true;
   }
 
-  function removeItem(code) {
-    const items = readCart().filter((item) => item.code !== code);
+  function removeItem(lineRef) {
+    const items = readCart().filter((item) => !matchesLineRef(item, lineRef));
     writeCart(items);
   }
 
-  function setQuantity(code, qty) {
+  function setQuantity(lineRef, qty) {
     const nextQty = Number(qty);
     if (!Number.isFinite(nextQty)) return;
 
     const items = readCart();
-    const target = items.find((item) => item.code === code);
+    const target = items.find((item) => matchesLineRef(item, lineRef));
     if (!target) return;
 
     if (nextQty <= 0) {
-      const filtered = items.filter((item) => item.code !== code);
+      const filtered = items.filter((item) => !matchesLineRef(item, lineRef));
       writeCart(filtered);
       return;
     }
 
     const stock = normalizeStock(target.stock);
     if (stock !== null && stock <= 0) {
-      const filtered = items.filter((item) => item.code !== code);
+      const filtered = items.filter((item) => !matchesLineRef(item, lineRef));
       writeCart(filtered);
       return;
     }
@@ -272,6 +303,12 @@
         font-size: 0.74rem;
         line-height: 1.35;
       }
+      .blaene-cart-item .unit-price {
+        margin-top: 0.22rem;
+        font-size: 0.68rem;
+        color: #111827;
+        font-weight: 600;
+      }
       .blaene-cart-item .code {
         margin-top: 0.2rem;
         font-size: 0.67rem;
@@ -402,15 +439,15 @@
     });
 
     drawer.addEventListener('change', function (event) {
-      const input = event.target.closest('input[data-code]');
+      const input = event.target.closest('input[data-line]');
       if (!input) return;
-      setQuantity(input.dataset.code, Number(input.value));
+      setQuantity(input.dataset.line, Number(input.value));
     });
 
     drawer.addEventListener('click', function (event) {
-      const removeBtn = event.target.closest('button.remove[data-code]');
+      const removeBtn = event.target.closest('button.remove[data-line]');
       if (!removeBtn) return;
-      removeItem(removeBtn.dataset.code);
+      removeItem(removeBtn.dataset.line);
     });
 
     window.addEventListener('keydown', function (event) {
@@ -461,17 +498,21 @@
           const stock = normalizeStock(item.stock);
           const maxAttr = stock === null ? '' : `max="${stock}"`;
           const stockLabel = stock === null ? '' : `<div class="code">Stok: ${stock}</div>`;
+          const colorLabel = normalizeColor(item.color) ? `<div class="code">Renk: ${item.color}</div>` : '';
+          const lineId = resolveLineId(item);
           return `
             <div class="blaene-cart-item">
               <img src="${item.image || 'logo/sitelogo.png'}" alt="${item.code}" />
               <div>
                 <h4>${item.name}</h4>
+                <div class="unit-price">${formatPrice(item.price)}</div>
                 <div class="code">${item.code}</div>
+                ${colorLabel}
                 ${stockLabel}
                 <div class="meta">
-                  <input type="number" min="1" step="1" ${maxAttr} value="${item.qty}" data-code="${item.code}" />
+                  <input type="number" min="1" step="1" ${maxAttr} value="${item.qty}" data-line="${lineId}" />
                   <span>${formatPrice(item.price * item.qty)}</span>
-                  <button type="button" class="remove" data-code="${item.code}">Sil</button>
+                  <button type="button" class="remove" data-line="${lineId}">Sil</button>
                 </div>
               </div>
             </div>

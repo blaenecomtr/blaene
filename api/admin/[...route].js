@@ -557,7 +557,7 @@ async function syncProductVariantsCache(config, productId) {
   const id = normalizeText(productId, 120);
   if (!id) return [];
   const variants = await restSelect(config, 'product_variants', {
-    select: 'id,label,sku,color,size,price,stock,active,display_order',
+    select: 'id,label,sku,color,size,price,stock,images,active,display_order',
     product_id: `eq.${id}`,
     order: 'display_order.asc,created_at.asc',
     limit: 1000,
@@ -733,8 +733,19 @@ async function handleProducts(req, res, ctx) {
   const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
 
   if (req.method === 'POST') {
+    const rawPayload = sanitizeObjectShallow(body);
+    const requiredRaw = validateRequiredFields(rawPayload, ['code', 'name', 'category', 'material', 'thickness', 'dims']);
+    if (!requiredRaw.valid) {
+      return sendError(res, 400, `Missing fields: ${requiredRaw.missing.join(', ')}`, 'VALIDATION_REQUIRED_FIELDS');
+    }
+
+    const normalizedCategory = normalizeText(rawPayload.category, 32).toLowerCase();
+    if (!CATEGORY_ALLOWED.includes(normalizedCategory)) {
+      return sendError(res, 400, 'Invalid category', 'VALIDATION_CATEGORY');
+    }
+
     const payload = normalizeProductPayload(body);
-    const required = validateRequiredFields(payload, ['code', 'name', 'category']);
+    const required = validateRequiredFields(payload, ['code', 'name', 'category', 'material', 'thickness', 'dims']);
     if (!required.valid) {
       return sendError(res, 400, `Missing fields: ${required.missing.join(', ')}`, 'VALIDATION_REQUIRED_FIELDS');
     }

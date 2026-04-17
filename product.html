@@ -291,8 +291,8 @@
             transition: border-color 0.15s, color 0.15s, background-color 0.15s;
         }
         .variant-btn.active {
-            border-color: var(--accent); color: var(--accent);
-            background-color: rgba(224,112,32,0.06);
+            border-color: var(--accent); color: #ffffff;
+            background-color: var(--accent);
         }
         .variant-btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 
@@ -309,6 +309,7 @@
             letter-spacing: 0.12em; text-transform: uppercase; width: 38%;
         }
         .specs-table td:last-child { color: var(--foreground); font-weight: 500; }
+        .product-cart-slot { margin: 0 0 1.35rem; }
 
         /* ── TECHNICAL FILES ─────────────────────────────── */
         .tech-section { margin-bottom: 1.5rem; }
@@ -855,6 +856,8 @@ if (!product) {
                             : `<button class="variant-btn active" data-variant="krom">${t('Krom', 'Chrome')}</button><button class="variant-btn" data-variant="siyah">${t('Siyah', 'Black')}</button>`
                     }
                 </div>
+
+                <div id="blaene-product-cart-slot" class="product-cart-slot"></div>
 
                 <table class="specs-table" aria-label="${t('Ürün özellikleri', 'Product specifications')}">
                     <tbody>${specsHTML}</tbody>

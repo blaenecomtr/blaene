@@ -337,7 +337,19 @@
       const discountAmount = document.getElementById('discount-amount');
       const urlParams = new URLSearchParams(window.location.search);
 
+      const DEFAULT_CHECKOUT_SETTINGS = {
+        shipping: {
+          free_shipping_threshold: 2000,
+          base_shipping_fee: 120,
+          tiers: [],
+        },
+        payment: {
+          paytr_enabled: true,
+        },
+      };
+
       let appliedPromo = null;
+      let checkoutSettings = DEFAULT_CHECKOUT_SETTINGS;
 
       if (!cart) {
         alertBox.innerHTML = '<div class="alert error">Sepet modulu yuklenemedi.</div>';
@@ -412,6 +424,79 @@
         return Number(value || 0).toFixed(2) + ' TL';
       }
 
+      function normalizeMoney(value, fallback) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return fallback;
+        return Math.round(Math.max(0, number) * 100) / 100;
+      }
+
+      function normalizeShippingSettings(raw) {
+        const source = raw && typeof raw === 'object' ? raw : {};
+        const tiers = Array.isArray(source.tiers)
+          ? source.tiers
+            .map(function (tier) {
+              return {
+                min: normalizeMoney(tier && tier.min, 0),
+                fee: normalizeMoney(tier && tier.fee, 0),
+              };
+            })
+            .sort(function (a, b) { return b.min - a.min; })
+          : [];
+
+        return {
+          free_shipping_threshold: normalizeMoney(
+            source.free_shipping_threshold,
+            DEFAULT_CHECKOUT_SETTINGS.shipping.free_shipping_threshold
+          ),
+          base_shipping_fee: normalizeMoney(
+            source.base_shipping_fee,
+            DEFAULT_CHECKOUT_SETTINGS.shipping.base_shipping_fee
+          ),
+          tiers: tiers,
+        };
+      }
+
+      function computeShippingFee(subtotalAfterDiscount) {
+        const amount = normalizeMoney(subtotalAfterDiscount, 0);
+        if (amount <= 0) return 0;
+
+        const shipping = normalizeShippingSettings(checkoutSettings && checkoutSettings.shipping);
+        if (shipping.free_shipping_threshold > 0 && amount >= shipping.free_shipping_threshold) {
+          return 0;
+        }
+
+        const matchedTier = shipping.tiers.find(function (tier) {
+          return amount >= tier.min;
+        });
+        if (matchedTier) return normalizeMoney(matchedTier.fee, 0);
+        return normalizeMoney(shipping.base_shipping_fee, 0);
+      }
+
+      function updatePayButtonLabel() {
+        const paytrEnabled = !checkoutSettings || !checkoutSettings.payment || checkoutSettings.payment.paytr_enabled !== false;
+        payBtn.textContent = paytrEnabled ? 'PayTR ile ode' : 'Siparisi tamamla';
+      }
+
+      async function loadCheckoutSettings() {
+        try {
+          const response = await fetch('/api/public/checkout-settings', { method: 'GET' });
+          const payload = await response.json().catch(function () { return null; });
+          const data = payload && payload.success ? payload.data : null;
+          if (!response.ok || !data) return;
+          checkoutSettings = {
+            shipping: normalizeShippingSettings(data.shipping),
+            payment: {
+              paytr_enabled: data.payment ? data.payment.paytr_enabled !== false : true,
+            },
+          };
+        } catch (_) {
+          checkoutSettings = DEFAULT_CHECKOUT_SETTINGS;
+        } finally {
+          updatePayButtonLabel();
+          renderSummary();
+        }
+      }
+
       function showAlert(message, type) {
         alertBox.innerHTML = '<div class="alert ' + type + '">' + message + '</div>';
       }
@@ -474,17 +559,20 @@
         const state = getCartState();
         const items = state.items || [];
 
-        let total = state.subtotal || 0;
+        let discountedSubtotal = state.subtotal || 0;
         let discountAmount_val = 0;
 
         if (appliedPromo && appliedPromo.discount_value && appliedPromo.discount_type) {
           if (appliedPromo.discount_type === 'percent') {
-            discountAmount_val = (total * (appliedPromo.discount_value / 100));
+            discountAmount_val = discountedSubtotal * (appliedPromo.discount_value / 100);
           } else if (appliedPromo.discount_type === 'fixed') {
             discountAmount_val = appliedPromo.discount_value;
           }
-          total = Math.max(0, total - discountAmount_val);
+          discountedSubtotal = Math.max(0, discountedSubtotal - discountAmount_val);
         }
+
+        const shippingFee = computeShippingFee(discountedSubtotal);
+        const grandTotal = Math.round((discountedSubtotal + shippingFee) * 100) / 100;
 
         subtotalEl.textContent = formatPrice(state.subtotal || 0);
         if (appliedPromo && discountAmount_val > 0) {
@@ -493,8 +581,8 @@
         } else {
           discountRow.style.display = 'none';
         }
-        shippingEl.textContent = formatPrice(0);
-        grandTotalEl.textContent = formatPrice(total);
+        shippingEl.textContent = formatPrice(shippingFee);
+        grandTotalEl.textContent = formatPrice(grandTotal);
 
         if (!items.length) {
           summaryList.innerHTML = '<div class="alert">Sepetiniz bos. Urun ekleyip tekrar deneyin.</div>';
@@ -506,14 +594,19 @@
         summaryNote.textContent = state.totalItems + ' adet urun';
         summaryList.innerHTML = items
           .map(function (item) {
+            const colorLine = item.color
+              ? '<div style="font-size:0.67rem;color:#6b7280;margin:0.12rem 0 0.22rem;">Renk: ' + item.color + '</div>'
+              : '';
             return (
               '<div class="item">' +
                 '<img src="' + (item.image || 'logo/sitelogo.png') + '" alt="' + item.code + '" />' +
                 '<div>' +
                   '<div style="font-size:0.72rem;font-weight:600;">' + item.name + '</div>' +
-                  '<div style="font-size:0.67rem;color:#6b7280;margin:0.2rem 0;">' + item.code + '</div>' +
+                  '<div style="font-size:0.7rem;font-weight:600;color:#111827;margin:0.15rem 0 0.2rem;">' + formatPrice(item.price) + '</div>' +
+                  '<div style="font-size:0.67rem;color:#6b7280;margin:0 0 0.12rem;">' + item.code + '</div>' +
+                  colorLine +
                   '<div class="line">' +
-                    '<span>' + item.qty + ' x ' + formatPrice(item.price) + '</span>' +
+                    '<span>' + item.qty + ' adet</span>' +
                     '<strong>' + formatPrice(item.price * item.qty) + '</strong>' +
                   '</div>' +
                 '</div>' +
@@ -585,40 +678,31 @@
         promoMessage.className = '';
 
         try {
-          const response = await fetch('/api/admin/promotions?code=' + encodeURIComponent(code), {
-            method: 'GET',
-            headers: {
-              'Authorization': 'Bearer ' + (window.BlaeneAuth ? await window.BlaeneAuth.getAccessToken() : ''),
-            },
-          });
-          const data = await response.json().catch(() => ({ data: [] }));
-          const promotions = data?.data || data || [];
-          const promo = Array.isArray(promotions) ? promotions.find(p => String(p.code || '').toUpperCase() === code) : null;
+          const state = getCartState();
+          const subtotal = Number(state.subtotal || 0);
+          const query = '?code=' + encodeURIComponent(code) + '&subtotal=' + encodeURIComponent(String(subtotal));
+          const response = await fetch('/api/public/promo-validate' + query, { method: 'GET' });
+          const payload = await response.json().catch(function () { return null; });
+          const result = payload && payload.success ? payload.data : null;
+          if (!response.ok || !result) {
+            throw new Error('Indirim kodu kontrol edilemedi.');
+          }
 
-          if (!promo || !promo.is_active) {
-            promoMessage.textContent = 'Gecersiz veya pasif indirim kodu.';
-            promoMessage.className = 'error';
+          if (!result.valid || !result.promo) {
             appliedPromo = null;
+            promoMessage.textContent = result.message || 'Gecersiz indirim kodu.';
+            promoMessage.className = 'error';
           } else {
-            const now = new Date();
-            if (promo.starts_at && new Date(promo.starts_at) > now) {
-              promoMessage.textContent = 'Bu indirim kodu henuz gecerli degil.';
-              promoMessage.className = 'error';
-              appliedPromo = null;
-            } else if (promo.ends_at && new Date(promo.ends_at) < now) {
-              promoMessage.textContent = 'Bu indirim kodunun gecerliligi sona ermis.';
-              promoMessage.className = 'error';
-              appliedPromo = null;
-            } else if (promo.usage_limit && (promo.usage_count || 0) >= promo.usage_limit) {
-              promoMessage.textContent = 'Bu indirim kodu kullanim limitine ulasmis.';
-              promoMessage.className = 'error';
-              appliedPromo = null;
-            } else {
-              appliedPromo = promo;
-              promoMessage.textContent = promo.title + ' (' + (promo.discount_type === 'percent' ? promo.discount_value + '%' : promo.discount_value + ' TL') + ' indirim) uyguland
-i.';
-              promoMessage.className = 'success';
-            }
+            appliedPromo = result.promo;
+            const discountText = appliedPromo.discount_type === 'percent'
+              ? appliedPromo.discount_value + '%'
+              : appliedPromo.discount_value + ' TL';
+            const amountText = result.discount_amount !== null && result.discount_amount !== undefined
+              ? ' - ' + formatPrice(result.discount_amount) + ' indirim'
+              : '';
+
+            promoMessage.textContent = (appliedPromo.title || appliedPromo.code) + ' (' + discountText + ')' + amountText + ' uygulandi.';
+            promoMessage.className = 'success';
           }
           renderSummary();
         } catch (error) {
@@ -685,7 +769,7 @@ i.';
         } catch (error) {
           showAlert(mapCheckoutError(error?.message), 'error');
         } finally {
-          payBtn.textContent = 'PayTR ile ode';
+          updatePayButtonLabel();
           updatePayButtonState();
         }
       });
@@ -715,7 +799,9 @@ i.';
       }
 
       window.addEventListener('blaene:cart:updated', renderSummary);
+      updatePayButtonLabel();
       renderSummary();
+      void loadCheckoutSettings();
     })();
   </script>
   <script src="assets/js/traffic.js"></script>

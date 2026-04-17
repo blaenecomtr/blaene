@@ -27,6 +27,11 @@ interface Order {
   items?: OrderItem[]
 }
 
+interface ShippingProviderInfo {
+  provider: string
+  configured: boolean
+}
+
 interface ReturnRequest {
   id: string
   customer_name?: string | null
@@ -38,6 +43,12 @@ interface ReturnRequest {
 }
 
 type OrdersTab = 'all' | 'returns'
+
+const FALLBACK_SHIPPING_PROVIDERS: ShippingProviderInfo[] = [
+  { provider: 'yurtici', configured: true },
+  { provider: 'mng', configured: true },
+  { provider: 'aras', configured: true },
+]
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('tr-TR', {
@@ -67,6 +78,30 @@ function workflowLabel(value: string) {
   if (normalized === 'delivered') return 'Teslim'
   if (normalized === 'cancelled') return 'Reddedildi'
   return 'Beklemede'
+}
+
+function shippingProviderLabel(value: string) {
+  const normalized = String(value || '').toLowerCase()
+  if (normalized === 'yurtici') return 'Yurtici'
+  if (normalized === 'mng') return 'MNG'
+  if (normalized === 'aras') return 'Aras'
+  if (!normalized) return 'manual'
+  return normalized
+}
+
+function providerPillStyle(configured: boolean): CSSProperties {
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    border: `1px solid ${configured ? '#10b981' : '#475569'}`,
+    background: configured ? 'rgba(16,185,129,0.12)' : 'rgba(71,85,105,0.16)',
+    color: configured ? '#6ee7b7' : '#cbd5e1',
+    borderRadius: '999px',
+    padding: '3px 10px',
+    fontSize: '11px',
+    fontWeight: 600,
+  }
 }
 
 function statusBadgeStyle(value: string): CSSProperties {
@@ -170,6 +205,12 @@ export default function Orders() {
   const [workflowStatus, setWorkflowStatus] = useState('all')
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({})
   const [trackingDrafts, setTrackingDrafts] = useState<Record<string, string>>({})
+  const [providerDrafts, setProviderDrafts] = useState<Record<string, string>>({})
+  const [shippingProviders, setShippingProviders] = useState<ShippingProviderInfo[]>(FALLBACK_SHIPPING_PROVIDERS)
+
+  const getSelectedProvider = (orderId: string) => {
+    return String(providerDrafts[orderId] || '').toLowerCase().trim()
+  }
 
   const loadOrders = async () => {
     if (!token) return
@@ -182,13 +223,31 @@ export default function Orders() {
       if (paymentStatus !== 'all') params.set('status', paymentStatus)
       if (workflowStatus !== 'all') params.set('workflow_status', workflowStatus)
       params.set('include_items', 'true')
-      const data = await apiRequest<Order[]>(`/api/admin/orders?${params.toString()}`, { token })
-      const nextOrders = Array.isArray(data) ? data : []
+      const [ordersData, shippingData] = await Promise.all([
+        apiRequest<Order[]>(`/api/admin/orders?${params.toString()}`, { token }),
+        apiRequest<{ providers?: ShippingProviderInfo[] }>('/api/admin/shipping?page_size=1', { token }).catch(() => null),
+      ])
+      const nextOrders = Array.isArray(ordersData) ? ordersData : []
+      const nextProviders = Array.isArray(shippingData?.providers) && shippingData.providers.length
+        ? shippingData.providers
+        : FALLBACK_SHIPPING_PROVIDERS
+      const firstConfiguredProvider =
+        nextProviders.find((item) => item.configured)?.provider || FALLBACK_SHIPPING_PROVIDERS[0].provider
+
+      setShippingProviders(nextProviders)
       setOrders(nextOrders)
       setTrackingDrafts((prev) => {
         const next: Record<string, string> = {}
         nextOrders.forEach((order) => {
           next[order.id] = prev[order.id] ?? String(order.tracking_code || '')
+        })
+        return next
+      })
+      setProviderDrafts((prev) => {
+        const next: Record<string, string> = {}
+        nextOrders.forEach((order) => {
+          const provider = String(order.shipping_provider || '').toLowerCase().trim()
+          next[order.id] = prev[order.id] || provider || firstConfiguredProvider
         })
         return next
       })
@@ -261,6 +320,7 @@ export default function Orders() {
 
   const saveTrackingCode = async (order: Order) => {
     if (!token) return
+    const provider = getSelectedProvider(order.id)
     await runAction(order.id, 'tracking', async () => {
       await apiRequest('/api/admin/shipping', {
         method: 'PUT',
@@ -268,14 +328,18 @@ export default function Orders() {
         body: {
           order_id: order.id,
           tracking_code: trackingDrafts[order.id] || '',
+          provider: provider || undefined,
         },
       })
-      setMessage(`${order.order_no}: takip no kaydedildi`)
+      setMessage(
+        `${order.order_no}: takip no kaydedildi` + (provider ? ` (${shippingProviderLabel(provider)})` : '')
+      )
     })
   }
 
   const markAsShipped = async (order: Order) => {
     if (!token) return
+    const provider = getSelectedProvider(order.id)
     const tracking = String(trackingDrafts[order.id] || '').trim()
     if (!tracking) {
       setError(`${order.order_no}: once takip no girin`)
@@ -290,9 +354,47 @@ export default function Orders() {
           order_id: order.id,
           status: 'shipped',
           tracking_code: tracking,
+          provider: provider || undefined,
         },
       })
-      setMessage(`${order.order_no}: kargoya verildi`)
+      setMessage(
+        `${order.order_no}: kargoya verildi` + (provider ? ` (${shippingProviderLabel(provider)})` : '')
+      )
+    })
+  }
+
+  const createShipment = async (order: Order) => {
+    if (!token) return
+    const provider = String(providerDrafts[order.id] || '').toLowerCase().trim()
+    if (!provider) {
+      setError(`${order.order_no}: once kargo firmasi secin`)
+      return
+    }
+
+    const selectedProvider = shippingProviders.find((item) => item.provider === provider)
+    if (selectedProvider && !selectedProvider.configured) {
+      setError(`${order.order_no}: secilen kargo firmasi henuz entegre edilmemis`)
+      return
+    }
+
+    await runAction(order.id, 'shipment', async () => {
+      const data = await apiRequest<{ tracking_code?: string; provider?: string }>('/api/admin/shipping', {
+        method: 'POST',
+        token,
+        body: {
+          order_id: order.id,
+          provider,
+        },
+      })
+
+      const trackingCode = String(data?.tracking_code || '').trim()
+      if (trackingCode) {
+        setTrackingDrafts((prev) => ({ ...prev, [order.id]: trackingCode }))
+      }
+      setMessage(
+        `${order.order_no}: ${shippingProviderLabel(provider)} ile kargo olusturuldu` +
+          (trackingCode ? ` (${trackingCode})` : '')
+      )
     })
   }
 
@@ -362,6 +464,13 @@ export default function Orders() {
                 Yenile
               </button>
             </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              {shippingProviders.map((item) => (
+                <span key={`provider-pill-${item.provider}`} style={providerPillStyle(item.configured)}>
+                  {shippingProviderLabel(item.provider)}: {item.configured ? 'hazir' : 'pasif'}
+                </span>
+              ))}
+            </div>
 
             {loading ? (
               <p style={{ color: '#94a3b8' }}>Siparisler yukleniyor...</p>
@@ -400,6 +509,22 @@ export default function Orders() {
                             <span style={statusBadgeStyle(order.status)}>{workflowLabel(order.status)}</span>
                           </td>
                           <td style={tdStyle}>
+                            <select
+                              value={providerDrafts[order.id] || ''}
+                              onChange={(evt) => setProviderDrafts((prev) => ({ ...prev, [order.id]: evt.target.value }))}
+                              style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
+                            >
+                              {shippingProviders.map((item) => (
+                                <option
+                                  key={item.provider}
+                                  value={item.provider}
+                                  disabled={!item.configured}
+                                >
+                                  {shippingProviderLabel(item.provider)}
+                                  {item.configured ? '' : ' (pasif)'}
+                                </option>
+                              ))}
+                            </select>
                             <input
                               value={trackingDrafts[order.id] || ''}
                               onChange={(evt) => setTrackingDrafts((prev) => ({ ...prev, [order.id]: evt.target.value }))}
@@ -407,7 +532,7 @@ export default function Orders() {
                               style={{ ...inputStyle, width: '160px' }}
                             />
                             <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '11px' }}>
-                              {order.shipping_provider || 'manual'}
+                              {shippingProviderLabel(order.shipping_provider || providerDrafts[order.id] || 'manual')}
                             </div>
                           </td>
                           <td style={tdStyle}>{formatDate(order.created_at)}</td>
@@ -427,8 +552,11 @@ export default function Orders() {
                               >
                                 {actionLoading[order.id] === 'cancelled' ? 'Isleniyor...' : 'Reddet'}
                               </button>
+                              <button disabled={busy} onClick={() => void createShipment(order)} style={shipButtonStyle}>
+                                {actionLoading[order.id] === 'shipment' ? 'Olusturuluyor...' : 'Otomatik takip olustur'}
+                              </button>
                               <button disabled={busy} onClick={() => void markAsShipped(order)} style={shipButtonStyle}>
-                                {actionLoading[order.id] === 'shipped' ? 'Isleniyor...' : 'Kargoya verildi'}
+                                {actionLoading[order.id] === 'shipped' ? 'Isleniyor...' : 'Manuel kargoya ver'}
                               </button>
                               <button disabled={busy} onClick={() => void saveTrackingCode(order)} style={buttonStyle}>
                                 {actionLoading[order.id] === 'tracking' ? 'Kaydediliyor...' : 'Takip no kaydet'}
