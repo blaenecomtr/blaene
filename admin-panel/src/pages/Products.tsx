@@ -25,6 +25,7 @@ interface Product {
   price: number | null
   price_visible: boolean
   active: boolean
+  archived?: boolean
   images?: string[]
   stock_quantity?: number | null
   seo_title?: string | null
@@ -231,7 +232,9 @@ export default function Products() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState<'all' | Category>('all')
+  const [category, setCategory] = useState<Category | ''>('')
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [imageDrafts, setImageDrafts] = useState<Record<string, string>>({})
@@ -271,12 +274,18 @@ export default function Products() {
 
   const loadProducts = async () => {
     if (!token) return
+    if (category === '') {
+      setProducts([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams()
       if (search.trim()) params.set('search', search.trim())
-      if (category !== 'all') params.set('category', category)
+      params.set('category', category)
+      if (showArchived) params.set('archived', 'true')
       params.set('page_size', '1000')
       params.set('_t', String(Date.now()))
       const path = `/api/admin/products?${params.toString()}`
@@ -327,7 +336,7 @@ export default function Products() {
 
   useEffect(() => {
     void loadProducts()
-  }, [category])
+  }, [category, showArchived])
 
   const readFileAsDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -761,6 +770,28 @@ export default function Products() {
     }
   }
 
+  const restoreProduct = async (id: string, code: string) => {
+    if (!token) return
+    setDeletingId(id)
+    setError('')
+    setMessage('')
+    try {
+      await apiRequest('/api/admin/products', {
+        method: 'PUT',
+        token,
+        body: { id, archived: false },
+      })
+      setMessage(`${code} canliya alindi`)
+      setProducts((prev) => prev.filter((item) => item.id !== id))
+      void loadProducts()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Canliya alma islemi basarisiz'
+      setError(msg)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const addImageFromDraft = async (productId: string) => {
     const draft = String(imageDrafts[productId] || '').trim()
     if (!draft) return
@@ -1021,11 +1052,45 @@ export default function Products() {
     })
   }
 
+  const handleSaveAll = async () => {
+    if (!editingProductId) {
+      setMessage('Duzenlenecek urun secin')
+      return
+    }
+    const editingProduct = products.find((p) => p.id === editingProductId)
+    if (!editingProduct) return
+    await saveProduct(editingProduct)
+  }
+
+  const openProductDetail = (product: Product) => {
+    setSelectedProductId(product.id)
+    setEditingProductId(product.id)
+  }
+
   return (
     <div>
-      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>
-        Urun, renk, fiyat, SEO ve foto yonetimi
-      </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '20px', margin: 0, color: '#fff' }}>
+          Urun, renk, fiyat, SEO ve foto yonetimi
+        </h2>
+        {editingProductId && (
+          <button
+            onClick={handleSaveAll}
+            style={{
+              background: '#10b981',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+            }}
+          >
+            Tumunu Kaydet
+          </button>
+        )}
+      </div>
 
       <input
         ref={fileInputRef}
@@ -1268,10 +1333,10 @@ export default function Products() {
           />
           <select
             value={category}
-            onChange={(evt) => setCategory(evt.target.value as 'all' | Category)}
+            onChange={(evt) => setCategory(evt.target.value as Category | '')}
             style={inputStyle}
           >
-            <option value="all">all</option>
+            <option value="">Kategori seçin</option>
             {CATEGORY_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -1281,24 +1346,46 @@ export default function Products() {
           <button onClick={() => void loadProducts()} style={secondaryButton}>
             Listeyi yenile
           </button>
+          <button
+            onClick={() => setShowArchived(false)}
+            style={{
+              ...secondaryButton,
+              background: !showArchived ? '#0f766e' : '#475569',
+            }}
+          >
+            Aktif
+          </button>
+          <button
+            onClick={() => setShowArchived(true)}
+            style={{
+              ...secondaryButton,
+              background: showArchived ? '#7c2d12' : '#475569',
+            }}
+          >
+            Arsiv
+          </button>
         </div>
 
         {message && <div style={okAlertStyle}>{message}</div>}
         {error && <div style={errorAlertStyle}>{error}</div>}
 
-        {loading ? (
-          <p style={{ color: '#94a3b8' }}>Urunler yukleniyor...</p>
-        ) : !hasProducts ? (
-          <p style={{ color: '#94a3b8' }}>Urun bulunamadi.</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        {category === '' ? (
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>Lutfen kategori seciniz</p>
+        ) : selectedProductId === null
+          ? loading ? (
+            <p style={{ color: '#94a3b8' }}>Urunler yukleniyor...</p>
+          ) : !hasProducts ? (
+            <p style={{ color: '#94a3b8' }}>Urun bulunamadi.</p>
+          ) : (
+            <div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Urun</th>
-                  <th style={thStyle}>Fiyat ve SEO</th>
-                  <th style={thStyle}>Fotolar</th>
-                  <th style={thStyle}>Renkler</th>
+                  <th style={thStyle}>Foto</th>
+                  <th style={thStyle}>Kod</th>
+                  <th style={thStyle}>Ad</th>
+                  <th style={thStyle}>Fiyat</th>
                   <th style={thStyle}>Durum</th>
                   <th style={thStyle}>Islem</th>
                 </tr>
@@ -1306,328 +1393,289 @@ export default function Products() {
               <tbody>
                 {products.map((product) => {
                   const photos = normalizeImages(product.images)
-                  const variants = normalizeVariants(product.variants)
-                  const variantDraft = variantDrafts[product.id] || createEmptyVariantDraft()
-                  const isEditingProduct = editingProductId === product.id
-                  const materialOptions = optionListWithCurrent(MATERIAL_OPTIONS, String(product.material || ''))
-                  const thicknessOptions = optionListWithCurrent(THICKNESS_OPTIONS, String(product.thickness || ''))
                   const discountPercent = normalizeDiscountPercent(product.discount_percent)
                   const discountedPrice = calculateDiscountedPrice(product.price, discountPercent)
                   return (
-                    <tr key={product.id} style={isEditingProduct ? activeRowStyle : undefined}>
+                    <tr key={product.id}>
                       <td style={tdStyle}>
-                        <input
-                          value={product.code || ''}
-                          onChange={(evt) => updateLocalProduct(product.id, { code: evt.target.value.toUpperCase() })}
-                          style={{ ...inputStyle, width: '120px', marginBottom: '6px' }}
-                        />
-                        <input
-                          value={product.name || ''}
-                          onChange={(evt) => updateLocalProduct(product.id, { name: evt.target.value })}
-                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
-                        />
-                        <select
-                          value={normalizeCategory(product.category)}
-                          onChange={(evt) => updateLocalProduct(product.id, { category: normalizeCategory(evt.target.value) })}
-                          style={{ ...inputStyle, width: '120px', marginBottom: '6px' }}
-                        >
-                          {CATEGORY_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={String(product.material || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { material: evt.target.value })}
-                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
-                        >
-                          <option value="">Malzeme sec *</option>
-                          {materialOptions.map((option) => (
-                            <option key={`${product.id}-material-${option}`} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={String(product.thickness || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { thickness: evt.target.value })}
-                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
-                        >
-                          <option value="">Kalinlik sec *</option>
-                          {thicknessOptions.map((option) => (
-                            <option key={`${product.id}-thickness-${option}`} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          value={String(product.dims || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { dims: evt.target.value })}
-                          placeholder="Olculer *"
-                          style={{ ...inputStyle, width: '230px', marginBottom: '6px' }}
-                        />
+                        {photos.length > 0 && <img src={photos[0]} alt={product.name} style={thumbStyle} />}
                       </td>
+                      <td style={tdStyle}>{product.code}</td>
+                      <td style={tdStyle}>{product.name}</td>
+                      <td style={tdStyle}>{formatPrice(product.price)}</td>
+                      <td style={tdStyle}>{product.active ? 'Aktif' : 'Pasif'}</td>
                       <td style={tdStyle}>
-                        <input
-                          value={product.price ?? ''}
-                          onChange={(evt) =>
-                            updateLocalProduct(product.id, {
-                              price: parsePrice(evt.target.value),
-                              price_visible: parsePrice(evt.target.value) !== null,
-                            })
-                          }
-                          style={{ ...inputStyle, width: '120px', marginBottom: '6px' }}
-                        />
-                        <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '8px' }}>
-                          {formatPrice(product.price)}
-                        </div>
-                        <input
-                          value={Number(product.stock_quantity || 0)}
-                          onChange={(evt) =>
-                            updateLocalProduct(product.id, {
-                              stock_quantity: parseStock(evt.target.value),
-                            })
-                          }
-                          placeholder="Stok"
-                          type="number"
-                          min={0}
-                          style={{ ...inputStyle, width: '120px', marginBottom: '6px' }}
-                        />
-                        <div style={{ color: '#94a3b8', fontSize: '11px', marginBottom: '8px' }}>
-                          Stok: {Number(product.stock_quantity || 0)}
-                        </div>
-                        <input
-                          value={product.discount_percent ?? ''}
-                          onChange={(evt) =>
-                            updateLocalProduct(product.id, {
-                              discount_percent: normalizeDiscountPercent(evt.target.value),
-                            })
-                          }
-                          placeholder="Indirim % (or: 30)"
-                          type="number"
-                          min={0}
-                          max={95}
-                          step={0.1}
-                          style={{ ...inputStyle, width: '220px', marginBottom: '6px' }}
-                        />
-                        <div style={{ color: '#fca5a5', fontSize: '11px', marginBottom: '8px' }}>
-                          {discountedPrice !== null && discountPercent
-                            ? `Indirimli fiyat: ${formatPrice(discountedPrice)} (eski: ${formatPrice(product.price)}, %${discountPercent})`
-                            : 'Indirim yok (0 ise kayitta kaldirilir)'}
-                        </div>
-                        <input
-                          value={String(product.seo_slug || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { seo_slug: evt.target.value })}
-                          placeholder="URL slug"
-                          style={{ ...inputStyle, width: '220px', marginBottom: '6px' }}
-                        />
-                        <input
-                          value={String(product.seo_title || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { seo_title: evt.target.value })}
-                          placeholder="SEO title"
-                          style={{ ...inputStyle, width: '220px', marginBottom: '6px' }}
-                        />
-                        <textarea
-                          value={String(product.seo_description || '')}
-                          onChange={(evt) => updateLocalProduct(product.id, { seo_description: evt.target.value })}
-                          placeholder="SEO description"
-                          style={{ ...inputStyle, width: '220px', minHeight: '58px', resize: 'vertical' }}
-                        />
-                      </td>
-                      <td style={tdStyle}>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                          {photos.slice(0, 8).map((src, idx) => (
-                            <div key={`${product.id}-img-${idx}`} style={{ position: 'relative' }}>
-                              <img src={src} alt={`${product.code}-${idx + 1}`} style={thumbStyle} />
-                              <button
-                                type="button"
-                                onClick={() => void removeProductImage(product, idx)}
-                                style={removeImageButtonStyle}
-                                title="Sil"
-                                disabled={uploadingImageId === product.id || savingImageId === product.id}
-                              >
-                                x
-                              </button>
-                            </div>
-                          ))}
-                          {!photos.length && <span style={{ color: '#64748b', fontSize: '11px' }}>Foto yok</span>}
-                        </div>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          <input
-                            value={imageDrafts[product.id] || ''}
-                            onChange={(evt) => setImageDrafts((prev) => ({ ...prev, [product.id]: evt.target.value }))}
-                            placeholder="Foto URL"
-                            style={{ ...inputStyle, width: '170px' }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => void addImageFromDraft(product.id)}
-                            style={miniButtonStyle}
-                            disabled={uploadingImageId === product.id || savingImageId === product.id}
-                          >
-                            URL ekle
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => chooseImageFile(product.id)}
-                            style={miniButtonStyle}
-                            disabled={uploadingImageId === product.id || savingImageId === product.id}
-                          >
-                            {uploadingImageId === product.id ? 'Yukleniyor...' : 'Dosya'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void clearProductImages(product)}
-                            style={dangerMiniStyle}
-                            disabled={uploadingImageId === product.id || savingImageId === product.id}
-                          >
-                            Temizle
-                          </button>
-                        </div>
-                        <div
-                          onDragOver={(event) => {
-                            event.preventDefault()
-                            setProductImageDropActiveId(product.id)
-                          }}
-                          onDragLeave={() => setProductImageDropActiveId((prev) => (prev === product.id ? null : prev))}
-                          onDrop={(event) => void onExistingProductImageDrop(event, product)}
-                          style={{
-                            marginTop: '8px',
-                            border: `1px dashed ${productImageDropActiveId === product.id ? '#60a5fa' : '#334155'}`,
-                            background: productImageDropActiveId === product.id ? 'rgba(59,130,246,0.12)' : 'rgba(15,23,42,0.45)',
-                            borderRadius: '6px',
-                            padding: '8px',
-                            color: '#93c5fd',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Bu urune foto eklemek icin dosyayi buraya birakin
-                        </div>
-                        <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '6px' }}>
-                          {photos.length} foto {savingImageId === product.id ? '(kaydediliyor...)' : ''}
-                        </div>
-                      </td>
-                      <td style={tdStyle}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
-                          {variants.map((variant) => (
-                            <div key={variant.id} style={variantRowStyle}>
-                              <span style={variantTagStyle}>{getVariantLabel(variant)}</span>
-                              <button
-                                type="button"
-                                onClick={() => startVariantEdit(product, variant)}
-                                style={variantEditButtonStyle}
-                                disabled={variantActionLoading === variant.id || variantActionLoading === product.id}
-                              >
-                                Duzenle
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => void removeVariant(variant.id, product.code)}
-                                style={variantDeleteButtonStyle}
-                                title="Sil"
-                                disabled={variantActionLoading === variant.id || variantActionLoading === product.id}
-                              >
-                                {variantActionLoading === variant.id ? 'Siliniyor...' : 'Sil'}
-                              </button>
-                            </div>
-                          ))}
-                          {!variants.length && <span style={{ color: '#64748b', fontSize: '11px' }}>Renk yok</span>}
-                        </div>
-                        <select
-                          value={variantDraft.color}
-                          onChange={(evt) => updateVariantDraft(product.id, { color: evt.target.value })}
-                          style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
-                        >
-                          <option value="">Renk sec *</option>
-                          {COLOR_OPTIONS.map((option) => (
-                            <option key={`${product.id}-variant-color-${option}`} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={(evt) =>
-                            updateVariantDraft(product.id, {
-                              file: evt.target.files?.[0] || null,
-                              files: Array.from(evt.target.files || []),
-                            })
-                          }
-                          style={{ ...inputStyle, width: '170px', marginBottom: '6px' }}
-                        />
-                        <div style={mutedMiniText}>
-                          {variantDraft.files?.length
-                            ? `${variantDraft.files.length} foto secildi`
-                            : (variantDraft.editingVariantId
-                                ? `${(variantDraft.existingImages || []).length} mevcut foto`
-                                : 'Foto ekle *')}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => void addVariantForProduct(product)}
-                          style={miniButtonStyle}
-                          disabled={variantActionLoading === product.id}
-                        >
-                          {variantActionLoading === product.id ? 'Kaydediliyor...' : (variantDraft.editingVariantId ? 'Renk guncelle' : 'Renk kaydet')}
+                        <button type="button" onClick={() => openProductDetail(product)} style={primaryButton}>
+                          Duzenle
                         </button>
-                        {variantDraft.editingVariantId && (
-                          <button
-                            type="button"
-                            onClick={() => clearVariantDraft(product.id)}
-                            style={dangerMiniStyle}
-                            disabled={variantActionLoading === product.id}
-                          >
-                            Duzenlemeyi iptal et
-                          </button>
-                        )}
-                      </td>
-                      <td style={tdStyle}>
-                        <label style={checkLabelStyle}>
-                          <input
-                            type="checkbox"
-                            checked={Boolean(product.active)}
-                            onChange={(evt) => updateLocalProduct(product.id, { active: evt.target.checked })}
-                          />
-                          Aktif
-                        </label>
-                        <label style={checkLabelStyle}>
-                          <input
-                            type="checkbox"
-                            checked={Boolean(product.price_visible)}
-                            onChange={(evt) => updateLocalProduct(product.id, { price_visible: evt.target.checked })}
-                          />
-                          Fiyat
-                        </label>
-                      </td>
-                      <td style={tdStyle}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <button
-                            type="button"
-                            onClick={() => setEditingProductId((prev) => (prev === product.id ? null : product.id))}
-                            style={primaryButton}
-                          >
-                            {isEditingProduct ? 'Duzenlemeyi Kapat' : 'Duzenle'}
-                          </button>
-                          <button onClick={() => void saveProduct(product)} disabled={savingId === product.id} style={secondaryButton}>
-                            {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
-                          </button>
-                          <button
-                            onClick={() => void deleteProduct(product.id, product.code)}
-                            disabled={deletingId === product.id}
-                            style={dangerButton}
-                          >
-                            {deletingId === product.id ? 'Siliniyor...' : 'Sil'}
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
+              </div>
+            </div>
+        ) : (
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedProductId(null)
+                setEditingProductId(null)
+              }}
+              style={{ ...primaryButton, marginBottom: '12px' }}
+            >
+              ← Geri
+            </button>
+            <div>
+              {products
+                .filter((p) => p.id === selectedProductId)
+                .map((product) => {
+                  const photos = normalizeImages(product.images)
+                  const variants = (product.variants || []).filter((v) => !v.deleted_at)
+                  const variantDraft = variantDrafts[product.id] || {}
+                  const materialOptions = (product.material_options || []).filter((m) => !m.deleted_at)
+                  const isEditingProduct = editingProductId === product.id
+                  const discountPercent = normalizeDiscountPercent(product.discount_percent)
+                  const discountedPrice = calculateDiscountedPrice(product.price, discountPercent)
+
+                  return (
+                    <div key={product.id} style={panelStyle}>
+                      <h2 style={panelTitleStyle}>{product.name}</h2>
+                      <div style={newGridStyle}>
+                        <div>
+                          <label style={checkLabelStyle}>Kod</label>
+                          <input
+                            value={product.code || ''}
+                            onChange={(evt) => updateLocalProduct(product.id, { code: evt.target.value })}
+                            placeholder="Urun kodu"
+                            style={inputStyle}
+                            disabled={!isEditingProduct}
+                          />
+                        </div>
+                        <div>
+                          <label style={checkLabelStyle}>Ad</label>
+                          <input
+                            value={product.name || ''}
+                            onChange={(evt) => updateLocalProduct(product.id, { name: evt.target.value })}
+                            placeholder="Urun adi"
+                            style={inputStyle}
+                            disabled={!isEditingProduct}
+                          />
+                        </div>
+                        <div>
+                          <label style={checkLabelStyle}>Kategori</label>
+                          <select
+                            value={product.category || ''}
+                            onChange={(evt) => updateLocalProduct(product.id, { category: evt.target.value as Category })}
+                            style={inputStyle}
+                            disabled={!isEditingProduct}
+                          >
+                            <option value="">Sec</option>
+                            {CATEGORY_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={checkLabelStyle}>Fiyat</label>
+                          <input
+                            value={product.price ?? ''}
+                            onChange={(evt) =>
+                              updateLocalProduct(product.id, {
+                                price: parsePrice(evt.target.value),
+                                price_visible: parsePrice(evt.target.value) !== null,
+                              })
+                            }
+                            style={inputStyle}
+                            disabled={!isEditingProduct}
+                          />
+                          {isEditingProduct && (
+                            <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                              {formatPrice(product.price)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <label style={checkLabelStyle}>Indirim %</label>
+                          <input
+                            value={product.discount_percent ?? ''}
+                            onChange={(evt) =>
+                              updateLocalProduct(product.id, {
+                                discount_percent: normalizeDiscountPercent(evt.target.value),
+                              })
+                            }
+                            type="number"
+                            min={0}
+                            max={95}
+                            step={0.1}
+                            style={inputStyle}
+                            disabled={!isEditingProduct}
+                          />
+                          {isEditingProduct && discountedPrice !== null && discountPercent && (
+                            <div style={{ color: '#fca5a5', fontSize: '11px', marginTop: '4px' }}>
+                              {formatPrice(discountedPrice)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <label style={checkLabelStyle}>Stok</label>
+                          <input
+                            value={Number(product.stock_quantity || 0)}
+                            onChange={(evt) =>
+                              updateLocalProduct(product.id, {
+                                stock_quantity: parseStock(evt.target.value),
+                              })
+                            }
+                            type="number"
+                            min={0}
+                            style={inputStyle}
+                            disabled={!isEditingProduct}
+                          />
+                        </div>
+                      </div>
+
+                      {isEditingProduct && (
+                        <div style={{ marginTop: '16px' }}>
+                          <h3 style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '10px' }}>Fotoğraflar</h3>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                            {photos.slice(0, 8).map((src, idx) => (
+                              <div key={`${product.id}-img-${idx}`} style={{ position: 'relative' }}>
+                                <img src={src} alt={`${product.code}-${idx + 1}`} style={thumbStyle} />
+                                <button
+                                  type="button"
+                                  onClick={() => void removeProductImage(product, idx)}
+                                  style={removeImageButtonStyle}
+                                  title="Sil"
+                                  disabled={uploadingImageId === product.id || savingImageId === product.id}
+                                >
+                                  x
+                                </button>
+                              </div>
+                            ))}
+                            {!photos.length && <span style={{ color: '#64748b', fontSize: '11px' }}>Foto yok</span>}
+                          </div>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <input
+                              value={imageDrafts[product.id] || ''}
+                              onChange={(evt) => setImageDrafts((prev) => ({ ...prev, [product.id]: evt.target.value }))}
+                              placeholder="Foto URL"
+                              style={{ ...inputStyle, width: '170px' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void addImageFromDraft(product.id)}
+                              style={miniButtonStyle}
+                              disabled={uploadingImageId === product.id || savingImageId === product.id}
+                            >
+                              URL ekle
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => chooseImageFile(product.id)}
+                              style={miniButtonStyle}
+                              disabled={uploadingImageId === product.id || savingImageId === product.id}
+                            >
+                              {uploadingImageId === product.id ? 'Yukleniyor...' : 'Dosya'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void clearProductImages(product)}
+                              style={dangerMiniStyle}
+                              disabled={uploadingImageId === product.id || savingImageId === product.id}
+                            >
+                              Temizle
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {isEditingProduct && (
+                        <div style={{ marginTop: '16px' }}>
+                          <h3 style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '10px' }}>Renkler</h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+                            {variants.map((variant) => (
+                              <div key={variant.id} style={variantRowStyle}>
+                                <span style={variantTagStyle}>{getVariantLabel(variant)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => startVariantEdit(product, variant)}
+                                  style={variantEditButtonStyle}
+                                  disabled={variantActionLoading === variant.id || variantActionLoading === product.id}
+                                >
+                                  Duzenle
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void removeVariant(variant.id, product.code)}
+                                  style={variantDeleteButtonStyle}
+                                  title="Sil"
+                                  disabled={variantActionLoading === variant.id || variantActionLoading === product.id}
+                                >
+                                  {variantActionLoading === variant.id ? 'Siliniyor...' : 'Sil'}
+                                </button>
+                              </div>
+                            ))}
+                            {!variants.length && <span style={{ color: '#64748b', fontSize: '11px' }}>Renk yok</span>}
+                          </div>
+                          <select
+                            value={variantDraft.color}
+                            onChange={(evt) => updateVariantDraft(product.id, { color: evt.target.value })}
+                            style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
+                          >
+                            <option value="">Renk sec *</option>
+                            {COLOR_OPTIONS.map((option) => (
+                              <option key={`${product.id}-variant-color-${option}`} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={(evt) =>
+                              updateVariantDraft(product.id, {
+                                file: evt.target.files?.[0] || null,
+                                files: Array.from(evt.target.files || []),
+                              })
+                            }
+                            style={{ ...inputStyle, width: '170px', marginBottom: '6px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void addVariantForProduct(product)}
+                            style={miniButtonStyle}
+                            disabled={variantActionLoading === product.id}
+                          >
+                            {variantActionLoading === product.id ? 'Kaydediliyor...' : (variantDraft.editingVariantId ? 'Renk guncelle' : 'Renk kaydet')}
+                          </button>
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setEditingProductId((prev) => (prev === product.id ? null : product.id))}
+                          style={primaryButton}
+                        >
+                          {isEditingProduct ? 'Duzenlemeyi Kapat' : 'Duzenle'}
+                        </button>
+                        <button
+                          onClick={() => void saveProduct(product)}
+                          disabled={savingId === product.id || !isEditingProduct}
+                          style={secondaryButton}
+                        >
+                          {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
           </div>
         )}
       </div>
