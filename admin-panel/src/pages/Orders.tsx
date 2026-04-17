@@ -1,18 +1,43 @@
 import { type CSSProperties, useEffect, useState } from 'react'
 import { apiRequest } from '../lib/api'
 
+interface OrderItem {
+  id: string
+  product_code?: string
+  product_name?: string
+  unit_price?: number
+  quantity?: number
+  line_total?: number
+}
+
 interface Order {
   id: string
   order_no: string
   customer_name: string
   email: string
+  phone?: string
+  address?: string
+  city?: string
   total: number
   payment_status: string
   status: string
   created_at: string
   tracking_code?: string | null
   shipping_provider?: string | null
+  items?: OrderItem[]
 }
+
+interface ReturnRequest {
+  id: string
+  customer_name?: string | null
+  customer_email?: string
+  subject?: string
+  status?: string
+  priority?: string
+  updated_at?: string
+}
+
+type OrdersTab = 'all' | 'returns'
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat('tr-TR', {
@@ -54,6 +79,8 @@ function statusBadgeStyle(value: string): CSSProperties {
     shipped: { bg: 'rgba(168,85,247,0.18)', border: '#a855f7', color: '#d8b4fe' },
     delivered: { bg: 'rgba(16,185,129,0.18)', border: '#10b981', color: '#6ee7b7' },
     cancelled: { bg: 'rgba(239,68,68,0.15)', border: '#ef4444', color: '#fca5a5' },
+    open: { bg: 'rgba(59,130,246,0.18)', border: '#3b82f6', color: '#93c5fd' },
+    closed: { bg: 'rgba(16,185,129,0.18)', border: '#10b981', color: '#6ee7b7' },
   }
   const selected = palette[normalized] || palette.pending
   return {
@@ -68,10 +95,74 @@ function statusBadgeStyle(value: string): CSSProperties {
   }
 }
 
+function buildSlipHtml(order: Order) {
+  const items = Array.isArray(order.items) ? order.items : []
+  const itemRows = items
+    .map(
+      (item) => `
+      <tr>
+        <td>${item.product_code || '-'}</td>
+        <td>${item.product_name || '-'}</td>
+        <td>${Number(item.quantity || 0)}</td>
+        <td>${formatPrice(Number(item.line_total || 0))}</td>
+      </tr>
+    `
+    )
+    .join('')
+
+  return `
+    <html>
+      <head>
+        <title>Kargo Fisi - ${order.order_no}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+          h1 { margin-bottom: 8px; }
+          .meta { margin-bottom: 16px; }
+          .meta p { margin: 4px 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+          th { background: #f3f4f6; }
+        </style>
+      </head>
+      <body>
+        <h1>Blaene Kargo Fisi</h1>
+        <div class="meta">
+          <p><strong>Siparis:</strong> ${order.order_no}</p>
+          <p><strong>Musteri:</strong> ${order.customer_name || '-'}</p>
+          <p><strong>E-posta:</strong> ${order.email || '-'}</p>
+          <p><strong>Telefon:</strong> ${order.phone || '-'}</p>
+          <p><strong>Adres:</strong> ${order.address || '-'}</p>
+          <p><strong>Sehir:</strong> ${order.city || '-'}</p>
+          <p><strong>Kargo:</strong> ${order.shipping_provider || 'manual'}</p>
+          <p><strong>Takip:</strong> ${order.tracking_code || '-'}</p>
+          <p><strong>Toplam:</strong> ${formatPrice(order.total || 0)}</p>
+          <p><strong>Tarih:</strong> ${formatDate(order.created_at)}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Kod</th>
+              <th>Urun</th>
+              <th>Adet</th>
+              <th>Tutar</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemRows || '<tr><td colspan="4">Satir bulunamadi</td></tr>'}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `
+}
+
 export default function Orders() {
   const token = localStorage.getItem('admin_token')
+  const [activeTab, setActiveTab] = useState<OrdersTab>('all')
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<Order[]>([])
+  const [returnsLoading, setReturnsLoading] = useState(false)
+  const [returns, setReturns] = useState<ReturnRequest[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [search, setSearch] = useState('')
@@ -90,6 +181,7 @@ export default function Orders() {
       if (search.trim()) params.set('search', search.trim())
       if (paymentStatus !== 'all') params.set('status', paymentStatus)
       if (workflowStatus !== 'all') params.set('workflow_status', workflowStatus)
+      params.set('include_items', 'true')
       const data = await apiRequest<Order[]>(`/api/admin/orders?${params.toString()}`, { token })
       const nextOrders = Array.isArray(data) ? data : []
       setOrders(nextOrders)
@@ -108,9 +200,30 @@ export default function Orders() {
     }
   }
 
+  const loadReturnRequests = async () => {
+    if (!token) return
+    setReturnsLoading(true)
+    setError('')
+    try {
+      const data = await apiRequest<ReturnRequest[]>('/api/admin/support-tickets?page_size=300&search=iade', { token })
+      setReturns(Array.isArray(data) ? data : [])
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Iade talepleri yuklenemedi'
+      setError(msg)
+    } finally {
+      setReturnsLoading(false)
+    }
+  }
+
   useEffect(() => {
     void loadOrders()
   }, [paymentStatus, workflowStatus])
+
+  useEffect(() => {
+    if (activeTab === 'returns' && !returns.length && !returnsLoading) {
+      void loadReturnRequests()
+    }
+  }, [activeTab])
 
   const runAction = async (orderId: string, actionName: string, task: () => Promise<void>) => {
     setActionLoading((prev) => ({ ...prev, [orderId]: actionName }))
@@ -183,127 +296,206 @@ export default function Orders() {
     })
   }
 
+  const printShippingSlip = (order: Order) => {
+    const win = window.open('', '_blank', 'width=900,height=700')
+    if (!win) {
+      setError('Tarayici pop-up engelledi. Lutfen izin verin.')
+      return
+    }
+    win.document.open()
+    win.document.write(buildSlipHtml(order))
+    win.document.close()
+    win.focus()
+    setTimeout(() => {
+      win.print()
+    }, 200)
+  }
+
   return (
     <div>
       <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Siparisler</h2>
       <div style={panelStyle}>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
-          <input
-            value={search}
-            onChange={(evt) => setSearch(evt.target.value)}
-            placeholder="Siparis no, e-posta veya ad ile ara"
-            style={{ ...inputStyle, flex: 1, minWidth: '240px' }}
-          />
-          <select value={paymentStatus} onChange={(evt) => setPaymentStatus(evt.target.value)} style={inputStyle}>
-            <option value="all">Odeme: tumu</option>
-            <option value="pending">Odeme: pending</option>
-            <option value="paid">Odeme: paid</option>
-            <option value="failed">Odeme: failed</option>
-          </select>
-          <select value={workflowStatus} onChange={(evt) => setWorkflowStatus(evt.target.value)} style={inputStyle}>
-            <option value="all">Durum: tumu</option>
-            <option value="pending">Durum: pending</option>
-            <option value="processing">Durum: processing</option>
-            <option value="shipped">Durum: shipped</option>
-            <option value="delivered">Durum: delivered</option>
-            <option value="cancelled">Durum: cancelled</option>
-          </select>
-          <button onClick={() => void loadOrders()} style={buttonStyle}>
-            Yenile
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('all')}
+            style={activeTab === 'all' ? activeTabButton : tabButton}
+          >
+            Tum Siparisler
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('returns')}
+            style={activeTab === 'returns' ? activeTabButton : tabButton}
+          >
+            Iade Talepleri
           </button>
         </div>
 
         {message && <div style={okStyle}>{message}</div>}
         {error && <div style={errorStyle}>{error}</div>}
 
-        {loading ? (
-          <p style={{ color: '#94a3b8' }}>Siparisler yukleniyor...</p>
-        ) : !orders.length ? (
-          <p style={{ color: '#94a3b8' }}>Siparis bulunamadi.</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Siparis</th>
-                  <th style={thStyle}>Musteri</th>
-                  <th style={thStyle}>Toplam</th>
-                  <th style={thStyle}>Odeme</th>
-                  <th style={thStyle}>Durum</th>
-                  <th style={thStyle}>Kargo</th>
-                  <th style={thStyle}>Tarih</th>
-                  <th style={thStyle}>Islem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => {
-                  const busy = Boolean(actionLoading[order.id])
-                  return (
-                    <tr key={order.id}>
-                      <td style={tdStyle}>{order.order_no}</td>
-                      <td style={tdStyle}>
-                        <div>{order.customer_name || '-'}</div>
-                        <div style={{ color: '#94a3b8', fontSize: '11px' }}>{order.email || '-'}</div>
-                      </td>
-                      <td style={tdStyle}>{formatPrice(order.total || 0)}</td>
-                      <td style={tdStyle}>
-                        <span style={statusBadgeStyle(order.payment_status)}>{paymentLabel(order.payment_status)}</span>
-                      </td>
-                      <td style={tdStyle}>
-                        <span style={statusBadgeStyle(order.status)}>{workflowLabel(order.status)}</span>
-                      </td>
-                      <td style={tdStyle}>
-                        <input
-                          value={trackingDrafts[order.id] || ''}
-                          onChange={(evt) =>
-                            setTrackingDrafts((prev) => ({ ...prev, [order.id]: evt.target.value }))
-                          }
-                          placeholder="Takip no"
-                          style={{ ...inputStyle, width: '160px' }}
-                        />
-                        <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '11px' }}>
-                          {order.shipping_provider || 'manual'}
-                        </div>
-                      </td>
-                      <td style={tdStyle}>{formatDate(order.created_at)}</td>
-                      <td style={tdStyle}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '140px' }}>
-                          <button
-                            disabled={busy}
-                            onClick={() => void updateOrderWorkflow(order, 'processing', 'siparis onaylandi')}
-                            style={approveButtonStyle}
-                          >
-                            {actionLoading[order.id] === 'processing' ? 'Isleniyor...' : 'Onayla'}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() => void updateOrderWorkflow(order, 'cancelled', 'siparis reddedildi')}
-                            style={rejectButtonStyle}
-                          >
-                            {actionLoading[order.id] === 'cancelled' ? 'Isleniyor...' : 'Reddet'}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() => void markAsShipped(order)}
-                            style={shipButtonStyle}
-                          >
-                            {actionLoading[order.id] === 'shipped' ? 'Isleniyor...' : 'Kargoya verildi'}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() => void saveTrackingCode(order)}
-                            style={buttonStyle}
-                          >
-                            {actionLoading[order.id] === 'tracking' ? 'Kaydediliyor...' : 'Takip no kaydet'}
-                          </button>
-                        </div>
-                      </td>
+        {activeTab === 'all' ? (
+          <>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <input
+                value={search}
+                onChange={(evt) => setSearch(evt.target.value)}
+                placeholder="Siparis no, e-posta veya ad ile ara"
+                style={{ ...inputStyle, flex: 1, minWidth: '240px' }}
+              />
+              <select value={paymentStatus} onChange={(evt) => setPaymentStatus(evt.target.value)} style={inputStyle}>
+                <option value="all">Odeme: tumu</option>
+                <option value="pending">Odeme: pending</option>
+                <option value="paid">Odeme: paid</option>
+                <option value="failed">Odeme: failed</option>
+              </select>
+              <select value={workflowStatus} onChange={(evt) => setWorkflowStatus(evt.target.value)} style={inputStyle}>
+                <option value="all">Durum: tumu</option>
+                <option value="pending">Durum: pending</option>
+                <option value="processing">Durum: processing</option>
+                <option value="shipped">Durum: shipped</option>
+                <option value="delivered">Durum: delivered</option>
+                <option value="cancelled">Durum: cancelled</option>
+              </select>
+              <button onClick={() => void loadOrders()} style={buttonStyle}>
+                Yenile
+              </button>
+            </div>
+
+            {loading ? (
+              <p style={{ color: '#94a3b8' }}>Siparisler yukleniyor...</p>
+            ) : !orders.length ? (
+              <p style={{ color: '#94a3b8' }}>Siparis bulunamadi.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Siparis</th>
+                      <th style={thStyle}>Musteri</th>
+                      <th style={thStyle}>Toplam</th>
+                      <th style={thStyle}>Odeme</th>
+                      <th style={thStyle}>Durum</th>
+                      <th style={thStyle}>Kargo</th>
+                      <th style={thStyle}>Tarih</th>
+                      <th style={thStyle}>Islem</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {orders.map((order) => {
+                      const busy = Boolean(actionLoading[order.id])
+                      return (
+                        <tr key={order.id}>
+                          <td style={tdStyle}>{order.order_no}</td>
+                          <td style={tdStyle}>
+                            <div>{order.customer_name || '-'}</div>
+                            <div style={{ color: '#94a3b8', fontSize: '11px' }}>{order.email || '-'}</div>
+                          </td>
+                          <td style={tdStyle}>{formatPrice(order.total || 0)}</td>
+                          <td style={tdStyle}>
+                            <span style={statusBadgeStyle(order.payment_status)}>{paymentLabel(order.payment_status)}</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <span style={statusBadgeStyle(order.status)}>{workflowLabel(order.status)}</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <input
+                              value={trackingDrafts[order.id] || ''}
+                              onChange={(evt) => setTrackingDrafts((prev) => ({ ...prev, [order.id]: evt.target.value }))}
+                              placeholder="Takip no"
+                              style={{ ...inputStyle, width: '160px' }}
+                            />
+                            <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '11px' }}>
+                              {order.shipping_provider || 'manual'}
+                            </div>
+                          </td>
+                          <td style={tdStyle}>{formatDate(order.created_at)}</td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '160px' }}>
+                              <button
+                                disabled={busy}
+                                onClick={() => void updateOrderWorkflow(order, 'processing', 'siparis onaylandi')}
+                                style={approveButtonStyle}
+                              >
+                                {actionLoading[order.id] === 'processing' ? 'Isleniyor...' : 'Onayla'}
+                              </button>
+                              <button
+                                disabled={busy}
+                                onClick={() => void updateOrderWorkflow(order, 'cancelled', 'siparis reddedildi')}
+                                style={rejectButtonStyle}
+                              >
+                                {actionLoading[order.id] === 'cancelled' ? 'Isleniyor...' : 'Reddet'}
+                              </button>
+                              <button disabled={busy} onClick={() => void markAsShipped(order)} style={shipButtonStyle}>
+                                {actionLoading[order.id] === 'shipped' ? 'Isleniyor...' : 'Kargoya verildi'}
+                              </button>
+                              <button disabled={busy} onClick={() => void saveTrackingCode(order)} style={buttonStyle}>
+                                {actionLoading[order.id] === 'tracking' ? 'Kaydediliyor...' : 'Takip no kaydet'}
+                              </button>
+                              <button type="button" onClick={() => printShippingSlip(order)} style={printButtonStyle}>
+                                Kargo fisi yazdir
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <p style={{ color: '#94a3b8', margin: 0 }}>
+                Iade talepleri destek kayitlarindan "iade" anahtar kelimesi ile listelenir.
+              </p>
+              <button onClick={() => void loadReturnRequests()} style={buttonStyle}>
+                Yenile
+              </button>
+            </div>
+            {returnsLoading ? (
+              <p style={{ color: '#94a3b8' }}>Iade talepleri yukleniyor...</p>
+            ) : !returns.length ? (
+              <p style={{ color: '#94a3b8' }}>Iade talebi bulunamadi.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Talep No</th>
+                      <th style={thStyle}>Musteri</th>
+                      <th style={thStyle}>Konu</th>
+                      <th style={thStyle}>Durum</th>
+                      <th style={thStyle}>Oncelik</th>
+                      <th style={thStyle}>Guncel</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {returns.map((item) => (
+                      <tr key={item.id}>
+                        <td style={tdStyle}>{item.id.slice(0, 8)}</td>
+                        <td style={tdStyle}>
+                          <div>{item.customer_name || '-'}</div>
+                          <div style={{ color: '#94a3b8', fontSize: '11px' }}>{item.customer_email || '-'}</div>
+                        </td>
+                        <td style={tdStyle}>{item.subject || '-'}</td>
+                        <td style={tdStyle}>
+                          <span style={statusBadgeStyle(String(item.status || 'open'))}>{item.status || 'open'}</span>
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={statusBadgeStyle(String(item.priority || 'medium'))}>{item.priority || 'medium'}</span>
+                        </td>
+                        <td style={tdStyle}>{item.updated_at ? formatDate(item.updated_at) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -352,6 +544,23 @@ const shipButtonStyle: CSSProperties = {
   ...buttonStyle,
   background: '#6d28d9',
   color: '#e9d5ff',
+}
+
+const printButtonStyle: CSSProperties = {
+  ...buttonStyle,
+  background: '#0f766e',
+  color: '#ccfbf1',
+}
+
+const tabButton: CSSProperties = {
+  ...buttonStyle,
+  padding: '8px 14px',
+}
+
+const activeTabButton: CSSProperties = {
+  ...tabButton,
+  background: '#2563eb',
+  color: '#fff',
 }
 
 const thStyle: CSSProperties = {

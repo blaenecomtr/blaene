@@ -11,6 +11,16 @@
   ],
   "redirects": [
     {
+      "source": "/yonetim-giris-n7k4p2",
+      "destination": "/yonetim-giris-n7k4p2.html",
+      "permanent": false
+    },
+    {
+      "source": "/yonetim-giris-n7k4p2/",
+      "destination": "/yonetim-giris-n7k4p2.html",
+      "permanent": false
+    },
+    {
       "source": "/auth",
       "destination": "/auth.html",
       "permanent": false

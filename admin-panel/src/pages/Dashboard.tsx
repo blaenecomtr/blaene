@@ -8,10 +8,13 @@ interface TrafficRow {
 interface AnalyticsResponse {
   metrics?: {
     paid_revenue?: number
+    daily_revenue?: number
     new_orders?: number
     paid_orders?: number
+    pending_orders?: number
     active_users?: number
     low_stock_products?: number
+    out_of_stock_products?: number
     open_support_tickets?: number
     traffic_page_views?: number
     traffic_clicks?: number
@@ -86,11 +89,17 @@ export default function Dashboard() {
   }
 
   const paidRevenue = Number(metrics?.paid_revenue || 0)
+  const dailyRevenue = Number(metrics?.daily_revenue || 0)
   const revenueLabel = new Intl.NumberFormat('tr-TR', {
     style: 'currency',
     currency: 'TRY',
     maximumFractionDigits: 0,
   }).format(paidRevenue)
+  const dailyRevenueLabel = new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'TRY',
+    maximumFractionDigits: 0,
+  }).format(dailyRevenue)
 
   const topSources = Array.isArray(traffic?.top_sources) ? traffic.top_sources : []
   const topPages = Array.isArray(traffic?.top_pages) ? traffic.top_pages : []
@@ -102,7 +111,10 @@ export default function Dashboard() {
       <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Dashboard</h2>
 
       <div style={gridStyle}>
-        {card('Aylik ciro', revenueLabel, '#22c55e')}
+        {card('Gunluk ciro', dailyRevenueLabel, '#22c55e')}
+        {card('Bekleyen siparis', String(metrics?.pending_orders || 0), '#f59e0b')}
+        {card('Biten stoklar', String(metrics?.out_of_stock_products || 0), '#ef4444')}
+        {card('Aylik ciro', revenueLabel, '#16a34a')}
         {card('Yeni siparis', String(metrics?.new_orders || 0), '#3b82f6')}
         {card('Odeme alinan', String(metrics?.paid_orders || 0), '#10b981')}
         {card('Aktif kullanici', String(metrics?.active_users || 0), '#38bdf8')}

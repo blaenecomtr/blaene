@@ -18,6 +18,7 @@
           qty: Math.max(1, Number(item.qty || 1)),
           image: String(item.image || '').trim(),
           category: String(item.category || '').trim(),
+          stock: normalizeStock(item.stock),
         }))
         .filter((item) => item.code && item.name && Number.isFinite(item.price) && item.price > 0);
     } catch {
@@ -36,6 +37,13 @@
     return { items, totalItems, subtotal };
   }
 
+  function normalizeStock(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    return Math.max(0, Math.floor(parsed));
+  }
+
   function addItem(product, qty = 1) {
     const normalizedQty = Math.max(1, Number(qty || 1));
     if (!product || !product.code || !product.name || !Number.isFinite(Number(product.price)) || Number(product.price) <= 0) {
@@ -44,24 +52,62 @@
 
     const items = readCart();
     const existing = items.find((item) => item.code === product.code);
+    const productStock = normalizeStock(product.stock);
 
+    if (productStock !== null && productStock <= 0) {
+      return false;
+    }
+
+    let changed = false;
     if (existing) {
-      existing.qty += normalizedQty;
+      const prevQty = existing.qty;
+      const prevPrice = existing.price;
+      const prevName = existing.name;
+      const prevImage = existing.image;
+      const prevCategory = existing.category;
+      const prevStock = normalizeStock(existing.stock);
+      const nextStock = productStock !== null ? productStock : normalizeStock(existing.stock);
+      let nextQty = prevQty + normalizedQty;
+      if (nextStock !== null) {
+        nextQty = Math.min(nextQty, nextStock);
+      }
+      if (nextQty <= 0) return false;
+
+      existing.qty = nextQty;
       existing.price = Number(product.price);
       existing.name = String(product.name || existing.name);
       existing.image = String(product.image || existing.image || '');
       existing.category = String(product.category || existing.category || '');
+      existing.stock = nextStock;
+      if (
+        existing.qty !== prevQty ||
+        existing.price !== prevPrice ||
+        existing.name !== prevName ||
+        existing.image !== prevImage ||
+        existing.category !== prevCategory ||
+        normalizeStock(existing.stock) !== prevStock
+      ) {
+        changed = true;
+      }
     } else {
+      let firstQty = normalizedQty;
+      if (productStock !== null) {
+        firstQty = Math.min(firstQty, productStock);
+      }
+      if (firstQty <= 0) return false;
       items.push({
         code: String(product.code),
         name: String(product.name),
         price: Number(product.price),
-        qty: normalizedQty,
+        qty: firstQty,
         image: String(product.image || ''),
         category: String(product.category || ''),
+        stock: productStock,
       });
+      changed = true;
     }
 
+    if (!changed && existing) return false;
     writeCart(items);
     return true;
   }
@@ -85,7 +131,18 @@
       return;
     }
 
-    target.qty = Math.max(1, Math.floor(nextQty));
+    const stock = normalizeStock(target.stock);
+    if (stock !== null && stock <= 0) {
+      const filtered = items.filter((item) => item.code !== code);
+      writeCart(filtered);
+      return;
+    }
+
+    let normalized = Math.max(1, Math.floor(nextQty));
+    if (stock !== null) {
+      normalized = Math.min(normalized, stock);
+    }
+    target.qty = normalized;
     writeCart(items);
   }
 
@@ -400,20 +457,26 @@
       list.innerHTML = '<div class="blaene-cart-empty">Sepetiniz bos.</div>';
     } else {
       list.innerHTML = summary.items
-        .map((item) => `
-          <div class="blaene-cart-item">
-            <img src="${item.image || 'logo/sitelogo.png'}" alt="${item.code}" />
-            <div>
-              <h4>${item.name}</h4>
-              <div class="code">${item.code}</div>
-              <div class="meta">
-                <input type="number" min="1" step="1" value="${item.qty}" data-code="${item.code}" />
-                <span>${formatPrice(item.price * item.qty)}</span>
-                <button type="button" class="remove" data-code="${item.code}">Sil</button>
+        .map((item) => {
+          const stock = normalizeStock(item.stock);
+          const maxAttr = stock === null ? '' : `max="${stock}"`;
+          const stockLabel = stock === null ? '' : `<div class="code">Stok: ${stock}</div>`;
+          return `
+            <div class="blaene-cart-item">
+              <img src="${item.image || 'logo/sitelogo.png'}" alt="${item.code}" />
+              <div>
+                <h4>${item.name}</h4>
+                <div class="code">${item.code}</div>
+                ${stockLabel}
+                <div class="meta">
+                  <input type="number" min="1" step="1" ${maxAttr} value="${item.qty}" data-code="${item.code}" />
+                  <span>${formatPrice(item.price * item.qty)}</span>
+                  <button type="button" class="remove" data-code="${item.code}">Sil</button>
+                </div>
               </div>
             </div>
-          </div>
-        `)
+          `;
+        })
         .join('');
     }
 

@@ -2,15 +2,11 @@
 // Supabase Auth helpers for customer login/register/account management
 
 (function (global) {
-  // Supabase credentials (same as storefront.js for consistency)
   const SUPABASE_URL = 'https://myufpjuyfjmpbunrkozy.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_uKwxlDCAxSOzus7W96aF9w_m2iDE2QA';
 
   let supabaseClient = null;
 
-  /**
-   * Initialize Supabase client (requires supabase JS library to be loaded)
-   */
   function initSupabase() {
     if (!window.supabase || typeof window.supabase.createClient !== 'function') {
       console.error('Supabase JS library not loaded');
@@ -22,9 +18,6 @@
     return supabaseClient;
   }
 
-  /**
-   * Get current Supabase client instance
-   */
   function getSupabase() {
     if (!supabaseClient) {
       return initSupabase();
@@ -32,73 +25,138 @@
     return supabaseClient;
   }
 
-  /**
-   * Sign up new customer with email, password, name, phone
-   * Creates auth.users entry + customer_profiles row
-   */
-  async function signUp(email, password, fullName, phone) {
+  async function signUp(email, password, fullName, phone, options = {}) {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
 
-    email = (email || '').trim().toLowerCase();
-    fullName = (fullName || '').trim();
-    phone = (phone || '').trim();
+    email = String(email || '').trim().toLowerCase();
+    fullName = String(fullName || '').trim();
+    phone = String(phone || '').trim();
+    const defaultAddress = String(options.default_address || '').trim();
+    const defaultCity = String(options.default_city || '').trim();
+    const customerType = String(options.customer_type || '').trim().toLowerCase();
+    const username = String(options.username || '').trim().toLowerCase();
+    const consentKvkk = options.consent_kvkk === true;
+    const consentTerms = options.consent_terms === true;
+    const consentEmail = options.consent_marketing_email === true;
+    const consentSms = options.consent_marketing_sms === true;
+    const consentCall = options.consent_marketing_call === true;
 
-    if (!email || !password || !fullName || !phone) {
-      throw new Error('Tüm alanlar gerekli');
+    if (!email || !password || !fullName || !phone || !defaultAddress) {
+      throw new Error('Tum alanlar gerekli');
+    }
+    if (!username || username.length < 3) {
+      throw new Error('Kullanici adi en az 3 karakter olmali');
+    }
+    if (!consentKvkk || !consentTerms) {
+      throw new Error('KVKK ve sozlesme onaylari zorunlu');
     }
 
-    // 1. Create auth user
     const { data: authData, error: authError } = await client.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
-          phone: phone,
+          phone,
+          default_address: defaultAddress,
+          default_city: defaultCity,
+          username,
+          customer_type: customerType,
+          consent_kvkk: consentKvkk,
+          consent_terms: consentTerms,
+          consent_marketing_email: consentEmail,
+          consent_marketing_sms: consentSms,
+          consent_marketing_call: consentCall,
         },
       },
     });
 
     if (authError) {
-      throw new Error(authError.message || 'Kayıt başarısız');
+      throw new Error(authError.message || 'Kayit basarisiz');
     }
-
     if (!authData.user) {
-      throw new Error('Kullanıcı oluşturulamadı');
+      throw new Error('Kullanici olusturulamadi');
     }
 
-    // 2. Create customer profile
-    const { error: profileError } = await client
+    const richProfile = {
+      id: authData.user.id,
+      email,
+      username,
+      full_name: fullName,
+      phone,
+      default_address: defaultAddress,
+      default_city: defaultCity,
+      consent_kvkk: consentKvkk,
+      consent_terms: consentTerms,
+      consent_marketing_email: consentEmail,
+      consent_marketing_sms: consentSms,
+      consent_marketing_call: consentCall,
+    };
+
+    let { error: profileError } = await client
       .from('customer_profiles')
-      .insert([
-        {
+      .upsert([richProfile], { onConflict: 'id' });
+
+    if (profileError) {
+      const basicProfile = {
+        id: authData.user.id,
+        email,
+        full_name: fullName,
+        phone,
+        default_address: defaultAddress,
+        default_city: defaultCity,
+      };
+      const fallback = await client
+        .from('customer_profiles')
+        .upsert([basicProfile], { onConflict: 'id' });
+      if (!fallback.error) {
+        profileError = null;
+      } else {
+        const minimalProfile = {
           id: authData.user.id,
           email,
           full_name: fullName,
           phone,
-        },
-      ]);
+          default_address: defaultAddress,
+        };
+        const finalFallback = await client
+          .from('customer_profiles')
+          .upsert([minimalProfile], { onConflict: 'id' });
+        if (!finalFallback.error) profileError = null;
+      }
+    }
 
     if (profileError) {
       console.error('Customer profile creation failed:', profileError);
-      // Auth user created but profile failed — still allow login
+    }
+
+    // Ensure session exists immediately after signup when confirmation is disabled.
+    // If email confirmation is enabled, this may fail and caller can proceed with pending confirmation flow.
+    if (!authData.session) {
+      try {
+        const { data: signInData, error: signInError } = await client.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (!signInError && signInData?.user) {
+          return signInData.user;
+        }
+      } catch (_) {
+        // ignore; signup itself was successful
+      }
     }
 
     return authData.user;
   }
 
-  /**
-   * Sign in with email and password
-   */
   async function signIn(email, password) {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
 
-    email = (email || '').trim().toLowerCase();
-
+    email = String(email || '').trim().toLowerCase();
     if (!email || !password) {
-      throw new Error('E-posta ve şifre gerekli');
+      throw new Error('E-posta ve sifre gerekli');
     }
 
     const { data, error } = await client.auth.signInWithPassword({
@@ -107,32 +165,41 @@
     });
 
     if (error) {
-      throw new Error(error.message || 'Giriş başarısız');
+      throw new Error(error.message || 'Giris basarisiz');
     }
-
     if (!data.user) {
-      throw new Error('Giriş yapılamadı');
+      throw new Error('Giris yapilamadi');
     }
-
     return data.user;
   }
 
-  /**
-   * Sign out current user
-   */
+  async function signInWithGoogle(redirectPath = '/account.html') {
+    const client = getSupabase();
+    if (!client) throw new Error('Supabase not initialized');
+
+    const redirectTo = new URL(redirectPath, window.location.origin).toString();
+    const { data, error } = await client.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo },
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Google girisi basarisiz');
+    }
+
+    return data;
+  }
+
   async function signOut() {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
 
     const { error } = await client.auth.signOut();
     if (error) {
-      throw new Error(error.message || 'Çıkış başarısız');
+      throw new Error(error.message || 'Cikis basarisiz');
     }
   }
 
-  /**
-   * Get current session
-   */
   async function getSession() {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
@@ -145,9 +212,6 @@
     return data.session;
   }
 
-  /**
-   * Get currently logged-in user
-   */
   async function getCurrentUser() {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
@@ -159,9 +223,6 @@
     return data.user;
   }
 
-  /**
-   * Get customer profile from customer_profiles table
-   */
   async function getCustomerProfile() {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
@@ -182,15 +243,12 @@
     return data;
   }
 
-  /**
-   * Update customer profile (phone, default_address, default_city)
-   */
   async function updateCustomerProfile(updates) {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
 
     const user = await getCurrentUser();
-    if (!user) throw new Error('Kullanıcı oturum açmamış');
+    if (!user) throw new Error('Kullanici oturum acmamis');
 
     const { error } = await client
       .from('customer_profiles')
@@ -198,19 +256,16 @@
       .eq('id', user.id);
 
     if (error) {
-      throw new Error(error.message || 'Profil güncellenemedi');
+      throw new Error(error.message || 'Profil guncellenemedi');
     }
   }
 
-  /**
-   * Fetch customer's orders from orders table
-   */
   async function getCustomerOrders() {
     const client = getSupabase();
     if (!client) throw new Error('Supabase not initialized');
 
     const user = await getCurrentUser();
-    if (!user) throw new Error('Kullanıcı oturum açmamış');
+    if (!user) throw new Error('Kullanici oturum acmamis');
 
     const { data, error } = await client
       .from('orders')
@@ -246,16 +301,12 @@
 
     if (error) {
       console.error('Orders fetch error:', error);
-      throw new Error('Siparişler yüklenemedi');
+      throw new Error('Siparisler yuklenemedi');
     }
 
     return data || [];
   }
 
-  /**
-   * Listen for auth state changes
-   * Calls callback whenever auth state changes (login/logout)
-   */
   function onAuthStateChange(callback) {
     const client = getSupabase();
     if (!client) return null;
@@ -267,20 +318,17 @@
     return data.subscription;
   }
 
-  /**
-   * Get access token for API calls (Authorization: Bearer <token>)
-   */
   async function getAccessToken() {
     const session = await getSession();
     return session?.access_token || null;
   }
 
-  // Export functions
   global.BlaeneAuth = {
     initSupabase,
     getSupabase,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     getSession,
     getCurrentUser,

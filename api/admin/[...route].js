@@ -44,6 +44,13 @@ const IMAGE_MIME_EXT = {
   'image/webp': 'webp',
   'image/gif': 'gif',
 };
+const PRODUCT_OPTIONAL_COLUMNS = [
+  'stock_threshold',
+  'stock_quantity',
+  'seo_title',
+  'seo_description',
+  'seo_slug',
+];
 
 function getUrl(req) {
   return new URL(req.url, 'http://localhost');
@@ -276,6 +283,15 @@ function normalizeStorageToken(input, fallback = 'asset') {
   return cleaned || fallback;
 }
 
+function normalizeSlug(input, fallback = '') {
+  const value = normalizeText(input, 220)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const cleaned = value.replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return cleaned || fallback;
+}
+
 function parseImageDataUrl(input) {
   const value = normalizeText(input, 16 * 1024 * 1024);
   const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/.exec(value);
@@ -295,6 +311,7 @@ function parseImageDataUrl(input) {
 function normalizeProductPayload(input) {
   const payload = sanitizeObjectShallow(input || {});
   const category = normalizeText(payload.category, 32).toLowerCase();
+  const fallbackSlug = normalizeStorageToken(payload.code || payload.name, 'product');
   return {
     code: normalizeText(payload.code, 40).toUpperCase(),
     name: normalizeText(payload.name, 180),
@@ -307,6 +324,9 @@ function normalizeProductPayload(input) {
     price_visible: toBool(payload.price_visible, false),
     images: Array.isArray(payload.images) ? payload.images.filter(Boolean).slice(0, 24) : [],
     variants: Array.isArray(payload.variants) ? payload.variants : [],
+    seo_title: normalizeText(payload.seo_title, 160) || null,
+    seo_description: normalizeText(payload.seo_description, 320) || null,
+    seo_slug: normalizeSlug(payload.seo_slug || payload.name || payload.code, fallbackSlug),
     display_order: normalizePositiveInt(payload.display_order || 0, 0, 9999),
     active: payload.active === undefined ? true : toBool(payload.active, true),
     stock_threshold: normalizePositiveInt(payload.stock_threshold || 0, 0, 999999),
@@ -331,6 +351,9 @@ function normalizeProductPatch(input) {
   if (payload.price_visible !== undefined) patch.price_visible = toBool(payload.price_visible, false);
   if (payload.images !== undefined) patch.images = Array.isArray(payload.images) ? payload.images.filter(Boolean).slice(0, 24) : [];
   if (payload.variants !== undefined) patch.variants = Array.isArray(payload.variants) ? payload.variants : [];
+  if (payload.seo_title !== undefined) patch.seo_title = normalizeText(payload.seo_title, 160) || null;
+  if (payload.seo_description !== undefined) patch.seo_description = normalizeText(payload.seo_description, 320) || null;
+  if (payload.seo_slug !== undefined) patch.seo_slug = normalizeSlug(payload.seo_slug, '');
   if (payload.display_order !== undefined) patch.display_order = normalizePositiveInt(payload.display_order || 0, 0, 9999);
   if (payload.active !== undefined) patch.active = toBool(payload.active, true);
   if (payload.stock_threshold !== undefined) patch.stock_threshold = normalizePositiveInt(payload.stock_threshold || 0, 0, 999999);
@@ -367,6 +390,66 @@ function normalizeVariantPatch(input) {
   if (payload.active !== undefined) patch.active = toBool(payload.active, true);
   if (payload.display_order !== undefined) patch.display_order = normalizePositiveInt(payload.display_order || 0, 0, 9999);
   return patch;
+}
+
+function extractMissingColumnName(error) {
+  const parts = [
+    error?.details?.message,
+    error?.details?.hint,
+    error?.message,
+    error?.details?.details,
+  ]
+    .map((item) => normalizeText(item, 400))
+    .filter(Boolean);
+  if (!parts.length) return null;
+  const joined = parts.join(' ');
+
+  const cacheMatch = joined.match(/Could not find the '([a-z_]+)' column/i);
+  if (cacheMatch?.[1]) return cacheMatch[1].toLowerCase();
+
+  const pgMatch = joined.match(/column\s+"?([a-z_]+)"?/i);
+  if (pgMatch?.[1]) return pgMatch[1].toLowerCase();
+
+  return null;
+}
+
+function stripUnavailableProductColumn(payload, error) {
+  const missingColumn = extractMissingColumnName(error);
+  if (!missingColumn) return null;
+  if (!PRODUCT_OPTIONAL_COLUMNS.includes(missingColumn)) return null;
+  if (!(missingColumn in payload)) return null;
+  const next = { ...payload };
+  delete next[missingColumn];
+  return next;
+}
+
+async function insertProductWithFallback(config, payload, options = undefined) {
+  let candidate = { ...(payload || {}) };
+  for (let attempt = 0; attempt < PRODUCT_OPTIONAL_COLUMNS.length + 1; attempt += 1) {
+    try {
+      return await restInsert(config, 'products', candidate, options);
+    } catch (error) {
+      const next = stripUnavailableProductColumn(candidate, error);
+      if (!next) throw error;
+      candidate = next;
+    }
+  }
+  return restInsert(config, 'products', candidate, options);
+}
+
+async function updateProductWithFallback(config, filters, payload, options = undefined) {
+  let candidate = { ...(payload || {}) };
+  for (let attempt = 0; attempt < PRODUCT_OPTIONAL_COLUMNS.length + 1; attempt += 1) {
+    try {
+      await restUpdate(config, 'products', filters, candidate, options);
+      return;
+    } catch (error) {
+      const next = stripUnavailableProductColumn(candidate, error);
+      if (!next) throw error;
+      candidate = next;
+    }
+  }
+  await restUpdate(config, 'products', filters, candidate, options);
 }
 
 function normalizePromotionPayload(input, existing = {}) {
@@ -533,6 +616,26 @@ async function supabaseAdminUpdateUser(config, userId, patch) {
   }
 }
 
+async function supabaseAdminListUsers(config, options = {}) {
+  const page = normalizePositiveInt(options.page, 1, 999999);
+  const perPage = normalizePositiveInt(options.perPage, 1000, 1000);
+  const response = await fetch(`${config.url}/auth/v1/admin/users?page=${page}&per_page=${perPage}`, {
+    method: 'GET',
+    headers: buildServiceHeaders(config),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = data?.msg || data?.message || data?.error || 'Auth user list failed';
+    const error = new Error(message);
+    error.httpStatus = 400;
+    error.code = 'AUTH_USER_LIST_FAILED';
+    throw error;
+  }
+  if (Array.isArray(data?.users)) return data.users;
+  if (Array.isArray(data)) return data;
+  return [];
+}
+
 async function handleMe(req, res, ctx) {
   if (req.method !== 'GET') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
   const { config, auth } = ctx;
@@ -635,7 +738,17 @@ async function handleProducts(req, res, ctx) {
     if (!required.valid) {
       return sendError(res, 400, `Missing fields: ${required.missing.join(', ')}`, 'VALIDATION_REQUIRED_FIELDS');
     }
-    const inserted = await restInsert(config, 'products', payload);
+    let inserted;
+    try {
+      inserted = await insertProductWithFallback(config, payload);
+    } catch (error) {
+      const sqlState = error?.details?.code;
+      const rawMessage = String(error?.message || '').toLowerCase();
+      if (sqlState === '23505' || rawMessage.includes('duplicate key') || rawMessage.includes('unique constraint')) {
+        return sendError(res, 409, `Bu ürün kodu zaten kullanımda: ${payload.code}`, 'PRODUCT_CODE_CONFLICT');
+      }
+      throw error;
+    }
     const row = Array.isArray(inserted) ? inserted[0] : inserted;
     await writeAuditLog(config, req, auth, 'product.create', { code: payload.code }, {
       entityType: 'product',
@@ -649,7 +762,7 @@ async function handleProducts(req, res, ctx) {
     if (!id) return sendError(res, 400, 'id is required', 'VALIDATION_REQUIRED_ID');
     const patch = normalizeProductPatch(body);
     if (!Object.keys(patch).length) return sendError(res, 400, 'No fields to update', 'VALIDATION_EMPTY_PATCH');
-    await restUpdate(config, 'products', { id: `eq.${id}` }, patch);
+    await updateProductWithFallback(config, { id: `eq.${id}` }, patch);
     await writeAuditLog(config, req, auth, 'product.update', { id }, { entityType: 'product', entityId: id });
     return sendSuccess(res, { id });
   }
@@ -686,15 +799,106 @@ async function handleProductsBulk(req, res, ctx) {
       limit: 1,
     });
     if (existing.length) {
-      await restUpdate(config, 'products', { id: `eq.${existing[0].id}` }, payload);
+      await updateProductWithFallback(config, { id: `eq.${existing[0].id}` }, payload);
       updated += 1;
     } else {
-      await restInsert(config, 'products', payload, { prefer: 'return=minimal' });
+      await insertProductWithFallback(config, payload, { prefer: 'return=minimal' });
       inserted += 1;
     }
   }
   await writeAuditLog(config, req, auth, 'products.bulk_upsert', { inserted, updated }, { entityType: 'product' });
   return sendSuccess(res, { inserted, updated, total: inserted + updated });
+}
+
+async function handleProductsPriceBulk(req, res, ctx) {
+  const { config, auth } = ctx;
+  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+  if (!hasRole(auth.profile.role, WRITER_ROLES)) return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+
+  const parsed = await parseBodySafe(req);
+  const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+
+  const modeRaw = normalizeText(body.mode || body.operation, 40).toLowerCase();
+  const mode = ['set', 'increase_percent', 'increase_fixed'].includes(modeRaw) ? modeRaw : 'set';
+  const amount = normalizePrice(body.amount);
+  const category = normalizeText(body.category, 40).toLowerCase();
+  const explicitIds = Array.isArray(body.product_ids)
+    ? body.product_ids.map((value) => normalizeText(value, 120)).filter(Boolean)
+    : [];
+  const includeInactive = toBool(body.include_inactive, false);
+
+  if (amount === null || !Number.isFinite(amount)) {
+    return sendError(res, 400, 'amount is required', 'VALIDATION_REQUIRED_AMOUNT');
+  }
+  if (category && category !== 'all' && !CATEGORY_ALLOWED.includes(category)) {
+    return sendError(res, 400, 'Invalid category', 'VALIDATION_CATEGORY');
+  }
+
+  let rows = await restSelect(config, 'products', {
+    select: 'id,code,name,category,price,active',
+    order: 'created_at.asc',
+    limit: 5000,
+  });
+
+  if (category && category !== 'all') {
+    rows = rows.filter((row) => String(row.category || '').toLowerCase() === category);
+  }
+  if (!includeInactive) {
+    rows = rows.filter((row) => row.active !== false);
+  }
+  if (explicitIds.length) {
+    const idSet = new Set(explicitIds);
+    rows = rows.filter((row) => idSet.has(String(row.id || '')));
+  }
+
+  if (!rows.length) {
+    return sendSuccess(res, { updated: 0, mode, amount, category: category || 'all', sample: [] });
+  }
+
+  const updatedProducts = [];
+  for (const row of rows) {
+    const currentPrice = Number(row.price || 0);
+    if (!Number.isFinite(currentPrice) && mode !== 'set') continue;
+
+    let nextPrice = currentPrice;
+    if (mode === 'set') {
+      nextPrice = Number(amount || 0);
+    } else if (mode === 'increase_percent') {
+      nextPrice = currentPrice + (currentPrice * Number(amount || 0)) / 100;
+    } else if (mode === 'increase_fixed') {
+      nextPrice = currentPrice + Number(amount || 0);
+    }
+
+    nextPrice = Math.round(Math.max(0, nextPrice) * 100) / 100;
+    await updateProductWithFallback(config, { id: `eq.${row.id}` }, {
+      price: nextPrice,
+      price_visible: true,
+    });
+
+    updatedProducts.push({
+      id: row.id,
+      code: row.code,
+      from: Math.round(currentPrice * 100) / 100,
+      to: nextPrice,
+    });
+  }
+
+  await writeAuditLog(config, req, auth, 'products.bulk_price_update', {
+    mode,
+    amount,
+    category: category || 'all',
+    include_inactive: includeInactive,
+    explicit_ids_count: explicitIds.length,
+    updated: updatedProducts.length,
+  }, { entityType: 'product' });
+
+  return sendSuccess(res, {
+    updated: updatedProducts.length,
+    mode,
+    amount,
+    category: category || 'all',
+    sample: updatedProducts.slice(0, 20),
+  });
 }
 
 async function handleOrders(req, res, ctx) {
@@ -937,6 +1141,15 @@ async function handleAnalytics(req, res, ctx) {
   const conversionRate = scopedOrders.length
     ? Math.round((paidOrders.length / scopedOrders.length) * 10000) / 100
     : 0;
+  const pendingOrders = orders.filter((row) => String(row.status || '').toLowerCase() === 'pending').length;
+  const outOfStockCount = products.filter((row) => Number(row.stock_quantity || 0) <= 0).length;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const nowIso = new Date().toISOString();
+  const dailyRevenue = orders
+    .filter((row) => String(row.payment_status || '').toLowerCase() === 'paid')
+    .filter((row) => isWithinRange(row.created_at, startOfToday.toISOString(), nowIso))
+    .reduce((sum, row) => sum + Number(row.total || 0), 0);
 
   const scopedTraffic = auditLogs
     .filter((row) => String(row.action || '').startsWith('traffic.'))
@@ -1007,12 +1220,15 @@ async function handleAnalytics(req, res, ctx) {
     range,
     metrics: {
       paid_revenue: Math.round(paidRevenue * 100) / 100,
+      daily_revenue: Math.round(dailyRevenue * 100) / 100,
       new_orders: scopedOrders.length,
       paid_orders: paidOrders.length,
+      pending_orders: pendingOrders,
       active_users: users.filter((item) => item.is_active !== false).length,
       scoped_new_users: scopedUsers.length,
       conversion_rate: conversionRate,
       low_stock_products: lowStockCount,
+      out_of_stock_products: outOfStockCount,
       open_support_tickets: tickets.filter((item) => String(item.status || '').toLowerCase() !== 'closed').length,
       traffic_page_views: pageViewCount,
       traffic_clicks: clickCount,
@@ -1515,6 +1731,96 @@ async function handleMarketplaceConnections(req, res, ctx) {
   }
 
   return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+}
+
+async function handleMarketplaceSync(req, res, ctx) {
+  const { config, auth } = ctx;
+  if (req.method !== 'POST') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+  if (!hasRole(auth.profile.role, WRITER_ROLES)) return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+
+  const parsed = await parseBodySafe(req);
+  const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+  const action = normalizeText(body.action, 40).toLowerCase();
+  const provider = normalizeText(body.provider, 80).toLowerCase();
+  const connectionId = normalizeText(body.connection_id, 120);
+  const allowedActions = ['push_stock', 'pull_orders', 'full_sync'];
+  if (!allowedActions.includes(action)) {
+    return sendError(res, 400, 'Invalid action', 'VALIDATION_SYNC_ACTION');
+  }
+
+  let connections = await restSelect(config, 'marketplace_connections', {
+    select: 'id,provider,display_name,is_active',
+    order: 'created_at.desc',
+    limit: 500,
+  });
+
+  connections = connections.filter((row) => row.is_active !== false);
+  if (provider && provider !== 'all') {
+    connections = connections.filter((row) => String(row.provider || '').toLowerCase() === provider);
+  }
+  if (connectionId) {
+    connections = connections.filter((row) => String(row.id || '') === connectionId);
+  }
+  if (!connections.length) {
+    return sendError(res, 404, 'No active integration found', 'MARKETPLACE_CONNECTION_NOT_FOUND');
+  }
+
+  let activeProducts = [];
+  let openOrders = [];
+  if (action === 'push_stock' || action === 'full_sync') {
+    activeProducts = await safeSelect(config, 'products', {
+      select: 'id',
+      active: 'eq.true',
+      limit: 5000,
+    }, []);
+  }
+  if (action === 'pull_orders' || action === 'full_sync') {
+    openOrders = await safeSelect(config, 'orders', {
+      select: 'id,status',
+      order: 'created_at.desc',
+      limit: 5000,
+    }, []);
+    openOrders = openOrders.filter((row) => {
+      const status = String(row.status || '').toLowerCase();
+      return ['pending', 'processing', 'shipped'].includes(status);
+    });
+  }
+
+  const syncedAt = new Date().toISOString();
+  const results = [];
+  for (const row of connections) {
+    const pushedStockCount = action === 'pull_orders' ? 0 : activeProducts.length;
+    const pulledOrderCount = action === 'push_stock' ? 0 : openOrders.length;
+
+    await restUpdate(config, 'marketplace_connections', { id: `eq.${row.id}` }, {
+      last_sync_at: syncedAt,
+      last_error: null,
+    });
+
+    results.push({
+      connection_id: row.id,
+      provider: row.provider,
+      display_name: row.display_name || row.provider,
+      pushed_stock_count: pushedStockCount,
+      pulled_order_count: pulledOrderCount,
+      synced_at: syncedAt,
+      status: 'ok',
+    });
+  }
+
+  await writeAuditLog(config, req, auth, 'marketplace.sync', {
+    action,
+    provider: provider || 'all',
+    connection_count: results.length,
+    pushed_stock_total: results.reduce((sum, item) => sum + Number(item.pushed_stock_count || 0), 0),
+    pulled_order_total: results.reduce((sum, item) => sum + Number(item.pulled_order_count || 0), 0),
+  }, { entityType: 'marketplace_connection' });
+
+  return sendSuccess(res, {
+    action,
+    synced_at: syncedAt,
+    results,
+  });
 }
 
 async function handleSupportTickets(req, res, ctx) {
@@ -2088,23 +2394,172 @@ async function handleCustomers(req, res, ctx) {
   const query = getUrl(req).searchParams;
 
   if (req.method === 'GET') {
-    let rows = await restSelect(config, 'customer_profiles', {
-      select: 'id,email,full_name,phone,default_address,default_city,created_at,updated_at',
-      order: 'created_at.desc',
-      limit: 5000,
-    });
+    let rows = [];
+    try {
+      rows = await restSelect(config, 'customer_profiles', {
+        select: 'id,email,username,full_name,phone,default_address,default_city,consent_kvkk,consent_terms,consent_marketing_email,consent_marketing_sms,consent_marketing_call,created_at,updated_at',
+        order: 'created_at.desc',
+        limit: 5000,
+      });
+    } catch {
+      rows = await safeSelect(config, 'customer_profiles', {
+        select: 'id,email,full_name,phone,default_address,default_city,created_at,updated_at',
+        order: 'created_at.desc',
+        limit: 5000,
+      }, []);
+    }
+
+    try {
+      const authUsers = await supabaseAdminListUsers(config, { page: 1, perPage: 1000 });
+      if (Array.isArray(authUsers) && authUsers.length) {
+        const indexById = new Map();
+        rows.forEach((row, index) => {
+          const id = normalizeText(row.id, 120);
+          if (id) indexById.set(id, index);
+        });
+
+        authUsers.forEach((user) => {
+          const id = normalizeText(user?.id, 120);
+          if (!id) return;
+
+          const metadata = user?.user_metadata && typeof user.user_metadata === 'object'
+            ? user.user_metadata
+            : {};
+          const email = normalizeEmail(user?.email) || null;
+          const fullName = normalizeText(metadata.full_name || metadata.name, 180) || null;
+          const username = normalizeText(metadata.username, 120) || null;
+          const phone = normalizeText(user?.phone || metadata.phone, 60) || null;
+          const address = normalizeText(metadata.default_address, 300) || null;
+          const city = normalizeText(metadata.default_city, 120) || null;
+          const createdAt = normalizeText(user?.created_at, 80) || new Date().toISOString();
+          const updatedAt = normalizeText(user?.updated_at, 80) || createdAt;
+
+          const existingIndex = indexById.get(id);
+          if (existingIndex !== undefined) {
+            const current = rows[existingIndex] || {};
+            rows[existingIndex] = {
+              ...current,
+              id,
+              email: current.email || email,
+              full_name: current.full_name || fullName,
+              username: current.username || username,
+              phone: current.phone || phone,
+              default_address: current.default_address || address,
+              default_city: current.default_city || city,
+              created_at: current.created_at || createdAt,
+              updated_at: current.updated_at || updatedAt,
+            };
+            return;
+          }
+
+          rows.push({
+            id,
+            email,
+            username,
+            full_name: fullName,
+            phone,
+            default_address: address,
+            default_city: city,
+            consent_kvkk: null,
+            consent_terms: null,
+            consent_marketing_email: null,
+            consent_marketing_sms: null,
+            consent_marketing_call: null,
+            created_at: createdAt,
+            updated_at: updatedAt,
+          });
+        });
+      }
+    } catch {
+      // customer_profiles is still the primary source; auth fallback is best-effort
+    }
+
+    rows = rows
+      .slice()
+      .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
 
     const search = normalizeText(query.get('search'), 120).toLowerCase();
     if (search) {
       rows = rows.filter((row) =>
         String(row.email || '').toLowerCase().includes(search) ||
-        String(row.full_name || '').toLowerCase().includes(search)
+        String(row.full_name || '').toLowerCase().includes(search) ||
+        String(row.username || '').toLowerCase().includes(search) ||
+        String(row.phone || '').toLowerCase().includes(search)
       );
     }
 
     const pagination = parsePagination(query, { pageSize: 25, maxPageSize: 500 });
     const paged = paginateRows(rows, pagination);
     return sendSuccess(res, paged.items, 200, paged.meta);
+  }
+
+  return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+}
+
+async function handleSiteSettings(req, res, ctx) {
+  const { config, auth } = ctx;
+  const query = getUrl(req).searchParams;
+
+  if (req.method === 'GET') {
+    const key = normalizeStorageToken(query.get('key'), '');
+    if (key) {
+      const rows = await safeSelect(config, 'site_settings', {
+        select: '*',
+        key: `eq.${key}`,
+        limit: 1,
+      }, []);
+      const row = Array.isArray(rows) && rows.length ? rows[0] : null;
+      return sendSuccess(res, row);
+    }
+
+    const rows = await safeSelect(config, 'site_settings', {
+      select: '*',
+      order: 'key.asc',
+      limit: 5000,
+    }, []);
+    const pagination = parsePagination(query, { pageSize: 50, maxPageSize: 500 });
+    const paged = paginateRows(rows, pagination);
+    return sendSuccess(res, paged.items, 200, paged.meta);
+  }
+
+  if (!hasRole(auth.profile.role, WRITER_ROLES)) {
+    return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+  }
+
+  const parsed = await parseBodySafe(req);
+  const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+  const key = normalizeStorageToken(body.key || query.get('key'), '');
+  if (!key) return sendError(res, 400, 'key is required', 'VALIDATION_REQUIRED_KEY');
+
+  if (req.method === 'DELETE') {
+    await restDelete(config, 'site_settings', { key: `eq.${key}` });
+    await writeAuditLog(config, req, auth, 'site_settings.delete', { key }, { entityType: 'site_settings', entityId: key });
+    return sendSuccess(res, { key });
+  }
+
+  if (req.method === 'POST' || req.method === 'PUT') {
+    const payload = {
+      key,
+      value_json: body.value_json !== undefined ? body.value_json : (body.value !== undefined ? body.value : {}),
+      description: normalizeText(body.description, 500) || null,
+      is_public: toBool(body.is_public, false),
+      updated_by: normalizeText(auth.user?.email, 180) || null,
+    };
+
+    const existing = await safeSelect(config, 'site_settings', {
+      select: 'key',
+      key: `eq.${key}`,
+      limit: 1,
+    }, []);
+
+    if (Array.isArray(existing) && existing.length) {
+      await restUpdate(config, 'site_settings', { key: `eq.${key}` }, payload);
+    } else {
+      await restInsert(config, 'site_settings', payload, { prefer: 'return=minimal' });
+    }
+
+    await writeAuditLog(config, req, auth, 'site_settings.upsert', { key }, { entityType: 'site_settings', entityId: key });
+    return sendSuccess(res, payload);
   }
 
   return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
@@ -2190,14 +2645,17 @@ const authenticatedHandler = createApiHandler(
     if (routeKey === 'products') return handleProducts(req, res, ctx);
     if (routeKey === 'product-variants') return handleProductVariants(req, res, ctx);
     if (routeKey === 'products-bulk') return handleProductsBulk(req, res, ctx);
+    if (routeKey === 'products-price-bulk') return handleProductsPriceBulk(req, res, ctx);
     if (routeKey === 'orders') return handleOrders(req, res, ctx);
     if (routeKey === 'order-status') return handleOrderStatus(req, res, ctx);
     if (routeKey === 'analytics') return handleAnalytics(req, res, ctx);
     if (routeKey === 'users') return handleUsers(req, res, ctx);
     if (routeKey === 'customers') return handleCustomers(req, res, ctx);
+    if (routeKey === 'site-settings') return handleSiteSettings(req, res, ctx);
     if (routeKey === 'subscriptions') return handleSubscriptions(req, res, ctx);
     if (routeKey === 'promotions') return handlePromotions(req, res, ctx);
     if (routeKey === 'marketplace-connections') return handleMarketplaceConnections(req, res, ctx);
+    if (routeKey === 'marketplace-sync') return handleMarketplaceSync(req, res, ctx);
     if (routeKey === 'support-tickets') return handleSupportTickets(req, res, ctx);
     if (routeKey === 'support-messages') return handleSupportMessages(req, res, ctx);
     if (routeKey === 'financial-summary') return handleFinancialSummary(req, res, ctx);

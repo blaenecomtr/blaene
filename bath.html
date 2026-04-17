@@ -400,6 +400,7 @@
         <a href="bath.html" class="nav-link active">BANYO</a>
         <a href="forge.html" class="nav-link">ATEŞ ÇUKURU</a>
         <a href="industrial.html" class="nav-link">MODÜLER RAF & TAKIM ARABASI</a>
+        <a href="/account.html" class="nav-link">Hesabım</a>
         <a href="index.html#why" class="nav-link">Hakkımızda</a>
         <a href="index.html#contact" class="nav-link">İletişim</a>
     </nav>
@@ -428,6 +429,7 @@
             <a href="bath.html">BANYO</a>
             <a href="forge.html">ATEŞ ÇUKURU</a>
             <a href="industrial.html">MODÜLER RAF & TAKIM ARABASI</a>
+            <a href="/account.html">Hesabım</a>
             <a href="index.html#why">Hakkımızda</a>
             <a href="index.html#contact">İletişim</a>
         </nav>
@@ -678,8 +680,11 @@ function renderProducts(list) {
 
 function getSortedProducts() {
     const sort = document.querySelector('.sort-tab.active')?.dataset.sort || 'new';
-    const sorted = [...PRODUCTS];
-    if (sort === 'az') sorted.sort((a, b) => a.code.localeCompare(b.code));
+    const source = Array.isArray(window.BLAENE_REMOTE_PRODUCTS) && window.BLAENE_REMOTE_PRODUCTS.length
+        ? window.BLAENE_REMOTE_PRODUCTS
+        : PRODUCTS;
+    const sorted = [...source];
+    if (sort === 'az') sorted.sort((a, b) => String(a.code).localeCompare(String(b.code)));
     if (sort === 'thick') sorted.sort((a, b) => parseFloat(b.thickness) - parseFloat(a.thickness));
     return sorted;
 }
@@ -717,9 +722,9 @@ function applyStaticLanguage() {
         });
     };
 
-    setAll('.header-center .nav-link', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'About', 'Contact']);
+    setAll('.header-center .nav-link', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'Account', 'About', 'Contact']);
     setText('.wa-header-btn-text', 'Get Quote');
-    setAll('#mobile-nav nav a', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'About', 'Contact']);
+    setAll('#mobile-nav nav a', ['BATHROOM', 'FIRE PIT', 'MODULAR SHELVING & TOOL CART', 'Account', 'About', 'Contact']);
     setText('.breadcrumb a[href="index.html"]', 'Home');
     setText('.breadcrumb span:last-child', 'BATHROOM');
     const catTitle = document.querySelector('.cat-title');

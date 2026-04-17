@@ -35,6 +35,17 @@
         font-weight: 700;
         color: #0f172a;
       }
+      .blaene-desc-line {
+        margin-top: 0.45rem;
+        font-size: 0.72rem;
+        color: #475569;
+        line-height: 1.35;
+      }
+      .blaene-stock-line {
+        margin-top: 0.35rem;
+        font-size: 0.68rem;
+        color: #64748b;
+      }
       .blaene-add-cart {
         margin-top: 0.5rem;
         width: 100%;
@@ -47,6 +58,12 @@
         font-family: 'Montserrat', sans-serif;
         letter-spacing: 0.04em;
         cursor: pointer;
+      }
+      .blaene-add-cart[disabled] {
+        cursor: not-allowed;
+        border-color: #d1d5db;
+        background: #f3f4f6;
+        color: #6b7280;
       }
       .blaene-add-cart.secondary {
         width: auto;
@@ -95,6 +112,7 @@
       variants,
       colorGroups,
       active: row.active !== false,
+      stock_quantity: Number.isFinite(Number(row.stock_quantity)) ? Math.max(0, Number(row.stock_quantity)) : 0,
       display_order: Number.isFinite(Number(row.display_order)) ? Number(row.display_order) : 0,
     };
   }
@@ -150,7 +168,23 @@
       if (!info) return;
 
       info.querySelector('.blaene-price-line')?.remove();
+      info.querySelector('.blaene-desc-line')?.remove();
+      info.querySelector('.blaene-stock-line')?.remove();
       info.querySelector('.blaene-add-cart')?.remove();
+
+      const descriptionText = String(product.description || '').trim();
+      if (descriptionText) {
+        const descEl = document.createElement('p');
+        descEl.className = 'blaene-desc-line';
+        descEl.textContent = descriptionText.length > 120 ? `${descriptionText.slice(0, 117)}...` : descriptionText;
+        info.appendChild(descEl);
+      }
+
+      const stock = Math.max(0, Number(product.stock_quantity || 0));
+      const stockEl = document.createElement('p');
+      stockEl.className = 'blaene-stock-line';
+      stockEl.textContent = stock > 0 ? `Stok: ${stock}` : 'Stokta yok';
+      info.appendChild(stockEl);
 
       if (product.price_visible && Number.isFinite(product.price) && product.price > 0) {
         const priceEl = document.createElement('p');
@@ -161,7 +195,8 @@
         const addBtn = document.createElement('button');
         addBtn.type = 'button';
         addBtn.className = 'blaene-add-cart';
-        addBtn.textContent = 'Sepete Ekle';
+        addBtn.textContent = stock > 0 ? 'Sepete Ekle' : 'Tukendi';
+        addBtn.disabled = stock <= 0;
         addBtn.dataset.productCode = product.code;
         addBtn.addEventListener('click', function (event) {
           event.preventDefault();
@@ -173,6 +208,7 @@
             price: product.price,
             image: product.images?.[0] || 'logo/sitelogo.png',
             category: product.category,
+            stock: stock,
           }, 1);
         });
         info.appendChild(addBtn);
@@ -205,17 +241,23 @@
 
     const { data, error } = await client
       .from('products')
-      .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, display_order')
+      .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, stock_quantity, display_order')
       .eq('category', category)
       .eq('active', true)
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: true });
 
-    if (error || !Array.isArray(data) || !data.length) {
+    if (error) {
+      console.error('[blaene-storefront] syncCategoryPage error:', error);
+      return;
+    }
+    if (!Array.isArray(data)) {
+      console.warn('[blaene-storefront] syncCategoryPage: unexpected response shape');
       return;
     }
 
     const products = data.map(toPublicProduct);
+    window.BLAENE_REMOTE_PRODUCTS = products;
 
     if (typeof window.renderProducts === 'function') {
       window.renderProducts(sortProducts(products));
@@ -223,8 +265,11 @@
       document.querySelectorAll('.sort-tab').forEach((tab) => {
         tab.addEventListener('click', function () {
           setTimeout(function () {
-            window.renderProducts(sortProducts(products));
-            injectCardCommerce(products);
+            const current = Array.isArray(window.BLAENE_REMOTE_PRODUCTS)
+              ? window.BLAENE_REMOTE_PRODUCTS
+              : products;
+            window.renderProducts(sortProducts(current));
+            injectCardCommerce(current);
           }, 0);
         });
       });
@@ -270,6 +315,7 @@
 
   function injectProductCommerce(product) {
     const cart = window.BlaeneCart;
+    const stock = Math.max(0, Number(product.stock_quantity || 0));
 
     const ctaSection = document.querySelector('.cta-section');
     if (ctaSection) {
@@ -289,7 +335,8 @@
       const addBtn = document.createElement('button');
       addBtn.type = 'button';
       addBtn.className = 'blaene-add-cart secondary';
-      addBtn.textContent = 'Sepete Ekle';
+      addBtn.textContent = stock > 0 ? 'Sepete Ekle' : 'Tukendi';
+      addBtn.disabled = stock <= 0;
       addBtn.addEventListener('click', function () {
         if (!cart) return;
         cart.addItem({
@@ -298,6 +345,7 @@
           price: product.price,
           image: product.images?.[0] || 'logo/sitelogo.png',
           category: product.category,
+          stock: stock,
         }, 1);
       });
       target.appendChild(addBtn);
@@ -313,12 +361,16 @@
 
     const { data, error } = await client
       .from('products')
-      .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, display_order')
+      .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, stock_quantity, display_order')
       .eq('code', code)
       .eq('active', true)
       .maybeSingle();
 
-    if (error || !data) return;
+    if (error) {
+      console.error('[blaene-storefront] syncProductPage error:', error);
+      return;
+    }
+    if (!data) return;
 
     const product = toPublicProduct(data);
 

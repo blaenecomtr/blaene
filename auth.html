@@ -3,191 +3,256 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blaene Üye Girişi & Kayıt</title>
+  <title>Blaene Hesabı</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" />
   <style>
     :root {
-      --bg: #f6f7fb;
-      --surface: #ffffff;
-      --text: #111827;
+      --bg: #ececec;
+      --panel: #ffffff;
+      --text: #111111;
       --muted: #6b7280;
-      --border: #dbe1ea;
+      --border: #d7d7d7;
       --accent: #111827;
-      --danger: #b91c1c;
-      --success: #166534;
-      --shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+      --accent-hover: #1f2937;
+      --success-bg: #ecfdf3;
+      --success-text: #166534;
+      --success-border: #9be6bb;
+      --error-bg: #fef2f2;
+      --error-text: #9f1239;
+      --error-border: #f9b7b7;
+      --info-bg: #eff6ff;
+      --info-text: #1d4ed8;
+      --info-border: #bfdbfe;
+      --shadow: 0 12px 28px rgba(17, 24, 39, 0.1);
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: 'Montserrat', sans-serif;
-      background: var(--bg);
       color: var(--text);
+      background: var(--bg);
     }
+
     .wrap {
-      max-width: 600px;
+      max-width: 760px;
       margin: 0 auto;
-      padding: 1rem;
+      padding: 1.2rem 1rem 2rem;
     }
+
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.9rem;
       gap: 0.8rem;
+      margin-bottom: 0.9rem;
     }
-    .topbar a {
-      text-decoration: none;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
+
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3.7vw, 1.95rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .back-btn {
+      border: 1px solid #222;
+      background: #efefef;
+      color: #111;
       border-radius: 10px;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
+      padding: 0.56rem 0.95rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
     }
-    .topbar a:hover {
-      background: var(--bg);
-    }
+
     .panel {
-      background: var(--surface);
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
       box-shadow: var(--shadow);
-      padding: 1.5rem;
+      padding: 1rem;
     }
-    h1 { margin: 0; font-size: 1.15rem; }
-    h2 { margin: 0; font-size: 0.97rem; }
-    p { margin: 0; }
-    .muted {
-      color: var(--muted);
-      font-size: 0.8rem;
-      margin-top: 0.4rem;
+
+    .alert {
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.84rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid transparent;
+      line-height: 1.45;
     }
+
+    .alert.success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .alert.error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error-text);
+    }
+
+    .alert.info {
+      background: var(--info-bg);
+      border-color: var(--info-border);
+      color: var(--info-text);
+    }
+
     .tabs {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       border-bottom: 1px solid var(--border);
+      margin-bottom: 0.95rem;
     }
-    .tabs button {
-      flex: 1;
-      background: none;
-      border: none;
+
+    .tab-btn {
+      border: 0;
       border-bottom: 2px solid transparent;
-      padding: 0.8rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--muted);
+      background: transparent;
+      padding: 0.78rem 0.5rem;
+      font-family: inherit;
+      font-size: 0.93rem;
+      font-weight: 700;
+      color: #6b7280;
       cursor: pointer;
-      transition: all 0.2s;
     }
-    .tabs button.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
+
+    .tab-btn.active {
+      color: #111827;
+      border-bottom-color: #111827;
     }
-    .tab-content {
-      display: none;
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
     }
-    .tab-content.active {
-      display: block;
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.34rem;
     }
-    .form-group {
-      margin-bottom: 0.9rem;
-    }
+
+    .field.full { grid-column: 1 / -1; }
+
     label {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--muted);
-      display: block;
-      margin-bottom: 0.4rem;
+      font-weight: 700;
     }
-    input {
+
+    input,
+    select {
       width: 100%;
-      padding: 0.6rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-family: 'Montserrat', sans-serif;
+      border: 1px solid #cfd5dd;
+      border-radius: 10px;
+      padding: 0.62rem 0.72rem;
       font-size: 0.9rem;
-      transition: border-color 0.2s;
-    }
-    input:focus {
+      font-family: inherit;
+      background: #fff;
+      color: #111827;
       outline: none;
-      border-color: var(--accent);
     }
-    input[type="email"], input[type="password"] {
-      background: white;
-      color: var(--text);
+
+    input:focus,
+    select:focus {
+      border-color: #8ca0b8;
+      box-shadow: 0 0 0 3px rgba(140, 160, 184, 0.2);
     }
+
+    .type-options,
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .type-options label,
+    .check-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+      color: #1f2937;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .consent-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+      padding: 0.72rem;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .consent-title {
+      font-size: 0.82rem;
+      color: #4b5563;
+      font-weight: 600;
+      margin: 0;
+    }
+
     .btn {
       width: 100%;
-      padding: 0.7rem;
-      margin-top: 0.6rem;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-family: 'Montserrat', sans-serif;
+      border: 0;
+      border-radius: 9px;
+      padding: 0.7rem 1rem;
       font-size: 0.9rem;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: inherit;
       cursor: pointer;
-      transition: background 0.2s;
+      margin-top: 0.8rem;
     }
-    .btn:hover {
-      background: #1f2937;
+
+    .btn.primary {
+      background: var(--accent);
+      color: #fff;
     }
+
+    .btn.primary:hover { background: var(--accent-hover); }
+
+    .btn.secondary {
+      background: #fff;
+      color: #111827;
+      border: 1px solid #d1d5db;
+      margin-top: 0.55rem;
+    }
+
+    .btn.secondary:hover { background: #f9fafb; }
+
     .btn:disabled {
-      background: var(--muted);
+      opacity: 0.7;
       cursor: not-allowed;
     }
-    .btn.secondary {
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--border);
-    }
-    .btn.secondary:hover {
-      background: var(--bg);
-    }
-    .alert {
-      padding: 0.8rem;
-      border-radius: 8px;
-      margin-bottom: 0.9rem;
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-    .alert.success {
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #86efac;
-    }
-    .alert.error {
-      background: #fee2e2;
-      color: #b91c1c;
-      border: 1px solid #fca5a5;
-    }
-    .alert.info {
-      background: #e0f2fe;
-      color: #0369a1;
-      border: 1px solid #7dd3fc;
-    }
-    .form-link {
-      text-align: center;
-      margin-top: 0.8rem;
-      font-size: 0.85rem;
-    }
-    .form-link a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .form-link a:hover {
-      text-decoration: underline;
-    }
-    @media (max-width: 640px) {
-      .wrap { padding: 0.8rem; }
-      .panel { padding: 1rem; }
-      .topbar { flex-direction: column; align-items: stretch; }
-      .topbar a { text-align: center; }
+
+    @media (max-width: 760px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -195,7 +260,7 @@
   <div class="wrap">
     <div class="topbar">
       <h1>Blaene Hesabı</h1>
-      <a href="index.html">Ana sayfaya dön</a>
+      <a class="back-btn" href="index.html">Ana sayfaya dön</a>
     </div>
 
     <div class="panel">
@@ -206,134 +271,318 @@
         <button class="tab-btn" data-tab="signup">Hesap Oluştur</button>
       </div>
 
-      <!-- LOGIN TAB -->
       <div id="login" class="tab-content active">
         <form id="login-form">
-          <div class="form-group">
-            <label for="login-email">E-posta</label>
-            <input id="login-email" type="email" required />
+          <div class="form-grid">
+            <div class="field full">
+              <label for="login-email">E-posta</label>
+              <input id="login-email" type="email" required />
+            </div>
+            <div class="field full">
+              <label for="login-password">Şifre</label>
+              <input id="login-password" type="password" required />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="login-password">Şifre</label>
-            <input id="login-password" type="password" required />
-          </div>
-          <button type="submit" class="btn" id="login-btn">Giriş Yap</button>
+          <button type="submit" class="btn primary" id="login-btn">Giriş Yap</button>
         </form>
+        <button type="button" class="btn secondary" id="login-google-btn">Google ile bağlan</button>
       </div>
 
-      <!-- SIGNUP TAB -->
       <div id="signup" class="tab-content">
         <form id="signup-form">
-          <div class="form-group">
-            <label for="signup-name">Ad Soyad *</label>
-            <input id="signup-name" type="text" required />
+          <div class="form-grid">
+            <div class="field">
+              <label for="signup-username">Kullanıcı adı *</label>
+              <input id="signup-username" type="text" required />
+            </div>
+            <div class="field">
+              <label for="signup-name">Ad Soyad *</label>
+              <input id="signup-name" type="text" required />
+            </div>
+            <div class="field">
+              <label for="signup-email">E-posta *</label>
+              <input id="signup-email" type="email" required />
+            </div>
+            <div class="field">
+              <label for="signup-phone">Telefon *</label>
+              <input id="signup-phone" type="tel" placeholder="05xx xxx xx xx" required />
+            </div>
+            <div class="field">
+              <label for="signup-city">İl *</label>
+              <select id="signup-city" required></select>
+            </div>
+            <div class="field">
+              <label for="signup-district">İlçe *</label>
+              <select id="signup-district" required></select>
+            </div>
+            <div class="field full">
+              <label>Müşteri tipi</label>
+              <div class="type-options">
+                <label><input type="radio" name="signup-customer-type" value="bireysel" checked /> Bireysel</label>
+                <label><input type="radio" name="signup-customer-type" value="kurumsal" /> Kurumsal</label>
+              </div>
+            </div>
+            <div class="field full">
+              <label for="signup-address">Adres *</label>
+              <input id="signup-address" type="text" placeholder="Açık adres" required />
+            </div>
+            <div class="field full">
+              <label for="signup-password">Şifre *</label>
+              <input id="signup-password" type="password" required />
+            </div>
+            <div class="field full">
+              <div class="check-row">
+                <label><input id="consent-kvkk" type="checkbox" required /> KVKK aydınlatma metnini okudum ve onaylıyorum.</label>
+              </div>
+            </div>
+            <div class="field full">
+              <div class="check-row">
+                <label><input id="consent-terms" type="checkbox" required /> Mesafeli satış ve üyelik sözleşmelerini kabul ediyorum.</label>
+              </div>
+            </div>
+            <div class="field full">
+              <div class="consent-box">
+                <p class="consent-title">Reklam / kampanya izinleri (opsiyonel)</p>
+                <div class="check-row">
+                  <label><input id="consent-email" type="checkbox" /> E-posta ile kampanya almak istiyorum</label>
+                </div>
+                <div class="check-row">
+                  <label><input id="consent-sms" type="checkbox" /> SMS ile kampanya almak istiyorum</label>
+                </div>
+                <div class="check-row">
+                  <label><input id="consent-call" type="checkbox" /> Telefon ile kampanya bilgilendirmesi alabilirim</label>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="signup-email">E-posta *</label>
-            <input id="signup-email" type="email" required />
-          </div>
-          <div class="form-group">
-            <label for="signup-phone">Telefon *</label>
-            <input id="signup-phone" type="tel" placeholder="05xx xxx xx xx" required />
-          </div>
-          <div class="form-group">
-            <label for="signup-password">Şifre *</label>
-            <input id="signup-password" type="password" required />
-          </div>
-          <button type="submit" class="btn" id="signup-btn">Hesap Oluştur</button>
+          <button type="submit" class="btn primary" id="signup-btn">Hesap Oluştur</button>
         </form>
+        <button type="button" class="btn secondary" id="signup-google-btn">Google ile hızlı kayıt / giriş</button>
       </div>
     </div>
   </div>
 
-  <!-- Supabase JS -->
   <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- User Auth -->
   <script src="./assets/js/user-auth.js"></script>
-
   <script>
     (function () {
+      const CITY_LIST = [
+        'Adana', 'Adiyaman', 'Afyonkarahisar', 'Agri', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin',
+        'Aydin', 'Balikesir', 'Bartin', 'Batman', 'Bayburt', 'Bilecik', 'Bingol', 'Bitlis', 'Bolu', 'Burdur',
+        'Bursa', 'Canakkale', 'Cankiri', 'Corum', 'Denizli', 'Diyarbakir', 'Duzce', 'Edirne', 'Elazig', 'Erzincan',
+        'Erzurum', 'Eskisehir', 'Gaziantep', 'Giresun', 'Gumushane', 'Hakkari', 'Hatay', 'Igdir', 'Isparta', 'Istanbul',
+        'Izmir', 'Kahramanmaras', 'Karabuk', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kirikkale', 'Kirklareli', 'Kirsehir',
+        'Kilis', 'Kocaeli', 'Konya', 'Kutahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Mugla', 'Mus',
+        'Nevsehir', 'Nigde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Sanliurfa', 'Siirt', 'Sinop',
+        'Sirnak', 'Sivas', 'Tekirdag', 'Tokat', 'Trabzon', 'Tunceli', 'Usak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'
+      ];
+
+      const DISTRICT_MAP = {
+        Istanbul: ['Adalar', 'Arnavutkoy', 'Atasehir', 'Avcilar', 'Bagcilar', 'Bahcelievler', 'Bakirkoy', 'Basaksehir', 'Bayrampasa', 'Besiktas', 'Beykoz', 'Beylikduzu', 'Beyoglu', 'Buyukcekmece', 'Catalca', 'Cekmekoy', 'Esenler', 'Esenyurt', 'Eyupsultan', 'Fatih', 'Gaziosmanpasa', 'Gungoren', 'Kadikoy', 'Kagithane', 'Kartal', 'Kucukcekmece', 'Maltepe', 'Pendik', 'Sancaktepe', 'Sariyer', 'Silivri', 'Sisli', 'Sultanbeyli', 'Sultangazi', 'Tuzla', 'Umraniye', 'Uskudar', 'Zeytinburnu'],
+        Ankara: ['Altindag', 'Cankaya', 'Etimesgut', 'Kecioren', 'Mamak', 'Sincan', 'Yenimahalle', 'Golbasi', 'Polatli', 'Pursaklar'],
+        Izmir: ['Aliaga', 'Balcova', 'Bayrakli', 'Bornova', 'Buca', 'Cigli', 'Gaziemir', 'Guzelbahce', 'Karabaglar', 'Karaburun', 'Karsiyaka', 'Kemalpasa', 'Konak', 'Menderes', 'Menemen', 'Narlidere', 'Seferihisar', 'Torbali', 'Urla'],
+        Bursa: ['Nilufer', 'Osmangazi', 'Yildirim', 'Inegol', 'Gemlik', 'Mudanya', 'Mustafakemalpasa'],
+        Antalya: ['Aksu', 'Alanya', 'Dosemealti', 'Kemer', 'Kepez', 'Konyaalti', 'Muratpasa', 'Serik', 'Manavgat'],
+        Kocaeli: ['Basisele', 'Cayirova', 'Darica', 'Derince', 'Dilovasi', 'Gebze', 'Golcuk', 'Izmit', 'Kandira', 'Kartepe', 'Korfez'],
+        Konya: ['Karatay', 'Meram', 'Selcuklu', 'Eregli', 'Beysehir'],
+        Adana: ['Cukurova', 'Sariçam', 'Seyhan', 'Yuregir', 'Kozan', 'Ceyhan'],
+        Gaziantep: ['Sahinbey', 'Sehitkamil', 'Nizip', 'Islahiye'],
+        Mersin: ['Akdeniz', 'Mezitli', 'Toroslar', 'Yenisehir', 'Tarsus', 'Erdemli'],
+        Mugla: ['Bodrum', 'Dalaman', 'Datca', 'Fethiye', 'Marmaris', 'Mentese', 'Milas', 'Ortaca']
+      };
+
+      const CUSTOMER_TYPE_STORAGE_PREFIX = 'blaene_customer_type:';
       const alertBox = document.getElementById('alert-box');
-      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabButtons = document.querySelectorAll('.tab-btn');
       const tabContents = document.querySelectorAll('.tab-content');
       const loginForm = document.getElementById('login-form');
       const signupForm = document.getElementById('signup-form');
       const loginBtn = document.getElementById('login-btn');
       const signupBtn = document.getElementById('signup-btn');
+      const loginGoogleBtn = document.getElementById('login-google-btn');
+      const signupGoogleBtn = document.getElementById('signup-google-btn');
+      const signupCity = document.getElementById('signup-city');
+      const signupDistrict = document.getElementById('signup-district');
+      const signupCustomerTypeInputs = document.querySelectorAll('input[name="signup-customer-type"]');
 
-      function showAlert(message, type = 'info') {
-        alertBox.innerHTML = `<div class="alert ${type}">${message}</div>`;
-        setTimeout(() => {
-          if (alertBox.textContent === message) alertBox.innerHTML = '';
-        }, 5000);
+      function showAlert(message, type) {
+        alertBox.innerHTML = '<div class="alert ' + type + '">' + message + '</div>';
       }
 
       function switchTab(tabName) {
-        tabBtns.forEach((btn) => btn.classList.remove('active'));
-        tabContents.forEach((content) => content.classList.remove('active'));
-        document.querySelector(`.tab-btn[data-tab="${tabName}"]`).classList.add('active');
-        document.getElementById(tabName).classList.add('active');
+        tabButtons.forEach(function (button) {
+          button.classList.toggle('active', button.dataset.tab === tabName);
+        });
+        tabContents.forEach(function (content) {
+          content.classList.toggle('active', content.id === tabName);
+        });
       }
 
-      tabBtns.forEach((btn) => {
-        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      function getDistrictList(city) {
+        if (!city) return [];
+        if (DISTRICT_MAP[city]) return DISTRICT_MAP[city];
+        return ['Merkez'];
+      }
+
+      function populateCities() {
+        signupCity.innerHTML = '<option value="">İl seçin</option>';
+        CITY_LIST.forEach(function (city) {
+          const option = document.createElement('option');
+          option.value = city;
+          option.textContent = city;
+          signupCity.appendChild(option);
+        });
+      }
+
+      function populateDistricts(city) {
+        signupDistrict.innerHTML = '';
+        if (!city) {
+          signupDistrict.innerHTML = '<option value="">Önce il seçin</option>';
+          signupDistrict.disabled = true;
+          return;
+        }
+        signupDistrict.disabled = false;
+        signupDistrict.innerHTML = '<option value="">İlçe seçin</option>';
+        getDistrictList(city).forEach(function (district) {
+          const option = document.createElement('option');
+          option.value = district;
+          option.textContent = district;
+          signupDistrict.appendChild(option);
+        });
+      }
+
+      function getSelectedSignupCustomerType() {
+        const selected = Array.from(signupCustomerTypeInputs).find(function (input) { return input.checked; });
+        return selected && selected.value === 'kurumsal' ? 'kurumsal' : 'bireysel';
+      }
+
+      async function runGoogleAuth(button, fallbackMessage) {
+        if (!window.BlaeneAuth || !window.BlaeneAuth.signInWithGoogle) {
+          showAlert('Google ile giriş şu an kullanılamıyor.', 'error');
+          return;
+        }
+        const initialText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Google yönlendirmesi...';
+        try {
+          await window.BlaeneAuth.signInWithGoogle('/account.html');
+        } catch (error) {
+          showAlert((error && error.message) || fallbackMessage, 'error');
+          button.disabled = false;
+          button.textContent = initialText;
+        }
+      }
+
+      async function waitForAuthReady() {
+        for (let i = 0; i < 120; i += 1) {
+          if (window.BlaeneAuth && window.supabase) return true;
+          await new Promise(function (resolve) { setTimeout(resolve, 50); });
+        }
+        return false;
+      }
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          switchTab(button.dataset.tab);
+        });
       });
 
-      // Login handler
-      loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+      signupCity.addEventListener('change', function () {
+        populateDistricts(signupCity.value);
+      });
+
+      loginForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
         alertBox.innerHTML = '';
         loginBtn.disabled = true;
         loginBtn.textContent = 'Giriş yapılıyor...';
 
         try {
-          const email = document.getElementById('login-email').value.trim();
+          const email = String(document.getElementById('login-email').value || '').trim();
           const password = document.getElementById('login-password').value;
-
           await window.BlaeneAuth.signIn(email, password);
-          showAlert('Başarıyla giriş yapıldı!', 'success');
-
-          // Redirect
+          showAlert('Başarıyla giriş yapıldı. Yönlendiriliyorsunuz...', 'success');
           const redirect = new URLSearchParams(location.search).get('redirect');
-          setTimeout(() => {
+          setTimeout(function () {
             window.location.href = redirect || '/account.html';
-          }, 800);
+          }, 700);
         } catch (error) {
-          showAlert(error.message || 'Giriş başarısız', 'error');
+          showAlert((error && error.message) || 'Giriş başarısız.', 'error');
           loginBtn.disabled = false;
           loginBtn.textContent = 'Giriş Yap';
         }
       });
 
-      // Signup handler
-      signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+      signupForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
         alertBox.innerHTML = '';
         signupBtn.disabled = true;
         signupBtn.textContent = 'Hesap oluşturuluyor...';
 
         try {
-          const name = document.getElementById('signup-name').value.trim();
-          const email = document.getElementById('signup-email').value.trim();
-          const phone = document.getElementById('signup-phone').value.trim();
+          const username = String(document.getElementById('signup-username').value || '').trim();
+          const fullName = String(document.getElementById('signup-name').value || '').trim();
+          const email = String(document.getElementById('signup-email').value || '').trim();
+          const phone = String(document.getElementById('signup-phone').value || '').trim();
+          const city = String(signupCity.value || '').trim();
+          const district = String(signupDistrict.value || '').trim();
+          const address = String(document.getElementById('signup-address').value || '').trim();
           const password = document.getElementById('signup-password').value;
+          const customerType = getSelectedSignupCustomerType();
+          const consentKvkk = Boolean(document.getElementById('consent-kvkk').checked);
+          const consentTerms = Boolean(document.getElementById('consent-terms').checked);
+          const consentEmail = Boolean(document.getElementById('consent-email').checked);
+          const consentSms = Boolean(document.getElementById('consent-sms').checked);
+          const consentCall = Boolean(document.getElementById('consent-call').checked);
 
-          await window.BlaeneAuth.signUp(email, password, name, phone);
-          showAlert('Hesap başarıyla oluşturuldu! Yönlendiriliyorsunuz...', 'success');
+          if (!city) throw new Error('Lütfen il seçin.');
+          if (!district) throw new Error('Lütfen ilçe seçin.');
 
-          // Auto-login and redirect
-          setTimeout(() => {
+          const createdUser = await window.BlaeneAuth.signUp(email, password, fullName, phone, {
+            username: username,
+            default_address: address,
+            default_city: city + ' / ' + district,
+            customer_type: customerType,
+            consent_kvkk: consentKvkk,
+            consent_terms: consentTerms,
+            consent_marketing_email: consentEmail,
+            consent_marketing_sms: consentSms,
+            consent_marketing_call: consentCall
+          });
+
+          if (createdUser && createdUser.id) {
+            localStorage.setItem(CUSTOMER_TYPE_STORAGE_PREFIX + createdUser.id, customerType);
+          }
+
+          showAlert('Hesabınız başarıyla oluşturuldu. Yönlendiriliyorsunuz...', 'success');
+          setTimeout(function () {
             window.location.href = '/account.html';
-          }, 1500);
+          }, 1100);
         } catch (error) {
-          showAlert(error.message || 'Hesap oluşturulamadı', 'error');
+          showAlert((error && error.message) || 'Hesap oluşturulamadı.', 'error');
           signupBtn.disabled = false;
           signupBtn.textContent = 'Hesap Oluştur';
         }
       });
 
-      // Initialize Supabase
-      window.BlaeneAuth.initSupabase();
+      loginGoogleBtn.addEventListener('click', function () {
+        void runGoogleAuth(loginGoogleBtn, 'Google ile giriş başarısız.');
+      });
+
+      signupGoogleBtn.addEventListener('click', function () {
+        void runGoogleAuth(signupGoogleBtn, 'Google ile kayıt başarısız.');
+      });
+
+      (async function init() {
+        populateCities();
+        populateDistricts('');
+        const ready = await waitForAuthReady();
+        if (!ready) {
+          showAlert('Kimlik servisi yüklenemedi. Sayfayı yenileyin.', 'error');
+          return;
+        }
+        window.BlaeneAuth.initSupabase();
+      })();
     })();
   </script>
   <script src="assets/js/traffic.js"></script>

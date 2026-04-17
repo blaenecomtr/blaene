@@ -6,231 +6,472 @@
   <title>Blaene Hesabım</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" />
   <style>
     :root {
-      --bg: #f6f7fb;
-      --surface: #ffffff;
-      --text: #111827;
+      --bg: #ececec;
+      --panel: #ffffff;
+      --text: #111111;
       --muted: #6b7280;
-      --border: #dbe1ea;
-      --accent: #111827;
-      --danger: #b91c1c;
-      --success: #166534;
-      --shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+      --border: #d7d7d7;
+      --accent: #e07020;
+      --accent-dark: #c05810;
+      --shadow: 0 12px 28px rgba(17, 24, 39, 0.1);
+      --radius: 14px;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: 'Montserrat', sans-serif;
-      background: var(--bg);
       color: var(--text);
+      background: var(--bg);
     }
+
     .wrap {
-      max-width: 900px;
+      position: relative;
+      max-width: 980px;
       margin: 0 auto;
-      padding: 1rem;
+      padding: 1.2rem 1rem 2rem;
     }
+
+    .wrap::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url('logo/blaene-logo.png') no-repeat center 48%;
+      background-size: min(52vw, 520px) auto;
+      opacity: 0.035;
+      filter: blur(2px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topbar,
+    .card,
+    .footer-logo {
+      position: relative;
+      z-index: 1;
+    }
+
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.9rem;
       gap: 0.8rem;
     }
-    .topbar h1 { margin: 0; font-size: 1.15rem; }
-    .topbar a {
-      text-decoration: none;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
+
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .back-btn {
+      border: 1px solid #222;
+      background: #efefef;
+      color: #111;
       border-radius: 10px;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: background 0.2s;
+      padding: 0.56rem 0.95rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
     }
-    .topbar a:hover {
-      background: var(--bg);
-    }
-    .panel {
-      background: var(--surface);
+
+    .card {
+      background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 1.2rem;
-      margin-bottom: 1.5rem;
+      padding: 0.95rem;
+      margin-top: 0.85rem;
     }
-    h2 { margin: 0 0 0.8rem; font-size: 1rem; }
-    p { margin: 0; }
-    .user-header {
+
+    .auth-box {
+      background: #fff8eb;
+      border: 1px solid #f3d7b8;
+      color: #8a4c10;
+      border-radius: 10px;
+      padding: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .auth-box a {
+      color: #8a4c10;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    .profile-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
+      gap: 1rem;
+      margin-bottom: 0.7rem;
     }
-    .user-info {
-      flex: 1;
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      min-width: 0;
     }
-    .user-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.3rem;
-    }
-    .user-email {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .btn {
-      padding: 0.5rem 0.8rem;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn:hover {
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid #e7bf94;
       background: #1f2937;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-size: 1rem;
+      flex-shrink: 0;
     }
-    .btn.danger {
-      background: var(--danger);
+
+    .identity-main {
+      min-width: 0;
     }
-    .btn.danger:hover {
-      background: #991b1b;
+
+    .identity-name {
+      margin: 0;
+      font-size: 1.06rem;
+      font-weight: 800;
+      line-height: 1.2;
+      text-transform: uppercase;
     }
-    .profile-grid {
+
+    .identity-mail {
+      margin-top: 0.15rem;
+      color: #374151;
+      font-size: 0.86rem;
+      word-break: break-word;
+    }
+
+    .logout-btn {
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 9px;
+      padding: 0.58rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .logout-btn:hover { background: var(--accent-dark); }
+    .logout-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .profile-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .edit-toggle-btn {
+      border: 1px solid #d4d4d8;
+      background: #fff;
+      color: #111827;
+      border-radius: 9px;
+      padding: 0.56rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .edit-toggle-btn:hover {
+      background: #f3f4f6;
+    }
+
+    .section-title {
+      margin: 0.55rem 0 0.7rem;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .quick-list {
+      display: grid;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+      font-size: 0.92rem;
+    }
+
+    .quick-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      color: #111827;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .quick-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .edit-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.8rem;
-      margin-bottom: 1rem;
+      gap: 0.65rem;
     }
-    .profile-field {
-      padding: 0.8rem;
-      background: var(--bg);
-      border-radius: 8px;
-    }
-    .profile-label {
-      font-size: 0.75rem;
-      color: var(--muted);
+
+    .field { display: flex; flex-direction: column; gap: 0.32rem; }
+    .field.full { grid-column: 1 / -1; }
+
+    .field label {
+      font-size: 0.74rem;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.3rem;
+      color: var(--muted);
+      font-weight: 700;
     }
-    .profile-value {
-      font-size: 0.95rem;
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid #cfd5dd;
+      border-radius: 10px;
+      padding: 0.62rem 0.72rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fff;
+      color: #111827;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: #8ca0b8;
+      box-shadow: 0 0 0 3px rgba(140, 160, 184, 0.2);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.7rem;
+    }
+
+    .profile-form-wrap {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed #d7d7d7;
+    }
+
+    .type-options {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+      padding-top: 0.2rem;
+    }
+
+    .type-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+      color: #1f2937;
+      text-transform: none;
+      letter-spacing: normal;
       font-weight: 600;
     }
+
+    .save-btn {
+      border: 0;
+      background: #111827;
+      color: #fff;
+      border-radius: 9px;
+      padding: 0.6rem 1rem;
+      font-size: 0.83rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .save-btn:hover { background: #1f2937; }
+    .save-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
     .alert {
-      padding: 0.8rem;
-      border-radius: 8px;
-      margin-bottom: 0.8rem;
-      font-size: 0.85rem;
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.84rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid transparent;
     }
+
     .alert.success {
-      background: #dcfce7;
+      background: #ecfdf3;
+      border-color: #9be6bb;
       color: #166534;
-      border: 1px solid #86efac;
     }
+
     .alert.error {
-      background: #fee2e2;
-      color: #b91c1c;
-      border: 1px solid #fca5a5;
+      background: #fef2f2;
+      border-color: #f9b7b7;
+      color: #9f1239;
     }
-    .alert.info {
-      background: #e0f2fe;
-      color: #0369a1;
-      border: 1px solid #7dd3fc;
+
+    .orders-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+      margin-bottom: 0.75rem;
     }
-    .table-wrap {
+
+    .orders-head h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .orders-table-wrap {
       overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
+      min-width: 620px;
+      font-size: 0.86rem;
     }
-    th {
+
+    th, td {
+      padding: 0.7rem 0.65rem;
+      border-bottom: 1px solid #ececec;
       text-align: left;
-      padding: 0.7rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      font-weight: 600;
+      vertical-align: top;
     }
-    td {
-      padding: 0.7rem;
-      border: 1px solid var(--border);
+
+    th {
+      background: #f7f7f7;
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #4b5563;
+      font-weight: 700;
     }
-    tr:hover {
-      background: var(--bg);
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-weight: 600;
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 8px;
+      padding: 0.26rem 0.5rem;
       font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
     }
-    .status-pending {
-      background: #fef3c7;
-      color: #92400e;
+
+    .status.pending,
+    .status.processing { background: #fef3c7; color: #92400e; }
+    .status.shipped { background: #dbeafe; color: #1e40af; }
+    .status.delivered { background: #dcfce7; color: #166534; }
+    .status.cancelled,
+    .status.failed { background: #f3f4f6; color: #374151; }
+    .status.paid { background: #dcfce7; color: #166534; }
+
+    .detail-btn {
+      border: 0;
+      border-radius: 7px;
+      background: #111827;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.4rem 0.62rem;
+      font-family: inherit;
+      cursor: pointer;
     }
-    .status-paid {
-      background: #dcfce7;
-      color: #166534;
+
+    .detail-btn:hover { background: #1f2937; }
+
+    .order-detail-row td {
+      background: #fafafa;
+      border-top: 0;
+      padding-top: 0.2rem;
+      padding-bottom: 0.8rem;
     }
-    .status-failed {
-      background: #fee2e2;
-      color: #b91c1c;
+
+    .order-detail-content {
+      border: 1px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 0.7rem;
+      color: #1f2937;
+      font-size: 0.82rem;
+      line-height: 1.5;
     }
-    .status-processing {
-      background: #e0f2fe;
-      color: #0369a1;
-    }
-    .status-shipped {
-      background: #ddd6fe;
-      color: #5b21b6;
-    }
-    .status-delivered {
-      background: #dcfce7;
-      color: #166534;
-    }
-    .status-cancelled {
-      background: #f3f4f6;
-      color: #374151;
-    }
-    .tracking-line {
-      display: block;
-      margin-top: 0.25rem;
-      font-size: 0.72rem;
-      color: var(--muted);
-      word-break: break-word;
-    }
+
     .empty {
       text-align: center;
-      padding: 2rem 1rem;
-      color: var(--muted);
+      color: #6b7280;
+      padding: 1.2rem;
       font-size: 0.9rem;
     }
-    a {
-      color: var(--accent);
-      text-decoration: none;
+
+    .footer-logo {
+      margin-top: 1.2rem;
+      padding: 0.6rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.42;
     }
-    a:hover {
-      text-decoration: underline;
+
+    .footer-logo img {
+      width: 128px;
+      height: auto;
+      display: block;
     }
-    @media (max-width: 640px) {
-      .wrap { padding: 0.8rem; }
-      .panel { padding: 1rem; }
-      .topbar { flex-direction: column; align-items: stretch; }
-      .topbar a { text-align: center; }
-      .user-header { flex-direction: column; align-items: flex-start; }
-      .profile-grid { grid-template-columns: 1fr; }
-      table { font-size: 0.75rem; }
-      th, td { padding: 0.5rem; }
+
+    @media (max-width: 760px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .profile-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .profile-actions {
+        width: 100%;
+      }
+
+      .edit-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logout-btn,
+      .back-btn {
+        align-self: flex-start;
+      }
     }
   </style>
 </head>
@@ -238,126 +479,447 @@
   <div class="wrap">
     <div class="topbar">
       <h1>Hesabım</h1>
-      <div style="display: flex; gap: 0.5rem;">
-        <a href="index.html">Ana sayfaya dön</a>
-        <a href="/admin/" id="admin-link" style="display: none; background: #f59e0b; color: white;">Admin Paneli</a>
-      </div>
+      <a class="back-btn" href="index.html">Ana sayfaya don</a>
     </div>
 
-    <!-- AUTH CHECK -->
-    <div id="auth-required" style="display: none;">
-      <div class="panel">
-        <div class="alert info">
-          Bu sayfaya erişmek için giriş yapmalısınız.
-          <a href="/auth.html?redirect=/account.html" style="margin-left: 0.5rem;">Giriş yap</a>
+    <div id="auth-required" style="display:none;">
+      <div class="card">
+        <div class="auth-box">
+          Bu sayfayi gormek icin giris yapmalisiniz.
+          <a href="/auth.html?redirect=/account.html">Giris yap</a>
         </div>
       </div>
     </div>
 
-    <!-- PROFILE SECTION -->
-    <div id="profile-section" style="display: none;">
-      <div class="panel">
+    <div id="profile-section" style="display:none;">
+      <div class="card">
         <div id="alert-box"></div>
 
-        <div class="user-header">
-          <div class="user-info">
-            <div class="user-name" id="user-name">—</div>
-            <div class="user-email" id="user-email">—</div>
+        <div class="profile-head">
+          <div class="identity">
+            <div class="avatar" id="avatar-initials">BL</div>
+            <div class="identity-main">
+              <p class="identity-name" id="user-name">-</p>
+              <p class="identity-mail" id="user-email">-</p>
+            </div>
           </div>
-          <button class="btn danger" id="logout-btn">Çıkış Yap</button>
+          <div class="profile-actions">
+            <button id="edit-toggle-btn" class="edit-toggle-btn" type="button">Duzenle</button>
+            <button id="logout-btn" class="logout-btn" type="button">Cikis Yap</button>
+          </div>
         </div>
 
-        <h2>Profil Bilgileri</h2>
-        <div class="profile-grid">
-          <div class="profile-field">
-            <div class="profile-label">Telefon</div>
-            <div class="profile-value" id="profile-phone">—</div>
+        <p class="section-title">Profil Bilgileri</p>
+
+        <div class="quick-list">
+          <div class="quick-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.88.32 1.75.59 2.58a2 2 0 0 1-.45 2.11L8 9.59a16 16 0 0 0 6.4 6.4l1.18-1.25a2 2 0 0 1 2.11-.45c.83.27 1.7.47 2.58.59A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span id="view-phone">-</span>
           </div>
-          <div class="profile-field">
-            <div class="profile-label">Şehir</div>
-            <div class="profile-value" id="profile-city">—</div>
+          <div class="quick-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span id="view-city">-</span>
+          </div>
+          <div class="quick-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 7h-5V4l-6 6 6 6v-3h5a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+            </svg>
+            <span id="view-customer-type">Bireysel</span>
+          </div>
+          <div class="quick-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 11l9-9 9 9"/>
+              <path d="M9 22V12h6v10"/>
+              <path d="M4 22h16"/>
+            </svg>
+            <span id="view-address">-</span>
           </div>
         </div>
-        <div class="profile-grid" style="grid-template-columns: 1fr;">
-          <div class="profile-field">
-            <div class="profile-label">Varsayılan Adres</div>
-            <div class="profile-value" id="profile-address" style="word-break: break-word;">—</div>
-          </div>
+
+        <div id="profile-form-wrap" class="profile-form-wrap" style="display:none;">
+          <form id="profile-form" autocomplete="on">
+            <div class="edit-grid">
+              <div class="field">
+                <label for="full-name-input">Ad Soyad</label>
+                <input id="full-name-input" type="text" maxlength="140" placeholder="Ad Soyad" />
+              </div>
+              <div class="field">
+                <label for="phone-input">Telefon</label>
+                <input id="phone-input" type="tel" maxlength="60" placeholder="05xx xxx xx xx" />
+              </div>
+              <div class="field">
+                <label for="city-input">Il</label>
+                <select id="city-input"></select>
+              </div>
+              <div class="field">
+                <label for="district-input">Ilce</label>
+                <select id="district-input"></select>
+              </div>
+              <div class="field full">
+                <label>Musteri Tipi</label>
+                <div class="type-options">
+                  <label><input type="radio" name="customer-type" value="bireysel" checked /> Bireysel</label>
+                  <label><input type="radio" name="customer-type" value="kurumsal" /> Kurumsal</label>
+                </div>
+              </div>
+              <div class="field full">
+                <label for="address-input">Varsayilan Adres</label>
+                <textarea id="address-input" maxlength="500" placeholder="Adres bilginizi girin"></textarea>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="save-btn" id="save-btn" type="submit">Bilgileri Kaydet</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
 
-    <!-- ORDERS SECTION -->
-    <div id="orders-section" style="display: none;">
-      <div class="panel">
-        <h2>Sipariş Geçmişi</h2>
-        <p class="muted" style="margin-bottom: 1rem;">Tüm siparişleriniz aşağıda listelenmektedir.</p>
-
-        <div id="orders-container">
-          <div class="empty">Yükleniyor...</div>
+    <div id="orders-section" style="display:none;">
+      <div class="card">
+        <div class="orders-head">
+          <h2>Siparis Gecmisi</h2>
+        </div>
+        <div id="orders-container" class="orders-table-wrap">
+          <div class="empty">Yukleniyor...</div>
         </div>
       </div>
+    </div>
+
+    <div class="footer-logo">
+      <img src="logo/blaene-logo.png" alt="Blaene logo" />
     </div>
   </div>
 
-  <!-- Supabase JS -->
   <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- User Auth -->
   <script src="./assets/js/user-auth.js"></script>
-
   <script>
     (function () {
+      const CITY_LIST = [
+        'Adana', 'Adiyaman', 'Afyonkarahisar', 'Agri', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin',
+        'Aydin', 'Balikesir', 'Bartin', 'Batman', 'Bayburt', 'Bilecik', 'Bingol', 'Bitlis', 'Bolu', 'Burdur',
+        'Bursa', 'Canakkale', 'Cankiri', 'Corum', 'Denizli', 'Diyarbakir', 'Duzce', 'Edirne', 'Elazig', 'Erzincan',
+        'Erzurum', 'Eskisehir', 'Gaziantep', 'Giresun', 'Gumushane', 'Hakkari', 'Hatay', 'Igdir', 'Isparta', 'Istanbul',
+        'Izmir', 'Kahramanmaras', 'Karabuk', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kirikkale', 'Kirklareli', 'Kirsehir',
+        'Kilis', 'Kocaeli', 'Konya', 'Kutahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Mugla', 'Mus',
+        'Nevsehir', 'Nigde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Sanliurfa', 'Siirt', 'Sinop',
+        'Sirnak', 'Sivas', 'Tekirdag', 'Tokat', 'Trabzon', 'Tunceli', 'Usak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'
+      ];
+
+      const DISTRICT_MAP = {
+        Istanbul: ['Adalar', 'Arnavutkoy', 'Atasehir', 'Avcilar', 'Bagcilar', 'Bahcelievler', 'Bakirkoy', 'Basaksehir', 'Bayrampasa', 'Besiktas', 'Beykoz', 'Beylikduzu', 'Beyoglu', 'Buyukcekmece', 'Catalca', 'Cekmekoy', 'Esenler', 'Esenyurt', 'Eyupsultan', 'Fatih', 'Gaziosmanpasa', 'Gungoren', 'Kadikoy', 'Kagithane', 'Kartal', 'Kucukcekmece', 'Maltepe', 'Pendik', 'Sancaktepe', 'Sariyer', 'Silivri', 'Sisli', 'Sultanbeyli', 'Sultangazi', 'Tuzla', 'Umraniye', 'Uskudar', 'Zeytinburnu'],
+        Ankara: ['Altindag', 'Cankaya', 'Etimesgut', 'Kecioren', 'Mamak', 'Sincan', 'Yenimahalle', 'Golbasi', 'Polatli', 'Pursaklar'],
+        Izmir: ['Aliaga', 'Balcova', 'Bayrakli', 'Bornova', 'Buca', 'Cigli', 'Gaziemir', 'Guzelbahce', 'Karabaglar', 'Karaburun', 'Karsiyaka', 'Kemalpasa', 'Konak', 'Menderes', 'Menemen', 'Narlidere', 'Seferihisar', 'Torbali', 'Urla'],
+        Bursa: ['Nilufer', 'Osmangazi', 'Yildirim', 'Inegol', 'Gemlik', 'Mudanya', 'Mustafakemalpasa'],
+        Antalya: ['Aksu', 'Alanya', 'Dosemealti', 'Kemer', 'Kepez', 'Konyaalti', 'Muratpasa', 'Serik', 'Manavgat'],
+        Kocaeli: ['Basisele', 'Cayirova', 'Darica', 'Derince', 'Dilovasi', 'Gebze', 'Golcuk', 'Izmit', 'Kandira', 'Kartepe', 'Korfez'],
+        Konya: ['Karatay', 'Meram', 'Selcuklu', 'Eregli', 'Beysehir'],
+        Adana: ['Cukurova', 'Sariçam', 'Seyhan', 'Yuregir', 'Kozan', 'Ceyhan'],
+        Gaziantep: ['Sahinbey', 'Sehitkamil', 'Nizip', 'Islahiye'],
+        Mersin: ['Akdeniz', 'Mezitli', 'Toroslar', 'Yenisehir', 'Tarsus', 'Erdemli'],
+        Mugla: ['Bodrum', 'Dalaman', 'Datca', 'Fethiye', 'Marmaris', 'Menteşe', 'Milas', 'Ortaca'],
+        Kayseri: ['Kocasinan', 'Melikgazi', 'Talas', 'Develi'],
+        Balikesir: ['Altieylul', 'Karesi', 'Bandirma', 'Edremit', 'Gonen'],
+        Manisa: ['Sehzadeler', 'Yunusemre', 'Akhisar', 'Salihli', 'Turgutlu'],
+        Aydin: ['Efeler', 'Didim', 'Kusadasi', 'Nazilli', 'Soke']
+      };
+
+      const CUSTOMER_TYPE_STORAGE_PREFIX = 'blaene_customer_type:';
+      const AUTO_OPEN_EDIT_VALUES = new Set(['1', 'true', 'yes', 'open']);
+      const autoOpenEditFromQuery = AUTO_OPEN_EDIT_VALUES.has(
+        String(new URLSearchParams(window.location.search).get('edit') || '').toLowerCase()
+      );
+
       const authRequired = document.getElementById('auth-required');
       const profileSection = document.getElementById('profile-section');
       const ordersSection = document.getElementById('orders-section');
       const alertBox = document.getElementById('alert-box');
-      const logoutBtn = document.getElementById('logout-btn');
       const ordersContainer = document.getElementById('orders-container');
+      const profileForm = document.getElementById('profile-form');
+      const profileFormWrap = document.getElementById('profile-form-wrap');
+      const editToggleBtn = document.getElementById('edit-toggle-btn');
+      const saveBtn = document.getElementById('save-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const avatarInitials = document.getElementById('avatar-initials');
+      const fullNameInput = document.getElementById('full-name-input');
+      const phoneInput = document.getElementById('phone-input');
+      const cityInput = document.getElementById('city-input');
+      const districtInput = document.getElementById('district-input');
+      const addressInput = document.getElementById('address-input');
+      const customerTypeInputs = document.querySelectorAll('input[name="customer-type"]');
 
-      function formatPrice(value) {
-        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
+      let currentUser = null;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function showAlert(message, type) {
+        alertBox.innerHTML = '<div class="alert ' + type + '">' + escapeHtml(message) + '</div>';
       }
 
       function formatDate(dateStr) {
-        return new Date(dateStr).toLocaleDateString('tr-TR', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
+        if (!dateStr) return '-';
+        const dt = new Date(dateStr);
+        if (Number.isNaN(dt.getTime())) return '-';
+        return dt.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+
+      function formatPrice(value) {
+        const num = Number(value || 0);
+        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(num);
+      }
+
+      function initialsFromName(fullName, email) {
+        const source = String(fullName || '').trim() || String(email || '').trim();
+        if (!source) return 'BL';
+        const parts = source.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+        return source.slice(0, 2).toUpperCase();
+      }
+
+      function normalizeCustomerType(value) {
+        return String(value || '').toLowerCase() === 'kurumsal' ? 'kurumsal' : 'bireysel';
+      }
+
+      function customerTypeLabel(value) {
+        return normalizeCustomerType(value) === 'kurumsal' ? 'Kurumsal' : 'Bireysel';
+      }
+
+      function getStoredCustomerType() {
+        if (!currentUser || !currentUser.id) return 'bireysel';
+        const stored = localStorage.getItem(CUSTOMER_TYPE_STORAGE_PREFIX + currentUser.id);
+        return normalizeCustomerType(stored);
+      }
+
+      function setStoredCustomerType(value) {
+        if (!currentUser || !currentUser.id) return;
+        localStorage.setItem(CUSTOMER_TYPE_STORAGE_PREFIX + currentUser.id, normalizeCustomerType(value));
+      }
+
+      function setCustomerTypeInputs(value) {
+        const normalized = normalizeCustomerType(value);
+        customerTypeInputs.forEach(function (input) {
+          input.checked = input.value === normalized;
         });
       }
 
-      function getPaymentBadge(status) {
-        const badges = {
-          pending: 'Beklemede',
-          paid: 'Odendi',
-          failed: 'Basarisiz',
-        };
-        return badges[status] || (status || 'Bilinmiyor');
+      function getSelectedCustomerType() {
+        const selected = Array.from(customerTypeInputs).find(function (input) { return input.checked; });
+        return normalizeCustomerType(selected ? selected.value : 'bireysel');
       }
 
-      function getShippingBadge(status) {
-        const badges = {
-          pending: 'Hazirlaniyor',
+      function parseCityDistrict(rawCityValue) {
+        const raw = String(rawCityValue || '').trim();
+        if (!raw) return { city: '', district: '' };
+        if (raw.includes('/')) {
+          const parts = raw.split('/');
+          return { city: parts[0].trim(), district: parts.slice(1).join('/').trim() };
+        }
+        if (raw.includes('-')) {
+          const parts = raw.split('-');
+          return { city: parts[0].trim(), district: parts.slice(1).join('-').trim() };
+        }
+        return { city: raw, district: '' };
+      }
+
+      function getDistrictList(city) {
+        if (!city) return [];
+        if (DISTRICT_MAP[city]) return DISTRICT_MAP[city];
+        return ['Merkez'];
+      }
+
+      function populateCityOptions(selectedCity) {
+        const selected = String(selectedCity || '').trim();
+        cityInput.innerHTML = '<option value="">Il secin</option>';
+        CITY_LIST.forEach(function (city) {
+          const option = document.createElement('option');
+          option.value = city;
+          option.textContent = city;
+          if (city === selected) option.selected = true;
+          cityInput.appendChild(option);
+        });
+      }
+
+      function populateDistrictOptions(city, selectedDistrict) {
+        const selected = String(selectedDistrict || '').trim();
+        districtInput.innerHTML = '';
+
+        if (!city) {
+          districtInput.innerHTML = '<option value="">Once il secin</option>';
+          districtInput.disabled = true;
+          return;
+        }
+
+        districtInput.disabled = false;
+        const list = getDistrictList(city);
+        districtInput.innerHTML = '<option value="">Ilce secin</option>';
+        list.forEach(function (district) {
+          const option = document.createElement('option');
+          option.value = district;
+          option.textContent = district;
+          if (district === selected) option.selected = true;
+          districtInput.appendChild(option);
+        });
+      }
+
+      function statusLabel(status) {
+        const map = {
+          pending: 'Beklemede',
           processing: 'Hazirlaniyor',
           shipped: 'Kargoda',
           delivered: 'Teslim Edildi',
           cancelled: 'Iptal',
+          paid: 'Odendi',
+          failed: 'Basarisiz',
         };
-        return badges[status] || (status || 'Hazirlaniyor');
+        return map[String(status || '').toLowerCase()] || (status || 'Beklemede');
       }
 
-      function getStatusClass(status) {
-        return `status-badge status-${status}`;
+      function statusClass(status) {
+        const normalized = String(status || '').toLowerCase();
+        if (normalized === 'pending' || normalized === 'processing') return 'pending';
+        if (normalized === 'shipped') return 'shipped';
+        if (normalized === 'delivered') return 'delivered';
+        if (normalized === 'cancelled') return 'cancelled';
+        if (normalized === 'paid') return 'paid';
+        if (normalized === 'failed') return 'failed';
+        return 'pending';
       }
 
-      function showAlert(message, type = 'info') {
-        alertBox.innerHTML = `<div class="alert ${type}">${message}</div>`;
+      function setEditMode(open) {
+        const shouldOpen = Boolean(open);
+        profileFormWrap.style.display = shouldOpen ? '' : 'none';
+        editToggleBtn.textContent = shouldOpen ? 'Kapat' : 'Duzenle';
+      }
+
+      function updateProfileView(profile, user) {
+        const fullName = (profile && profile.full_name) || (user && user.user_metadata && user.user_metadata.full_name) || '-';
+        const email = (user && user.email) || (profile && profile.email) || '-';
+        const phone = (profile && profile.phone) || '-';
+        const cityRaw = (profile && profile.default_city) || '';
+        const address = (profile && profile.default_address) || '-';
+        const cityParts = parseCityDistrict(cityRaw);
+        const customerType = normalizeCustomerType(
+          (profile && (profile.customer_type || profile.customer_kind || profile.customer_category)) || getStoredCustomerType()
+        );
+
+        document.getElementById('user-name').textContent = fullName;
+        document.getElementById('user-email').textContent = email;
+        document.getElementById('view-phone').textContent = phone;
+        document.getElementById('view-city').textContent = cityParts.city
+          ? cityParts.city + (cityParts.district ? ' / ' + cityParts.district : '')
+          : '-';
+        document.getElementById('view-customer-type').textContent = customerTypeLabel(customerType);
+        document.getElementById('view-address').textContent = address;
+        avatarInitials.textContent = initialsFromName(fullName, email);
+
+        fullNameInput.value = fullName === '-' ? '' : fullName;
+        phoneInput.value = phone === '-' ? '' : phone;
+        populateCityOptions(cityParts.city);
+        populateDistrictOptions(cityParts.city, cityParts.district);
+        addressInput.value = address === '-' ? '' : address;
+        setCustomerTypeInputs(customerType);
+        setStoredCustomerType(customerType);
+      }
+
+      function renderOrders(orders) {
+        if (!Array.isArray(orders) || !orders.length) {
+          ordersContainer.innerHTML = '<div class="empty">Henuz bir siparisiniz yok.</div>';
+          return;
+        }
+
+        let html = '';
+        html += '<table>';
+        html += '<thead><tr><th>Siparis No</th><th>Tarih</th><th>Durum</th><th>Detaylar</th></tr></thead>';
+        html += '<tbody>';
+
+        orders.forEach(function (order, index) {
+          const shippingState = String(order && order.status || '').toLowerCase() || 'pending';
+          const paymentState = String(order && order.payment_status || '').toLowerCase() || 'pending';
+          const mainState = shippingState === 'pending' ? paymentState : shippingState;
+          const rowId = 'order-detail-' + index;
+          const orderNo = escapeHtml(order && order.order_no || '-');
+
+          html += '<tr>';
+          html += '<td><strong>#' + orderNo + '</strong></td>';
+          html += '<td>' + escapeHtml(formatDate(order && order.created_at)) + '</td>';
+          html += '<td><span class="status ' + escapeHtml(statusClass(mainState)) + '">' + escapeHtml(statusLabel(mainState)) + '</span></td>';
+          html += '<td><button class="detail-btn" type="button" data-detail-target="' + rowId + '">Incele</button></td>';
+          html += '</tr>';
+
+          const items = Array.isArray(order && order.order_items) ? order.order_items : [];
+          const itemsText = items.length
+            ? items.map(function (item) {
+                const name = escapeHtml(item && item.product_name || 'Urun');
+                const qty = Number(item && item.quantity || 0);
+                return name + ' (x' + qty + ')';
+              }).join(', ')
+            : 'Urun bilgisi yok';
+
+          const tracking = order && order.tracking_code
+            ? '<div><strong>Kargo:</strong> ' + escapeHtml(order.shipping_provider || 'Kargo') + ' / ' + escapeHtml(order.tracking_code) + '</div>'
+            : '<div><strong>Kargo:</strong> Bilgi yok</div>';
+
+          html += '<tr id="' + rowId + '" class="order-detail-row" style="display:none;">';
+          html += '<td colspan="4">';
+          html += '<div class="order-detail-content">';
+          html += '<div><strong>Urunler:</strong> ' + itemsText + '</div>';
+          html += '<div><strong>Tutar:</strong> ' + escapeHtml(formatPrice(order && order.total || 0)) + '</div>';
+          html += '<div><strong>Odeme Durumu:</strong> ' + escapeHtml(statusLabel(paymentState)) + '</div>';
+          html += tracking;
+          html += '</div>';
+          html += '</td>';
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        ordersContainer.innerHTML = html;
+      }
+
+      function bindOrderDetailButtons() {
+        const buttons = ordersContainer.querySelectorAll('[data-detail-target]');
+        buttons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const targetId = btn.getAttribute('data-detail-target');
+            const detailRow = targetId ? document.getElementById(targetId) : null;
+            if (!detailRow) return;
+            const isHidden = detailRow.style.display === 'none' || detailRow.style.display === '';
+            detailRow.style.display = isHidden ? 'table-row' : 'none';
+            btn.textContent = isHidden ? 'Kapat' : 'Incele';
+          });
+        });
+      }
+
+      async function updateCustomerProfileWithType(updates, customerType) {
+        const payloadWithType = Object.assign({}, updates, { customer_type: normalizeCustomerType(customerType) });
+        try {
+          await window.BlaeneAuth.updateCustomerProfile(payloadWithType);
+          return payloadWithType;
+        } catch (error) {
+          const message = String(error && error.message || '').toLowerCase();
+          if (message.includes('customer_type') || message.includes('column')) {
+            await window.BlaeneAuth.updateCustomerProfile(updates);
+            return payloadWithType;
+          }
+          throw error;
+        }
       }
 
       async function loadProfile() {
         try {
-          const user = await window.BlaeneAuth.getCurrentUser();
-          if (!user) {
+          currentUser = await window.BlaeneAuth.getCurrentUser();
+          if (!currentUser) {
             authRequired.style.display = '';
             profileSection.style.display = 'none';
             ordersSection.style.display = 'none';
@@ -365,24 +927,12 @@
           }
 
           const profile = await window.BlaeneAuth.getCustomerProfile();
-
-          document.getElementById('user-name').textContent = profile?.full_name || '—';
-          document.getElementById('user-email').textContent = user.email || '—';
-          document.getElementById('profile-phone').textContent = profile?.phone || '—';
-          document.getElementById('profile-city').textContent = profile?.default_city || '—';
-          document.getElementById('profile-address').textContent = profile?.default_address || '—';
-
-          // Check if user is admin
-          const isAdmin = user.user_metadata?.role &&
-            ['super_admin', 'admin', 'editor'].includes(user.user_metadata.role);
-          const adminLink = document.getElementById('admin-link');
-          if (isAdmin && adminLink) {
-            adminLink.style.display = '';
-          }
+          updateProfileView(profile, currentUser);
 
           authRequired.style.display = 'none';
           profileSection.style.display = '';
           ordersSection.style.display = '';
+          setEditMode(autoOpenEditFromQuery);
         } catch (error) {
           console.error('Profile load error:', error);
           authRequired.style.display = '';
@@ -394,81 +944,92 @@
       async function loadOrders() {
         try {
           const orders = await window.BlaeneAuth.getCustomerOrders();
-
-          if (!orders.length) {
-            ordersContainer.innerHTML = '<div class="empty">Henüz bir siparişiniz yok.</div>';
-            return;
-          }
-
-          let html = `
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Siparis No</th>
-                    <th>Tarih</th>
-                    <th>Urun</th>
-                    <th>Tutar</th>
-                    <th>Odeme</th>
-                    <th>Kargo Takip</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
-
-          orders.forEach((order) => {
-            const items = order.order_items || [];
-            const itemsText = items.map((i) => `${i.product_name} (x${i.quantity})`).join(', ');
-            const paymentClass = getStatusClass(order.payment_status);
-            const paymentLabel = getPaymentBadge(order.payment_status);
-            const shippingState = order.status || 'pending';
-            const shippingClass = getStatusClass(shippingState);
-            const shippingLabel = getShippingBadge(shippingState);
-            const trackingLine = order.tracking_code
-              ? `<span class="tracking-line">${order.shipping_provider || 'Kargo'}: ${order.tracking_code}</span>`
-              : '';
-
-            html += `
-              <tr>
-                <td><strong>${order.order_no}</strong></td>
-                <td>${formatDate(order.created_at)}</td>
-                <td style="font-size: 0.8rem; max-width: 300px; word-break: break-word;">${itemsText}</td>
-                <td>${formatPrice(order.total)}</td>
-                <td><span class="${paymentClass}">${paymentLabel}</span></td>
-                <td><span class="${shippingClass}">${shippingLabel}</span>${trackingLine}</td>
-              </tr>
-            `;
-          });
-
-          html += `
-                </tbody>
-              </table>
-            </div>
-          `;
-
-          ordersContainer.innerHTML = html;
+          renderOrders(orders);
+          bindOrderDetailButtons();
         } catch (error) {
           console.error('Orders load error:', error);
-          ordersContainer.innerHTML =
-            '<div class="alert error">Siparişler yüklenemedi. Lütfen daha sonra tekrar deneyin.</div>';
+          ordersContainer.innerHTML = '<div class="empty">Siparisler su an yuklenemedi.</div>';
         }
       }
 
-      logoutBtn.addEventListener('click', async () => {
+      cityInput.addEventListener('change', function () {
+        populateDistrictOptions(cityInput.value, '');
+      });
+
+      editToggleBtn.addEventListener('click', function () {
+        const willOpen = profileFormWrap.style.display === 'none' || profileFormWrap.style.display === '';
+        setEditMode(willOpen);
+      });
+
+      profileForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        saveBtn.disabled = true;
+
+        try {
+          const cityValue = String(cityInput.value || '').trim();
+          const districtValue = String(districtInput.value || '').trim();
+          if (!cityValue) {
+            throw new Error('Lutfen bir il secin.');
+          }
+          if (!districtValue) {
+            throw new Error('Lutfen bir ilce secin.');
+          }
+
+          const selectedType = getSelectedCustomerType();
+          const updates = {
+            full_name: String(fullNameInput.value || '').trim(),
+            phone: String(phoneInput.value || '').trim(),
+            default_city: cityValue + ' / ' + districtValue,
+            default_address: String(addressInput.value || '').trim(),
+          };
+
+          const savedProfile = await updateCustomerProfileWithType(updates, selectedType);
+          setStoredCustomerType(selectedType);
+          updateProfileView(savedProfile, currentUser);
+          setEditMode(false);
+          showAlert('Profil bilgileriniz guncellendi.', 'success');
+        } catch (error) {
+          console.error('Profile update error:', error);
+          showAlert(error && error.message ? error.message : 'Profil guncellenemedi.', 'error');
+        } finally {
+          saveBtn.disabled = false;
+        }
+      });
+
+      logoutBtn.addEventListener('click', async function () {
         logoutBtn.disabled = true;
         try {
           await window.BlaeneAuth.signOut();
           window.location.href = '/';
         } catch (error) {
-          showAlert(error.message || 'Çıkış başarısız', 'error');
+          console.error('Sign out error:', error);
+          showAlert('Cikis yapilamadi, lutfen tekrar deneyin.', 'error');
           logoutBtn.disabled = false;
         }
       });
 
-      // Initialize
-      window.BlaeneAuth.initSupabase();
-      loadProfile();
-      loadOrders();
+      async function waitForAuthReady() {
+        for (let i = 0; i < 120; i += 1) {
+          if (window.BlaeneAuth && window.supabase) return true;
+          await new Promise(function (resolve) { setTimeout(resolve, 50); });
+        }
+        return false;
+      }
+
+      (async function init() {
+        const ready = await waitForAuthReady();
+        if (!ready) {
+          authRequired.style.display = '';
+          showAlert('Kimlik servisi yuklenemedi. Sayfayi yenileyin.', 'error');
+          return;
+        }
+
+        populateCityOptions('');
+        populateDistrictOptions('', '');
+        window.BlaeneAuth.initSupabase();
+        await loadProfile();
+        if (currentUser) await loadOrders();
+      })();
     })();
   </script>
   <script src="assets/js/traffic.js"></script>

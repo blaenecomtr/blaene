@@ -214,8 +214,9 @@
         .nav-link:hover { color: var(--foreground); }
         .nav-link:focus-visible { outline: 1px solid var(--text-2); outline-offset: 3px; }
 
+        .header-left { display: flex; align-items: center; gap: 0.85rem; }
         .header-actions { display: flex; align-items: center; gap: 1rem; }
-
+        .header-cta-group { display: flex; align-items: center; gap: 0.55rem; }
         .teklif-btn {
             display: inline-flex;
             align-items: center;
@@ -228,10 +229,51 @@
             font-weight: 600;
             letter-spacing: 0.06em;
             text-decoration: none;
+            border: none;
+            cursor: pointer;
             transition: background-color 0.15s;
+        }
+        .header-cta-group .teklif-btn {
+            padding: 0.42rem 0.9rem;
+            font-size: 0.7rem;
+        }
+        .header-cta-group #user-login-link {
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .header-cta-group #user-account-link {
+            background-color: var(--accent);
+            color: var(--accent-fg);
+            border: none;
+            border-radius: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .header-cta-group #user-account-link:hover { background-color: var(--accent-dark); }
+        .header-cta-group #user-logout-btn {
+            border: 1px solid #111827;
+            background: transparent;
+            color: #111827;
+            border-radius: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .header-cta-group #user-logout-btn:hover {
+            background: #111827;
+            color: #ffffff;
+        }
+        .header-cta-group #user-logout-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
         }
         .teklif-btn:hover { background-color: var(--accent-dark); }
         .teklif-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        @media (max-width: 768px) {
+            .header-cta-group { display: none; }
+            #user-account-link { display: none !important; }
+            #user-logout-btn { display: none !important; }
+            #user-login-link { display: none !important; }
+        }
 
         .hamburger {
             display: none;
@@ -674,7 +716,8 @@
             gap: 0.6rem;
             margin-top: 1.2rem;
         }
-        .mobile-nav-auth a {
+        .mobile-nav-auth a,
+        .mobile-nav-auth button {
             flex: 1;
             text-align: center;
             border: 1px solid var(--border);
@@ -684,8 +727,12 @@
             font-size: 0.75rem;
             letter-spacing: 0.06em;
             text-transform: uppercase;
+            font-family: inherit;
+            background: transparent;
+            cursor: pointer;
         }
-        .mobile-nav-auth a:hover { border-color: var(--accent); color: var(--accent); }
+        .mobile-nav-auth a:hover,
+        .mobile-nav-auth button:hover { border-color: var(--accent); color: var(--accent); }
 
         .mobile-nav-footer {
             font-size: 0.72rem; color: var(--text-3);
@@ -695,6 +742,146 @@
         }
         .mobile-nav-footer a { color: var(--text-3); text-decoration: none; }
         .mobile-nav-footer a:hover { color: var(--accent); }
+
+        .profile-edit-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1400;
+            display: none;
+        }
+        .profile-edit-modal.is-open { display: block; }
+
+        .profile-edit-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.52);
+            border: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .profile-edit-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: min(94vw, 430px);
+            height: 100%;
+            background: #ffffff;
+            color: #0f172a;
+            border-left: 1px solid #e2e8f0;
+            box-shadow: -8px 0 36px rgba(2, 6, 23, 0.24);
+            padding: 1rem;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.24s ease;
+        }
+        .profile-edit-modal.is-open .profile-edit-panel { transform: translateX(0); }
+
+        .profile-edit-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.9rem;
+        }
+        .profile-edit-title {
+            margin: 0;
+            font-size: 1.02rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .profile-edit-close {
+            width: 34px;
+            height: 34px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #111827;
+            font-size: 1rem;
+        }
+
+        .profile-edit-feedback {
+            min-height: 1.1rem;
+            font-size: 0.76rem;
+            margin-bottom: 0.55rem;
+        }
+        .profile-edit-feedback.error { color: #b91c1c; }
+        .profile-edit-feedback.success { color: #166534; }
+
+        .profile-edit-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.62rem;
+        }
+        .profile-edit-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.28rem;
+        }
+        .profile-edit-field label {
+            font-size: 0.72rem;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+        .profile-edit-field input,
+        .profile-edit-field textarea {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 0.6rem 0.68rem;
+            font-size: 0.88rem;
+            font-family: 'Montserrat', sans-serif;
+            color: #111827;
+            background: #ffffff;
+        }
+        .profile-edit-field textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+        .profile-edit-field input:focus,
+        .profile-edit-field textarea:focus {
+            outline: none;
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2);
+        }
+
+        .profile-edit-type {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            flex-wrap: wrap;
+            padding-top: 0.15rem;
+        }
+        .profile-edit-type label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.86rem;
+            text-transform: none;
+            letter-spacing: normal;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .profile-edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.78rem;
+        }
+        .profile-edit-save {
+            border: 0;
+            border-radius: 9px;
+            background: #111827;
+            color: #ffffff;
+            padding: 0.6rem 0.95rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+        }
+        .profile-edit-save:hover { background: #1f2937; }
+        .profile-edit-save:disabled { opacity: 0.65; cursor: not-allowed; }
 
         /* ── MOBILE ────────────────────────────────── */
         @media (max-width: 768px) {
@@ -719,41 +906,33 @@
 
 <!-- HEADER -->
 <header class="site-header" id="site-header">
-    <a href="/" aria-label="Blaene anasayfa">
-        <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
-    </a>
+    <div class="header-left">
+        <a href="/" aria-label="Blaene anasayfa">
+            <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
+        </a>
+    </div>
     <div class="header-actions">
-        <div class="header-meta">
-            <span class="currency-ticker" id="currency-ticker" aria-live="polite" aria-label="USD/TRY kuru">
-                <span>$ 1 =</span>
-                <span class="rate-val" id="rate-val">—</span>
-                <span>₺</span>
-            </span>
-            <button class="lang-toggle" id="lang-toggle" aria-label="Dil değiştir">TR</button>
-        </div>
-        <a id="user-account-link" href="/account.html" class="teklif-btn" style="display: none;" aria-label="Hesabım">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="12" cy="8" r="4"></circle>
-                <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
-            </svg>
-            <span data-i18n="account-btn-txt">Hesabım</span>
-        </a>
-        <a id="user-login-link" href="/auth.html" class="teklif-btn" aria-label="Giriş yap">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                <polyline points="10 17 15 12 10 7"></polyline>
-                <line x1="15" y1="12" x2="3" y2="12"></line>
-            </svg>
-            <span data-i18n="login-btn-txt">Giriş</span>
-        </a>
-        <a href="https://wa.me/905320540019?text=Merhaba%2C%20ürünleriniz%20hakkında%20bilgi%20almak%20istiyorum."
+        <div class="header-cta-group">
+        <a href="https://wa.me/905320540019?text=Merhaba%2C%20urunleriniz%20hakkinda%20bilgi%20almak%20istiyorum."
            target="_blank" rel="noopener noreferrer" class="teklif-btn">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
             </svg>
             <span data-i18n="teklif-btn-txt">Teklif Al</span>
         </a>
-        <button class="hamburger" id="hamburger" aria-label="Menüyü aç" aria-expanded="false">
+        <button id="user-account-link" type="button" class="teklif-btn" style="display: none;" aria-label="Hesabım" data-i18n="account-btn-txt">Hesabım</button>
+        <button id="user-logout-btn" type="button" class="teklif-btn" style="display: none;" aria-label="Cikis yap" data-i18n="logout-btn-txt">Cikis Yap</button>
+        <a id="user-login-link" href="/auth.html" class="teklif-btn" aria-label="Üye Ol">Üye Ol</a>
+        </div>
+        <div class="header-meta">
+            <span class="currency-ticker" id="currency-ticker" aria-live="polite" aria-label="USD/TRY kuru">
+                <span>$ 1 =</span>
+                <span class="rate-val" id="rate-val">-</span>
+                <span>TL</span>
+            </span>
+            <button class="lang-toggle" id="lang-toggle" aria-label="Dil degistir">TR</button>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="Menuyu ac" aria-expanded="false">
             <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path class="menu-path-top" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"/>
                 <path d="M7 16 27 16"/>
@@ -774,14 +953,56 @@
             <a href="#contact" data-i18n="nav-contact">İletişim</a>
         </nav>
         <div class="mobile-nav-auth">
-            <a id="mobile-account-link" href="/account.html" data-i18n="account-btn-txt" style="display: none;">Hesabım</a>
-            <a id="mobile-login-link" href="/auth.html" data-i18n="login-btn-txt">Giriş</a>
+            <button id="mobile-account-link" type="button" data-i18n="account-btn-txt" style="display: none;">Hesabım</button>
+            <button id="mobile-logout-btn" type="button" data-i18n="logout-btn-txt" style="display: none;">Cikis Yap</button>
+            <a id="mobile-login-link" href="/auth.html" data-i18n="login-btn-txt">Üye Ol</a>
         </div>
         <div class="mobile-nav-footer">
             <a href="https://wa.me/905320540019">0532 054 0019</a>
             <span data-i18n="mobile-location">Çorum / Osmancık, Türkiye</span>
         </div>
     </div>
+</div>
+
+<div id="profile-edit-modal" class="profile-edit-modal" aria-hidden="true">
+    <button id="profile-edit-backdrop" type="button" class="profile-edit-backdrop" aria-label="Duzenleme penceresini kapat"></button>
+    <aside class="profile-edit-panel" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title">
+        <div class="profile-edit-head">
+            <h2 id="profile-edit-title" class="profile-edit-title">Bilgileri Duzenle</h2>
+            <button id="profile-edit-close" type="button" class="profile-edit-close" aria-label="Kapat">X</button>
+        </div>
+        <div id="profile-edit-feedback" class="profile-edit-feedback"></div>
+        <form id="profile-edit-form" autocomplete="on">
+            <div class="profile-edit-grid">
+                <div class="profile-edit-field">
+                    <label for="profile-edit-full-name">Ad Soyad</label>
+                    <input id="profile-edit-full-name" type="text" maxlength="140" placeholder="Ad Soyad" />
+                </div>
+                <div class="profile-edit-field">
+                    <label for="profile-edit-phone">Telefon</label>
+                    <input id="profile-edit-phone" type="tel" maxlength="60" placeholder="05xx xxx xx xx" />
+                </div>
+                <div class="profile-edit-field">
+                    <label for="profile-edit-city">Il / Ilce</label>
+                    <input id="profile-edit-city" type="text" maxlength="120" placeholder="Orn: Istanbul / Kadikoy" />
+                </div>
+                <div class="profile-edit-field">
+                    <label>Musteri Tipi</label>
+                    <div class="profile-edit-type">
+                        <label><input type="radio" name="profile-edit-customer-type" value="bireysel" checked /> Bireysel</label>
+                        <label><input type="radio" name="profile-edit-customer-type" value="kurumsal" /> Kurumsal</label>
+                    </div>
+                </div>
+                <div class="profile-edit-field">
+                    <label for="profile-edit-address">Adres</label>
+                    <textarea id="profile-edit-address" maxlength="500" placeholder="Adres bilginizi girin"></textarea>
+                </div>
+            </div>
+            <div class="profile-edit-actions">
+                <button id="profile-edit-save" type="submit" class="profile-edit-save">Kaydet</button>
+            </div>
+        </form>
+    </aside>
 </div>
 
 <!-- HERO -->
@@ -981,9 +1202,6 @@
     </div>
     <div class="footer-bottom">
         <p data-i18n="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
-        <p style="margin-top: 0.5rem; font-size: 0.75rem;">
-            <a href="/admin/" id="footer-admin-link" style="display: none; color: inherit; text-decoration: none; opacity: 0.6; font-weight: 600;">🔑 Admin Panel</a>
-        </p>
     </div>
 </footer>
 
@@ -1050,7 +1268,8 @@ const TRANSLATIONS = {
     'nav-about': 'About',
     'nav-contact': 'Contact',
     'mobile-location': 'Corum / Osmancik, Turkiye',
-    'login-btn-txt': 'Login',
+    'login-btn-txt': 'Sign Up',
+    'logout-btn-txt': 'Sign Out',
     'account-btn-txt': 'Account',
     'teklif-btn-txt': 'Get Quote',
     'panel-bath-title': 'Bathroom',
@@ -1223,31 +1442,244 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
     if (window.BlaeneAuth) {
         window.BlaeneAuth.initSupabase();
 
+        const accountLink = document.getElementById('user-account-link');
+        const logoutBtn = document.getElementById('user-logout-btn');
+        const loginLink = document.getElementById('user-login-link');
+        const mobileAccountLink = document.getElementById('mobile-account-link');
+        const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+        const mobileLoginLink = document.getElementById('mobile-login-link');
+        const mobileNav = document.getElementById('mobile-nav');
+        const hamburger = document.getElementById('hamburger');
+
+        const profileEditModal = document.getElementById('profile-edit-modal');
+        const profileEditBackdrop = document.getElementById('profile-edit-backdrop');
+        const profileEditClose = document.getElementById('profile-edit-close');
+        const profileEditForm = document.getElementById('profile-edit-form');
+        const profileEditSave = document.getElementById('profile-edit-save');
+        const profileEditFeedback = document.getElementById('profile-edit-feedback');
+        const profileEditFullName = document.getElementById('profile-edit-full-name');
+        const profileEditPhone = document.getElementById('profile-edit-phone');
+        const profileEditCity = document.getElementById('profile-edit-city');
+        const profileEditAddress = document.getElementById('profile-edit-address');
+        const profileEditTypeInputs = document.querySelectorAll('input[name="profile-edit-customer-type"]');
+
+        const CUSTOMER_TYPE_STORAGE_PREFIX = 'blaene_customer_type:';
+        let activeUser = null;
+        let openingProfileEdit = false;
+
+        const normalizeCustomerType = (value) =>
+            String(value || '').toLowerCase() === 'kurumsal' ? 'kurumsal' : 'bireysel';
+
+        const getStoredCustomerType = (userId) =>
+            normalizeCustomerType(localStorage.getItem(CUSTOMER_TYPE_STORAGE_PREFIX + userId));
+
+        const setStoredCustomerType = (userId, value) => {
+            localStorage.setItem(CUSTOMER_TYPE_STORAGE_PREFIX + userId, normalizeCustomerType(value));
+        };
+
+        const setProfileCustomerTypeInputs = (value) => {
+            const normalized = normalizeCustomerType(value);
+            profileEditTypeInputs.forEach((input) => {
+                input.checked = input.value === normalized;
+            });
+        };
+
+        const getSelectedProfileCustomerType = () => {
+            const selected = Array.from(profileEditTypeInputs).find((input) => input.checked);
+            return normalizeCustomerType(selected ? selected.value : 'bireysel');
+        };
+
+        const setProfileFeedback = (message, type = '') => {
+            if (!profileEditFeedback) return;
+            profileEditFeedback.textContent = message || '';
+            profileEditFeedback.className = 'profile-edit-feedback' + (type ? ' ' + type : '');
+        };
+
+        const setProfileSaveLoading = (isLoading) => {
+            if (!profileEditSave) return;
+            profileEditSave.disabled = isLoading;
+            profileEditSave.textContent = isLoading ? 'Kaydediliyor...' : 'Kaydet';
+        };
+
+        const closeMobileNavIfOpen = () => {
+            if (!mobileNav || !hamburger || !mobileNav.classList.contains('open')) return;
+            mobileNav.classList.remove('open');
+            mobileNav.setAttribute('aria-hidden', 'true');
+            hamburger.setAttribute('aria-expanded', 'false');
+            hamburger.classList.remove('is-open');
+        };
+
+        const closeProfileEditModal = () => {
+            if (!profileEditModal) return;
+            profileEditModal.classList.remove('is-open');
+            profileEditModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            setProfileFeedback('');
+            setProfileSaveLoading(false);
+        };
+
+        const populateProfileEditForm = (profile, user) => {
+            if (!profileEditFullName || !profileEditPhone || !profileEditCity || !profileEditAddress) return;
+
+            profileEditFullName.value = String(
+                (profile && profile.full_name) || (user && user.user_metadata && user.user_metadata.full_name) || ''
+            );
+            profileEditPhone.value = String(
+                (profile && profile.phone) || (user && user.user_metadata && user.user_metadata.phone) || ''
+            );
+            profileEditCity.value = String(
+                (profile && profile.default_city) || (user && user.user_metadata && user.user_metadata.default_city) || ''
+            );
+            profileEditAddress.value = String(
+                (profile && profile.default_address) || (user && user.user_metadata && user.user_metadata.default_address) || ''
+            );
+
+            const selectedType = normalizeCustomerType(
+                (profile && (profile.customer_type || profile.customer_kind || profile.customer_category)) ||
+                (user && user.user_metadata && user.user_metadata.customer_type) ||
+                (user && user.id ? getStoredCustomerType(user.id) : 'bireysel')
+            );
+            setProfileCustomerTypeInputs(selectedType);
+        };
+
+        const updateCustomerProfileWithType = async (updates, customerType) => {
+            const payloadWithType = Object.assign({}, updates, { customer_type: normalizeCustomerType(customerType) });
+            try {
+                await window.BlaeneAuth.updateCustomerProfile(payloadWithType);
+                return payloadWithType;
+            } catch (error) {
+                const message = String(error && error.message || '').toLowerCase();
+                if (message.includes('customer_type') || message.includes('column')) {
+                    await window.BlaeneAuth.updateCustomerProfile(updates);
+                    return payloadWithType;
+                }
+                throw error;
+            }
+        };
+
+        const openProfileEditModal = async () => {
+            if (!profileEditModal || openingProfileEdit) return;
+            openingProfileEdit = true;
+            setProfileFeedback('');
+
+            try {
+                let user = activeUser;
+                if (!user) {
+                    user = await window.BlaeneAuth.getCurrentUser();
+                    activeUser = user || null;
+                }
+
+                if (!user) {
+                    window.location.href = '/auth.html?redirect=/';
+                    return;
+                }
+
+                closeMobileNavIfOpen();
+                const profile = await window.BlaeneAuth.getCustomerProfile();
+                populateProfileEditForm(profile, user);
+
+                profileEditModal.classList.add('is-open');
+                profileEditModal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                if (profileEditFullName) profileEditFullName.focus();
+            } catch (error) {
+                console.error('Profile modal load error:', error);
+                alert('Profil bilgileri yuklenemedi. Lutfen tekrar deneyin.');
+            } finally {
+                openingProfileEdit = false;
+            }
+        };
+
+        const applyHeaderAuthState = (user) => {
+            const isLoggedIn = Boolean(user);
+            activeUser = user || null;
+            if (accountLink && loginLink && logoutBtn) {
+                accountLink.style.display = isLoggedIn ? '' : 'none';
+                logoutBtn.style.display = isLoggedIn ? '' : 'none';
+                loginLink.style.display = isLoggedIn ? 'none' : '';
+            }
+            if (mobileAccountLink && mobileLoginLink && mobileLogoutBtn) {
+                mobileAccountLink.style.display = isLoggedIn ? '' : 'none';
+                mobileLogoutBtn.style.display = isLoggedIn ? '' : 'none';
+                mobileLoginLink.style.display = isLoggedIn ? 'none' : '';
+            }
+            if (!isLoggedIn) closeProfileEditModal();
+        };
+
+        const setLogoutLoading = (isLoading) => {
+            [logoutBtn, mobileLogoutBtn].forEach((btn) => {
+                if (btn) btn.disabled = isLoading;
+            });
+        };
+
+        const handleLogout = async () => {
+            setLogoutLoading(true);
+            try {
+                await window.BlaeneAuth.signOut();
+                applyHeaderAuthState(null);
+            } catch (error) {
+                console.error('Sign out from header failed:', error);
+                alert('Cikis yapilamadi. Lutfen tekrar deneyin.');
+            } finally {
+                setLogoutLoading(false);
+            }
+        };
+
+        if (accountLink) accountLink.addEventListener('click', () => { void openProfileEditModal(); });
+        if (mobileAccountLink) mobileAccountLink.addEventListener('click', () => { void openProfileEditModal(); });
+        if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+        if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
+        if (profileEditClose) profileEditClose.addEventListener('click', closeProfileEditModal);
+        if (profileEditBackdrop) profileEditBackdrop.addEventListener('click', closeProfileEditModal);
+
+        if (profileEditForm) {
+            profileEditForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!activeUser || !activeUser.id) {
+                    setProfileFeedback('Oturum bilgisi bulunamadi. Lutfen tekrar giris yapin.', 'error');
+                    return;
+                }
+
+                setProfileSaveLoading(true);
+                setProfileFeedback('');
+
+                try {
+                    const selectedType = getSelectedProfileCustomerType();
+                    const updates = {
+                        full_name: String(profileEditFullName && profileEditFullName.value || '').trim(),
+                        phone: String(profileEditPhone && profileEditPhone.value || '').trim(),
+                        default_city: String(profileEditCity && profileEditCity.value || '').trim(),
+                        default_address: String(profileEditAddress && profileEditAddress.value || '').trim(),
+                    };
+
+                    await updateCustomerProfileWithType(updates, selectedType);
+                    setStoredCustomerType(activeUser.id, selectedType);
+                    setProfileFeedback('Bilgileriniz guncellendi.', 'success');
+                    setTimeout(closeProfileEditModal, 500);
+                } catch (error) {
+                    console.error('Profile update error:', error);
+                    setProfileFeedback(
+                        error && error.message ? error.message : 'Bilgileriniz guncellenemedi. Lutfen tekrar deneyin.',
+                        'error'
+                    );
+                } finally {
+                    setProfileSaveLoading(false);
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && profileEditModal && profileEditModal.classList.contains('is-open')) {
+                closeProfileEditModal();
+            }
+        });
+
         try {
             const user = await window.BlaeneAuth.getCurrentUser();
-            const accountLink = document.getElementById('user-account-link');
-            const loginLink = document.getElementById('user-login-link');
-            const mobileAccountLink = document.getElementById('mobile-account-link');
-            const mobileLoginLink = document.getElementById('mobile-login-link');
-            const adminLink = document.getElementById('footer-admin-link');
-
-            if (user && accountLink && loginLink) {
-                accountLink.style.display = '';
-                loginLink.style.display = 'none';
-            }
-            if (user && mobileAccountLink && mobileLoginLink) {
-                mobileAccountLink.style.display = '';
-                mobileLoginLink.style.display = 'none';
-            }
-
-            // Show admin link if user has admin role
-            if (user && adminLink) {
-                const isAdmin = user.user_metadata?.role &&
-                    ['super_admin', 'admin', 'editor'].includes(user.user_metadata.role);
-                if (isAdmin) {
-                    adminLink.style.display = '';
-                }
-            }
+            applyHeaderAuthState(user);
+            window.BlaeneAuth.onAuthStateChange?.((_event, session) => {
+                applyHeaderAuthState(session?.user || null);
+            });
         } catch (error) {
             console.error('Auth header init error:', error);
         }
@@ -1255,6 +1687,7 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
 })();
 
 </script>
+<script src="assets/js/homepage-banners.js"></script>
 <script src="assets/js/traffic.js"></script>
 </body>
 </html>

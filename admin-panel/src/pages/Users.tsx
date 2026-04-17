@@ -3,10 +3,17 @@ import { apiRequest } from '../lib/api'
 
 interface Customer {
   id: string
+  username?: string | null
   email: string
   full_name: string
   phone: string | null
+  default_address?: string | null
   default_city?: string | null
+  consent_kvkk?: boolean | null
+  consent_terms?: boolean | null
+  consent_marketing_email?: boolean | null
+  consent_marketing_sms?: boolean | null
+  consent_marketing_call?: boolean | null
   created_at?: string
 }
 
@@ -15,6 +22,15 @@ function formatDate(value?: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
   return date.toLocaleDateString('tr-TR')
+}
+
+function boolLabel(value: boolean | null | undefined) {
+  return value ? 'Evet' : 'Hayir'
+}
+
+function toCsvCell(value: unknown) {
+  const text = String(value ?? '').replace(/"/g, '""')
+  return `"${text}"`
 }
 
 export default function Users() {
@@ -30,7 +46,7 @@ export default function Users() {
     setError('')
     try {
       const params = new URLSearchParams()
-      params.set('page_size', '200')
+      params.set('page_size', '400')
       if (search.trim()) params.set('search', search.trim())
       const data = await apiRequest<Customer[]>(`/api/admin/customers?${params.toString()}`, { token })
       setCustomers(Array.isArray(data) ? data : [])
@@ -46,19 +62,71 @@ export default function Users() {
     void loadCustomers()
   }, [])
 
+  const exportCustomers = () => {
+    if (!customers.length) return
+    const headers = [
+      'ad_soyad',
+      'kullanici_adi',
+      'email',
+      'telefon',
+      'adres',
+      'sehir',
+      'kvkk',
+      'sozlesme',
+      'mail_izni',
+      'sms_izni',
+      'arama_izni',
+      'kayit_tarihi',
+    ]
+    const lines = [
+      headers.join(','),
+      ...customers.map((row) =>
+        [
+          row.full_name || '',
+          row.username || '',
+          row.email || '',
+          row.phone || '',
+          row.default_address || '',
+          row.default_city || '',
+          boolLabel(row.consent_kvkk),
+          boolLabel(row.consent_terms),
+          boolLabel(row.consent_marketing_email),
+          boolLabel(row.consent_marketing_sms),
+          boolLabel(row.consent_marketing_call),
+          formatDate(row.created_at),
+        ]
+          .map(toCsvCell)
+          .join(',')
+      ),
+    ]
+    const csv = `\uFEFF${lines.join('\n')}`
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `musteriler-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
-      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Musteriler</h2>
+      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Musteriler ve uye izinleri</h2>
       <div style={panelStyle}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
           <input
             value={search}
             onChange={(evt) => setSearch(evt.target.value)}
-            placeholder="Ad veya e-posta ara"
+            placeholder="Ad, e-posta, telefon veya kullanici adi ara"
             style={{ ...inputStyle, flex: 1 }}
           />
           <button onClick={() => void loadCustomers()} style={buttonStyle}>
             Ara
+          </button>
+          <button onClick={exportCustomers} style={buttonStyle} disabled={!customers.length}>
+            CSV indir
           </button>
         </div>
 
@@ -74,9 +142,16 @@ export default function Users() {
               <thead>
                 <tr>
                   <th style={thStyle}>Ad</th>
+                  <th style={thStyle}>Kullanici</th>
                   <th style={thStyle}>E-posta</th>
                   <th style={thStyle}>Telefon</th>
+                  <th style={thStyle}>Adres</th>
                   <th style={thStyle}>Sehir</th>
+                  <th style={thStyle}>KVKK</th>
+                  <th style={thStyle}>Sozlesme</th>
+                  <th style={thStyle}>Mail izni</th>
+                  <th style={thStyle}>SMS izni</th>
+                  <th style={thStyle}>Arama izni</th>
                   <th style={thStyle}>Kayit</th>
                 </tr>
               </thead>
@@ -84,9 +159,16 @@ export default function Users() {
                 {customers.map((customer) => (
                   <tr key={customer.id}>
                     <td style={tdStyle}>{customer.full_name || '-'}</td>
+                    <td style={tdStyle}>{customer.username || '-'}</td>
                     <td style={tdStyle}>{customer.email || '-'}</td>
                     <td style={tdStyle}>{customer.phone || '-'}</td>
+                    <td style={tdStyle}>{customer.default_address || '-'}</td>
                     <td style={tdStyle}>{customer.default_city || '-'}</td>
+                    <td style={tdStyle}>{boolLabel(customer.consent_kvkk)}</td>
+                    <td style={tdStyle}>{boolLabel(customer.consent_terms)}</td>
+                    <td style={tdStyle}>{boolLabel(customer.consent_marketing_email)}</td>
+                    <td style={tdStyle}>{boolLabel(customer.consent_marketing_sms)}</td>
+                    <td style={tdStyle}>{boolLabel(customer.consent_marketing_call)}</td>
                     <td style={tdStyle}>{formatDate(customer.created_at)}</td>
                   </tr>
                 ))}

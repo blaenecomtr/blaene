@@ -11,7 +11,21 @@
       "Bash(vercel link:*)",
       "Bash(vercel env *)",
       "Bash(vercel redeploy *)",
-      "Bash(curl -s \"https://blaene-o2ye0dboe-blaenes-projects-b043caf5.vercel.app/admin/\")"
+      "Bash(curl -s \"https://blaene-o2ye0dboe-blaenes-projects-b043caf5.vercel.app/admin/\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(curl -s -X POST https://www.blaene.com.tr/api/admin/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"wrongpass\"}')",
+      "Bash(curl -s -X POST https://www.blaene.com.tr/api/admin/login -H 'Content-Type: application/json' -H 'Origin: https://www.blaene.com.tr' -d '{\"email\":\"test@test.com\",\"password\":\"wrongpass\"}' -D -)",
+      "Bash(curl -s https://www.blaene.com.tr/api/admin/verify-logout -H 'Origin: https://www.blaene.com.tr' -D -)",
+      "Bash(git add *)",
+      "Bash(gh run *)",
+      "Bash(npx vercel *)",
+      "WebFetch(domain:blaene-qzt3ti9ab-blaenes-projects-b043caf5.vercel.app)",
+      "WebFetch(domain:blaene-blaenes-projects-b043caf5.vercel.app)",
+      "Bash(nslookup www.blaene.com.tr)",
+      "Bash(git show *)",
+      "Bash(npx tsc *)",
+      "Bash(npx vite *)"
     ]
   }
 }
