@@ -356,6 +356,7 @@ function normalizeProductPatch(input) {
   if (payload.seo_slug !== undefined) patch.seo_slug = normalizeSlug(payload.seo_slug, '');
   if (payload.display_order !== undefined) patch.display_order = normalizePositiveInt(payload.display_order || 0, 0, 9999);
   if (payload.active !== undefined) patch.active = toBool(payload.active, true);
+  if (payload.archived !== undefined) patch.archived = toBool(payload.archived, false);
   if (payload.stock_threshold !== undefined) patch.stock_threshold = normalizePositiveInt(payload.stock_threshold || 0, 0, 999999);
   if (payload.stock_quantity !== undefined) patch.stock_quantity = normalizePositiveInt(payload.stock_quantity || 0, 0, 999999);
   return patch;
@@ -711,6 +712,13 @@ async function handleProducts(req, res, ctx) {
     });
     const search = normalizeText(query.get('search'), 120).toLowerCase();
     const category = normalizeText(query.get('category'), 40).toLowerCase();
+    const showArchived = query.get('archived') === 'true';
+
+    rows = rows.filter((item) => {
+      const isArchived = item.archived === true;
+      return showArchived ? isArchived : !isArchived;
+    });
+
     if (category && category !== 'all') {
       rows = rows.filter((item) => String(item.category || '') === category);
     }
@@ -781,7 +789,7 @@ async function handleProducts(req, res, ctx) {
   if (req.method === 'DELETE') {
     const id = normalizeText(body.id || query.get('id'), 120);
     if (!id) return sendError(res, 400, 'id is required', 'VALIDATION_REQUIRED_ID');
-    await restDelete(config, 'products', { id: `eq.${id}` });
+    await updateProductWithFallback(config, { id: `eq.${id}` }, { archived: true });
     await writeAuditLog(config, req, auth, 'product.delete', { id }, { entityType: 'product', entityId: id });
     return sendSuccess(res, { id });
   }
@@ -1187,6 +1195,30 @@ async function handleAnalytics(req, res, ctx) {
     }
   };
 
+  const detectDevice = (userAgent) => {
+    const ua = String(userAgent || '').toLowerCase();
+    const mobilePatterns = /android|iphone|ipad|mobile|touch|webos|blackberry|windows phone|opera mini/;
+    return mobilePatterns.test(ua) ? 'mobile' : 'desktop';
+  };
+
+  const countryCache = {};
+
+  const getCountryFromIP = (ip) => {
+    if (!ip || ip === 'unknown') return 'unknown';
+    if (countryCache[ip]) return countryCache[ip];
+    // In production with X-Vercel-IP-Country header, country already in metadata
+    countryCache[ip] = 'unknown';
+    return 'unknown';
+  };
+
+  const productCache = {};
+
+  const getProductNameFromPath = (pagePath) => {
+    if (!pagePath || !pagePath.includes('/urun/')) return null;
+    const match = pagePath.match(/\/urun\/([a-z0-9\-]+)/i);
+    return match ? match[1] : null;
+  };
+
   scopedTraffic.forEach((row) => {
     const metadata = row && typeof row.metadata === 'object' && row.metadata ? row.metadata : {};
     const action = normalizeText(row.action, 80).toLowerCase();
@@ -1194,6 +1226,8 @@ async function handleAnalytics(req, res, ctx) {
     const source = resolveSource(metadata);
     const pagePath = normalizeText(metadata.page_path || row.request_path || '/', 220) || '/';
     const visitorKey = normalizeText(metadata.session_id, 160) || normalizeText(row.ip_address, 160) || 'unknown';
+    const device = detectDevice(row.user_agent);
+    const country = normalizeText(metadata.country, 80) || getCountryFromIP(row.ip_address);
     visitorSet.add(visitorKey);
 
     if (eventType === 'page_view') {
@@ -1206,6 +1240,8 @@ async function handleAnalytics(req, res, ctx) {
         page: pagePath,
         ip: normalizeText(row.ip_address, 160) || null,
         referrer: normalizeText(metadata.referrer, 500) || null,
+        device,
+        country: country && country !== 'unknown' ? country : null,
       });
       return;
     }
@@ -1218,6 +1254,14 @@ async function handleAnalytics(req, res, ctx) {
         normalizeText(metadata.element_tag, 40) ||
         'unknown';
       clickCounts[clickLabel] = (clickCounts[clickLabel] || 0) + 1;
+    }
+  });
+
+  const productCounts = {};
+  recentVisitors.forEach((visitor) => {
+    const productId = getProductNameFromPath(visitor.page);
+    if (productId) {
+      productCounts[productId] = (productCounts[productId] || 0) + 1;
     }
   });
 
@@ -1257,6 +1301,7 @@ async function handleAnalytics(req, res, ctx) {
       unique_visitors: visitorSet.size,
       top_sources: sortObjectEntries(sourceCounts, 'source'),
       top_pages: sortObjectEntries(pageCounts, 'page'),
+      top_products: sortObjectEntries(productCounts, 'product_id'),
       top_clicks: sortObjectEntries(clickCounts, 'label'),
       recent_visitors: recentVisitors
         .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))

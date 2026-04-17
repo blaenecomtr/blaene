@@ -323,6 +323,23 @@
     return session?.access_token || null;
   }
 
+  async function updatePassword(newPassword) {
+    const client = getSupabase();
+    if (!client) throw new Error('Supabase not initialized');
+
+    if (!newPassword || String(newPassword).length < 6) {
+      throw new Error('Sifre en az 6 karakter olmali');
+    }
+
+    const { error } = await client.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Sifre guncellenemedi');
+    }
+  }
+
   global.BlaeneAuth = {
     initSupabase,
     getSupabase,
@@ -337,5 +354,6 @@
     getCustomerOrders,
     onAuthStateChange,
     getAccessToken,
+    updatePassword,
   };
 })(window);

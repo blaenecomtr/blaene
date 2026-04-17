@@ -11,7 +11,8 @@
       "Bash(npm create *)",
       "WebFetch(domain:vercel.com)",
       "Bash(vercel logs *)",
-      "WebFetch(domain:www.blaene.com.tr)"
+      "WebFetch(domain:www.blaene.com.tr)",
+      "Bash(curl -s http://localhost:5173)"
     ],
     "additionalDirectories": [
       "c:\\Users\\DELL\\Desktop\\yazılım\\blaene\\admin-panel\\src\\components"

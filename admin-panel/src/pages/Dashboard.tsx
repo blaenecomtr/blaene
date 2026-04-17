@@ -20,12 +20,19 @@ interface AnalyticsResponse {
     traffic_clicks?: number
     traffic_unique_visitors?: number
   }
+  charts?: {
+    daily_sales?: Array<{ date: string; orders: number; paid_revenue: number }>
+    payment_distribution?: Record<string, number>
+    order_status_distribution?: Record<string, number>
+    product_category_distribution?: Record<string, number>
+  }
   traffic?: {
     total_views?: number
     total_clicks?: number
     unique_visitors?: number
     top_sources?: Array<TrafficRow & { source: string }>
     top_pages?: Array<TrafficRow & { page: string }>
+    top_products?: Array<TrafficRow & { product_id: string }>
     top_clicks?: Array<TrafficRow & { label: string }>
     recent_visitors?: Array<{
       at?: string | null
@@ -33,6 +40,8 @@ interface AnalyticsResponse {
       page?: string | null
       ip?: string | null
       referrer?: string | null
+      device?: string | null
+      country?: string | null
     }>
   }
 }
@@ -44,9 +53,9 @@ function formatDate(value?: string | null) {
   return date.toLocaleString('tr-TR')
 }
 
-function card(label: string, value: string, color: string) {
+function card(label: string, value: string, color: string, onClick?: () => void) {
   return (
-    <div style={cardStyle}>
+    <div style={{ ...cardStyle, cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
       <div style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '5px' }}>{label}</div>
       <div style={{ fontSize: '24px', fontWeight: 'bold', color }}>{value}</div>
     </div>
@@ -59,15 +68,19 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [metrics, setMetrics] = useState<AnalyticsResponse['metrics']>({})
   const [traffic, setTraffic] = useState<AnalyticsResponse['traffic']>({})
+  const [charts, setCharts] = useState<AnalyticsResponse['charts']>({})
+  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('month')
+  const [detailModal, setDetailModal] = useState<{ type: string; data: any } | null>(null)
 
   const loadMetrics = async () => {
     if (!token) return
     setLoading(true)
     setError('')
     try {
-      const data = await apiRequest<AnalyticsResponse>('/api/admin/analytics?range=month', { token })
+      const data = await apiRequest<AnalyticsResponse>(`/api/admin/analytics?range=${dateRange}`, { token })
       setMetrics(data?.metrics || {})
       setTraffic(data?.traffic || {})
+      setCharts(data?.charts || {})
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Dashboard verisi yuklenemedi'
       setError(msg)
@@ -78,7 +91,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     void loadMetrics()
-  }, [])
+  }, [dateRange])
 
   if (loading) {
     return <p style={{ color: '#94a3b8' }}>Dashboard yukleniyor...</p>
@@ -103,31 +116,103 @@ export default function Dashboard() {
 
   const topSources = Array.isArray(traffic?.top_sources) ? traffic.top_sources : []
   const topPages = Array.isArray(traffic?.top_pages) ? traffic.top_pages : []
+  const topProducts = Array.isArray(traffic?.top_products) ? traffic.top_products : []
   const topClicks = Array.isArray(traffic?.top_clicks) ? traffic.top_clicks : []
   const recentVisitors = Array.isArray(traffic?.recent_visitors) ? traffic.recent_visitors : []
 
+  const openDetailModal = (type: string, data: any) => {
+    setDetailModal({ type, data })
+  }
+
+  const closeDetailModal = () => {
+    setDetailModal(null)
+  }
+
   return (
     <div>
-      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Dashboard</h2>
-
-      <div style={gridStyle}>
-        {card('Gunluk ciro', dailyRevenueLabel, '#22c55e')}
-        {card('Bekleyen siparis', String(metrics?.pending_orders || 0), '#f59e0b')}
-        {card('Biten stoklar', String(metrics?.out_of_stock_products || 0), '#ef4444')}
-        {card('Aylik ciro', revenueLabel, '#16a34a')}
-        {card('Yeni siparis', String(metrics?.new_orders || 0), '#3b82f6')}
-        {card('Odeme alinan', String(metrics?.paid_orders || 0), '#10b981')}
-        {card('Aktif kullanici', String(metrics?.active_users || 0), '#38bdf8')}
-        {card('Dusuk stok', String(metrics?.low_stock_products || 0), '#f59e0b')}
-        {card('Acik destek', String(metrics?.open_support_tickets || 0), '#e879f9')}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '20px', color: '#fff', margin: 0 }}>Dashboard</h2>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {(['today', 'week', 'month'] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => setDateRange(range)}
+              style={{
+                padding: '6px 12px',
+                background: dateRange === range ? '#3b82f6' : '#334155',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: dateRange === range ? 600 : 400,
+              }}
+            >
+              {range === 'today' ? 'Bugün' : range === 'week' ? 'Bu Hafta' : 'Bu Ay'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <h3 style={sectionTitleStyle}>Site trafigi (Son 30 gun)</h3>
+      <div style={gridStyle}>
+        {card('Gunluk ciro', dailyRevenueLabel, '#22c55e', () => openDetailModal('daily_revenue', { value: dailyRevenue }))}
+        {card('Bekleyen siparis', String(metrics?.pending_orders || 0), '#f59e0b', () => openDetailModal('pending_orders', { value: metrics?.pending_orders || 0 }))}
+        {card('Biten stoklar', String(metrics?.out_of_stock_products || 0), '#ef4444', () => openDetailModal('out_of_stock', { value: metrics?.out_of_stock_products || 0 }))}
+        {card('Aylik ciro', revenueLabel, '#16a34a', () => openDetailModal('paid_revenue', { value: paidRevenue }))}
+        {card('Yeni siparis', String(metrics?.new_orders || 0), '#3b82f6', () => openDetailModal('new_orders', { value: metrics?.new_orders || 0 }))}
+        {card('Odeme alinan', String(metrics?.paid_orders || 0), '#10b981', () => openDetailModal('paid_orders', { value: metrics?.paid_orders || 0 }))}
+        {card('Aktif kullanici', String(metrics?.active_users || 0), '#38bdf8', () => openDetailModal('active_users', { value: metrics?.active_users || 0 }))}
+        {card('Dusuk stok', String(metrics?.low_stock_products || 0), '#f59e0b', () => openDetailModal('low_stock', { value: metrics?.low_stock_products || 0 }))}
+        {card('Acik destek', String(metrics?.open_support_tickets || 0), '#e879f9', () => openDetailModal('support_tickets', { value: metrics?.open_support_tickets || 0 }))}
+      </div>
+
+      <h3 style={sectionTitleStyle}>
+        Site trafigi (
+        {dateRange === 'today' ? 'Bugün' : dateRange === 'week' ? 'Bu Hafta' : 'Son 30 Gün'}
+        )
+      </h3>
       <div style={gridStyle}>
         {card('Sayfa goruntuleme', String(traffic?.total_views || metrics?.traffic_page_views || 0), '#f97316')}
         {card('Tiklama', String(traffic?.total_clicks || metrics?.traffic_clicks || 0), '#14b8a6')}
         {card('Tekil ziyaretci', String(traffic?.unique_visitors || metrics?.traffic_unique_visitors || 0), '#a855f7')}
       </div>
+
+      {Array.isArray(charts?.daily_sales) && charts.daily_sales.length > 0 && (
+        <div style={{ marginTop: '28px' }}>
+          <h3 style={sectionTitleStyle}>Günlük Satış Eğilimi</h3>
+          <div style={panelStyle}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {charts.daily_sales.map((day, idx) => {
+                const maxRevenue = Math.max(...charts.daily_sales!.map((d) => d.paid_revenue || 0), 1)
+                const barWidth = ((day.paid_revenue || 0) / maxRevenue) * 100
+                const revenueLabel = new Intl.NumberFormat('tr-TR', {
+                  style: 'currency',
+                  currency: 'TRY',
+                  maximumFractionDigits: 0,
+                }).format(day.paid_revenue || 0)
+                return (
+                  <div key={`daily-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', minWidth: '80px' }}>{day.date}</div>
+                    <div style={{ flex: 1, height: '24px', background: '#334155', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          background: '#10b981',
+                          width: `${barWidth}%`,
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 600, minWidth: '100px', textAlign: 'right' }}>
+                      {revenueLabel} ({day.orders || 0} sipariş)
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={trafficGridStyle}>
         <div style={panelStyle}>
@@ -177,6 +262,30 @@ export default function Dashboard() {
             </table>
           )}
         </div>
+
+        <div style={panelStyle}>
+          <h4 style={panelTitleStyle}>En cok ziyaret edilen urunler</h4>
+          {!topProducts.length ? (
+            <p style={emptyStyle}>Kayit yok.</p>
+          ) : (
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Urun</th>
+                  <th style={thStyle}>Goruntuleme</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topProducts.map((item) => (
+                  <tr key={`product-${item.product_id}`}>
+                    <td style={tdStyle}>{item.product_id}</td>
+                    <td style={tdStyle}>{item.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       <div style={trafficGridStyle}>
@@ -216,24 +325,66 @@ export default function Dashboard() {
                     <th style={thStyle}>Saat</th>
                     <th style={thStyle}>Kaynak</th>
                     <th style={thStyle}>Sayfa</th>
+                    <th style={thStyle}>Cihaz</th>
+                    <th style={thStyle}>Ülke</th>
                     <th style={thStyle}>IP</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentVisitors.map((item, idx) => (
-                    <tr key={`recent-${idx}`}>
-                      <td style={tdStyle}>{formatDate(item.at)}</td>
-                      <td style={tdStyle}>{item.source || 'direct'}</td>
-                      <td style={tdStyle}>{item.page || '-'}</td>
-                      <td style={tdStyle}>{item.ip || '-'}</td>
-                    </tr>
-                  ))}
+                  {recentVisitors.map((item, idx) => {
+                    const deviceLabel = item.device === 'mobile' ? '📱 Mobile' : '💻 Desktop'
+                    const deviceColor = item.device === 'mobile' ? '#f97316' : '#3b82f6'
+                    return (
+                      <tr key={`recent-${idx}`}>
+                        <td style={tdStyle}>{formatDate(item.at)}</td>
+                        <td style={tdStyle}>{item.source || 'direct'}</td>
+                        <td style={tdStyle}>{item.page || '-'}</td>
+                        <td style={{ ...tdStyle, color: deviceColor, fontWeight: 500 }}>{deviceLabel}</td>
+                        <td style={tdStyle}>{item.country || '-'}</td>
+                        <td style={tdStyle}>{item.ip || '-'}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
       </div>
+
+      {detailModal && (
+        <div style={modalOverlayStyle} onClick={closeDetailModal}>
+          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ color: '#fff', margin: 0, fontSize: '18px' }}>Detay</h3>
+              <button
+                onClick={closeDetailModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+              <p style={{ marginTop: 0 }}>
+                <strong>Tür:</strong> {detailModal.type}
+              </p>
+              <p>
+                <strong>Değer:</strong> {detailModal.data?.value}
+              </p>
+              <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: 0 }}>
+                Bu metrik {dateRange === 'today' ? 'bugüne' : dateRange === 'week' ? 'bu haftaya' : 'son 30 güne'} aittir.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -314,4 +465,26 @@ const errorStyle: CSSProperties = {
   padding: '8px 10px',
   color: '#fca5a5',
   fontSize: '12px',
+}
+
+const modalOverlayStyle: CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: 'rgba(0, 0, 0, 0.7)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1000,
+}
+
+const modalContentStyle: CSSProperties = {
+  background: '#1e293b',
+  border: '1px solid #334155',
+  borderRadius: '8px',
+  padding: '24px',
+  maxWidth: '400px',
+  width: '90%',
 }

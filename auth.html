@@ -244,6 +244,30 @@
       cursor: not-allowed;
     }
 
+    .forgot-password-link {
+      text-align: center;
+      margin-top: 0.6rem;
+    }
+
+    .forgot-password-link a {
+      font-size: 0.85rem;
+      color: #6b7280;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .forgot-password-link a:hover {
+      color: #111827;
+      text-decoration: underline;
+    }
+
+    .cooldown-warning {
+      text-align: center;
+      color: #9f1239;
+      font-size: 0.85rem;
+      margin-top: 0.6rem;
+    }
+
     @media (max-width: 760px) {
       .topbar {
         flex-direction: column;
@@ -286,6 +310,9 @@
           <button type="submit" class="btn primary" id="login-btn">Giriş Yap</button>
         </form>
         <button type="button" class="btn secondary" id="login-google-btn">Google ile bağlan</button>
+        <div class="forgot-password-link">
+          <a href="forgot-password.html">Şifremi unuttum</a>
+        </div>
       </div>
 
       <div id="signup" class="tab-content">
@@ -392,6 +419,10 @@
       };
 
       const CUSTOMER_TYPE_STORAGE_PREFIX = 'blaene_customer_type:';
+      const LOGIN_COOLDOWN_KEY = 'blaene_login_cooldown';
+      const MAX_LOGIN_ATTEMPTS = 5;
+      const COOLDOWN_DURATION = 15 * 60 * 1000; // 15 minutes
+
       const alertBox = document.getElementById('alert-box');
       const tabButtons = document.querySelectorAll('.tab-btn');
       const tabContents = document.querySelectorAll('.tab-content');
@@ -411,8 +442,79 @@
         return raw;
       })(new URLSearchParams(location.search).get('redirect'));
 
+      let loginCooldownInterval = null;
+
       function showAlert(message, type) {
         alertBox.innerHTML = '<div class="alert ' + type + '">' + message + '</div>';
+      }
+
+      function getLoginAttempts() {
+        const stored = localStorage.getItem(LOGIN_COOLDOWN_KEY);
+        if (!stored) return { attempts: 0, until: 0 };
+        try {
+          return JSON.parse(stored);
+        } catch (_) {
+          return { attempts: 0, until: 0 };
+        }
+      }
+
+      function recordLoginAttempt() {
+        const data = getLoginAttempts();
+        data.attempts = (data.attempts || 0) + 1;
+        if (data.attempts >= MAX_LOGIN_ATTEMPTS) {
+          data.until = Date.now() + COOLDOWN_DURATION;
+        }
+        localStorage.setItem(LOGIN_COOLDOWN_KEY, JSON.stringify(data));
+      }
+
+      function isInLoginCooldown() {
+        const data = getLoginAttempts();
+        if (!data.until || data.until < Date.now()) {
+          localStorage.removeItem(LOGIN_COOLDOWN_KEY);
+          return false;
+        }
+        return true;
+      }
+
+      function getLoginCooldownTimeLeft() {
+        const data = getLoginAttempts();
+        if (!data.until) return 0;
+        return Math.max(0, data.until - Date.now());
+      }
+
+      function clearLoginAttempts() {
+        localStorage.removeItem(LOGIN_COOLDOWN_KEY);
+      }
+
+      function updateLoginCooldownDisplay() {
+        if (!isInLoginCooldown()) {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Giriş Yap';
+          if (loginCooldownInterval) {
+            clearInterval(loginCooldownInterval);
+            loginCooldownInterval = null;
+          }
+          return;
+        }
+
+        loginBtn.disabled = true;
+        const timeLeft = Math.ceil(getLoginCooldownTimeLeft() / 1000);
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        loginBtn.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+        if (!loginCooldownInterval) {
+          loginCooldownInterval = setInterval(function () {
+            const remaining = Math.ceil(getLoginCooldownTimeLeft() / 1000);
+            if (remaining <= 0) {
+              updateLoginCooldownDisplay();
+              return;
+            }
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            loginBtn.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+          }, 1000);
+        }
       }
 
       function switchTab(tabName) {
@@ -500,6 +602,18 @@
       loginForm.addEventListener('submit', async function (event) {
         event.preventDefault();
         alertBox.innerHTML = '';
+
+        if (isInLoginCooldown()) {
+          const timeLeft = Math.ceil(getLoginCooldownTimeLeft() / 1000);
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          showAlert(
+            'Çok fazla başarısız giriş denemesi. Lütfen ' + minutes + ' dakika ' + seconds + ' saniye bekleyin.',
+            'error'
+          );
+          return;
+        }
+
         loginBtn.disabled = true;
         loginBtn.textContent = 'Giriş yapılıyor...';
 
@@ -507,14 +621,19 @@
           const email = String(document.getElementById('login-email').value || '').trim();
           const password = document.getElementById('login-password').value;
           await window.BlaeneAuth.signIn(email, password);
+          clearLoginAttempts();
           showAlert('Başarıyla giriş yapıldı. Yönlendiriliyorsunuz...', 'success');
           setTimeout(function () {
             window.location.href = redirectAfterAuth;
           }, 700);
         } catch (error) {
+          recordLoginAttempt();
+          updateLoginCooldownDisplay();
           showAlert((error && error.message) || 'Giriş başarısız.', 'error');
-          loginBtn.disabled = false;
-          loginBtn.textContent = 'Giriş Yap';
+          if (!isInLoginCooldown()) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Giriş Yap';
+          }
         }
       });
 
@@ -581,6 +700,7 @@
       (async function init() {
         populateCities();
         populateDistricts('');
+        updateLoginCooldownDisplay();
         const ready = await waitForAuthReady();
         if (!ready) {
           showAlert('Kimlik servisi yüklenemedi. Sayfayı yenileyin.', 'error');

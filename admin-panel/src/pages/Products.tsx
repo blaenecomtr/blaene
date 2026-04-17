@@ -1059,7 +1059,24 @@ export default function Products() {
     }
     const editingProduct = products.find((p) => p.id === editingProductId)
     if (!editingProduct) return
-    await saveProduct(editingProduct)
+
+    setError('')
+    setMessage('')
+    const variantDraft = variantDrafts[editingProduct.id]
+    const hasPendingVariant = variantDraft && variantDraft.color.trim()
+
+    try {
+      // Save product first
+      await saveProduct(editingProduct)
+
+      // Save pending variant if exists
+      if (hasPendingVariant) {
+        await addVariantForProduct(editingProduct)
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Kayit islemi basarisiz'
+      setError(msg)
+    }
   }
 
   const openProductDetail = (product: Product) => {
@@ -1656,7 +1673,7 @@ export default function Products() {
                         </div>
                       )}
 
-                      <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                      <div style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button
                           type="button"
                           onClick={() => setEditingProductId((prev) => (prev === product.id ? null : product.id))}
@@ -1671,6 +1688,25 @@ export default function Products() {
                         >
                           {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
                         </button>
+                        {showArchived ? (
+                          <button
+                            type="button"
+                            onClick={() => void restoreProduct(product.id, product.code)}
+                            disabled={deletingId === product.id}
+                            style={dangerButton}
+                          >
+                            {deletingId === product.id ? 'Canliya Aliniyor...' : 'Canliya Al'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => void deleteProduct(product.id, product.code)}
+                            disabled={deletingId === product.id}
+                            style={dangerButton}
+                          >
+                            {deletingId === product.id ? 'Arsivraniyor...' : 'Arşivle'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   )

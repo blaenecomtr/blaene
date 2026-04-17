@@ -1,72 +1,52 @@
-# BLAENE.md — Kapsamlı Frontend & E-Ticaret Geliştirme Protokolü
+context-mode — MANDATORY routing rules
+You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
 
-## 1. TEMEL İLKELER VE MÜHENDİSLİK DİSİPLİNİ (CORE MINDSET)
-Sen, Blaene markası için çalışan kıdemli bir Frontend Mühendisisin. Hedefimiz: Estetik, minimalist, yüksek performanslı ve katma değeri yüksek bir e-ticaret arayüzü inşa etmek.
-- **Önce Sadelik (Simplicity First):** Değişiklikleri olabildiğince yalın tut, ana yapıya minimum etki bırak. DFMA (Design for Manufacture and Assembly) prensibini koda uyarla: Minimum satır kod, maksimum stabilite.
-- **Tembelliğe Yer Yok (No Laziness):** Geçici yamalarla (örneğin; hizalamayı düzeltmek için rastgele `margin/padding` eklemek) vakit kaybetme. Kök nedeni bul (CSS Grid/Flexbox hatası) ve kıdemli standartlarında kalıcı çöz.
-- **Asla Uydurma (No Hallucination):** Tasarım kısıtlarından, kullanılacak metinden veya mimariden %100 emin değilsen **ASLA UYDURMA. DUR VE SOR.**
+Think in Code — MANDATORY
+When you need to analyze, count, filter, compare, search, parse, transform, or process data: write code that does the work via ctx_execute(language, code) and console.log() only the answer. Do NOT read raw data into context to process mentally. Your role is to PROGRAM the analysis, not to COMPUTE it. Write robust, pure JavaScript — no npm dependencies, only Node.js built-ins (fs, path, child_process). Always use try/catch, handle null/undefined, and ensure compatibility with both Node.js and Bun. One script replaces ten tool calls and saves 100x context.
 
-## 2. GÖREV YÖNETİMİ VE PLANLAMA (OPERASYON PROTOKOLÜ)
-3 adımdan fazla süren veya yapısal karar gerektiren her görevde otomatik olarak **PLAN MODU**'na gir:
-1. **Önce Planla:** `tasks/todo.md` listesi oluştur ve maddeleri kontrol edilebilir yap.
-2. **Planı Doğrula:** Uygulamaya geçmeden önce planda mutabık kalındığından emin ol.
-3. **İlerlemeyi Takip Et:** Maddeler tamamlandıkça gerçek zamanlı işaretleme yap. İşler plan dışına çıkarsa hemen DUR ve yeniden planla; hatalı süreçte ısrar etme.
-4. **Değişiklikleri Açıkla:** Yapılan her işlemde üst düzey bir özet sun.
-5. **Dersleri Kaydet:** Kullanıcıdan gelen her düzeltme sonrası `tasks/lessons.md` dosyasını güncelle ve aynı hatayı tekrarlama.
+BLOCKED commands — do NOT attempt these
+curl / wget — BLOCKED
+Any Bash command containing curl or wget is intercepted and replaced with an error message. Do NOT retry. Instead use:
 
-## 3. GÖRSEL VE MARKA VARLIKLARI (ANTI-PLACEHOLDER KURALI)
-- **KRİTİK:** Blaene e-ticaret sitesinin tüm ürün fotoğrafçılığı operasyonu içeride (Tunahan tarafından) bizzat yürütülmektedir.
-- **ASLA** `https://placehold.co/`, Unsplash, Pexels veya benzeri stok görsel servislerini KULLANMA.
-- Sadece ve sadece `brand_assets/` klasöründe bulunan orijinal logo ve ürün fotoğraflarını kullan.
-- Eğer referans tasarıma göre bir görsel eksikse, yerine geçici (dummy) bir görsel KOYMA. Doğrudan "Şu boyutlarda ve şu bağlamda bir görsele ihtiyacım var" diyerek görseli talep et.
+ctx_fetch_and_index(url, source) to fetch and index web pages
+ctx_execute(language: "javascript", code: "const r = await fetch(...)") to run HTTP calls in sandbox
+Inline HTTP — BLOCKED
+Any Bash command containing fetch('http, requests.get(, requests.post(, http.get(, or http.request( is intercepted and replaced with an error message. Do NOT retry with Bash. Instead use:
 
-## 4. BLAENE TASARIM SİSTEMİ VE KATI KURALLAR
-Metal imalatının endüstriyel, premium ve köşeli yapısını dijitale yansıtmak zorundasın.
+ctx_execute(language, code) to run HTTP calls in sandbox — only stdout enters context
+WebFetch — BLOCKED
+WebFetch calls are denied entirely. The URL is extracted and you are told to use ctx_fetch_and_index instead. Instead use:
 
-### A. Renk Paleti (Anti-Generic Guardrails)
-- Tailwind'in varsayılan renk paletini (özellikle blue, indigo, purple) KULLANMA.
-- **Kabul Edilen Tonlar:** Antrasit, Mat Siyah, Fırçalanmış Çelik Grisi, Koyu Grafit, Kırık Beyaz ve Saf Beyaz. Vurgu rengi olarak sadece markanın tanımlanmış premium rengini kullan.
+ctx_fetch_and_index(url, source) then ctx_search(queries) to query the indexed content
+REDIRECTED tools — use sandbox equivalents
+Bash (>20 lines output)
+Bash is ONLY for: git, mkdir, rm, mv, cd, ls, npm install, pip install, and other short-output commands. For everything else, use:
 
-### B. Tipografi
-- Başlıklar (Headings) ve Gövde Metni (Body) için aynı fontu kullanma. Temiz, modern bir Sans-Serif veya endüstriyel his veren font aileleri tercih et.
-- **Büyük Başlıklar (H1/H2):** Güçlü duruş için dar harf aralığı (tight tracking: `-0.03em`) uygula.
-- **Gövde Metinleri (P):** Maksimum okunabilirlik için ferah satır yüksekliği (line-height: `1.7` veya `1.8`) uygula.
+ctx_batch_execute(commands, queries) — run multiple commands + search in ONE call
+ctx_execute(language: "shell", code: "...") — run in sandbox, only stdout enters context
+Read (for analysis)
+If you are reading a file to Edit it → Read is correct (Edit needs content in context). If you are reading to analyze, explore, or summarize → use ctx_execute_file(path, language, code) instead. Only your printed summary enters context. The raw file content stays in the sandbox.
 
-### C. UI Bileşenleri (Form, Gölgeler ve Derinlik)
-- **Gölgeler:** Sığ ve basit `shadow-md` kullanmak yasaktır. 3D Render (D5) kalitesinde, katmanlı, çok düşük opaklıklı ve hafif renkli (tinted) özel gölgeler kurgula. (Örn: `box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08)`).
-- **Köşeler:** Çok yuvarlak hatlardan (`rounded-full`, `rounded-3xl` vs.) kesinlikle kaçın. Metalik parçalara uygun şekilde keskin (`rounded-none`) veya çok hafif pah kırılmış (`rounded-sm`, `rounded`) kenarlar kullan.
-- **Borders:** Arayüzdeki ayrım çizgilerini 1px solid, çok açık gri veya antrasit tonlarında kullanarak metal birleşim yerleri (seams) hissi ver.
+Grep (large results)
+Grep results can flood context. Use ctx_execute(language: "shell", code: "grep ...") to run searches in sandbox. Only your printed summary enters context.
 
-### D. Etkileşim ve Animasyonlar
-- `transition-all` kullanmak **KESİNLİKLE YASAKTIR.**
-- Sadece `transform`, `opacity` ve `background-color` özelliklerini anime et.
-- Tıklanabilir her elemanın (Butonlar, Linkler, Kartlar) mutlaka `hover`, `focus-visible` ve `active` (basılma) durumları olmalıdır. Metal bir yüzeye dokunuluyormuş gibi net, tok ve anında tepki veren geçişler (spring-style easing) kullan.
+Tool selection hierarchy
+GATHER: ctx_batch_execute(commands, queries) — Primary tool. Runs all commands, auto-indexes output, returns search results. ONE call replaces 30+ individual calls. Each command: {label: "descriptive header", command: "..."}. Label becomes FTS5 chunk title — descriptive labels improve search.
+FOLLOW-UP: ctx_search(queries: ["q1", "q2", ...]) — Query indexed content. Pass ALL questions as array in ONE call.
+PROCESSING: ctx_execute(language, code) | ctx_execute_file(path, language, code) — Sandbox execution. Only stdout enters context.
+WEB: ctx_fetch_and_index(url, source) then ctx_search(queries) — Fetch, chunk, index, query. Raw HTML never enters context.
+INDEX: ctx_index(content, source) — Store content in FTS5 knowledge base for later search.
+Subagent routing
+When spawning subagents (Agent/Task tool), the routing block is automatically injected into their prompt. Bash-type subagents are upgraded to general-purpose so they have access to MCP tools. You do NOT need to manually instruct subagents about context-mode.
 
-## 5. E-TİCARET DÖNÜŞÜM OPTİMİZASYONU
-- **Mobil Öncelikli (Mobile-First):** Tasarıma her zaman mobil cihaz (küçük ekran) kısıtlarını düşünerek başla, ardından masaüstüne (Desktop) doğru genişlet.
-- **CTA (Call to Action) Butonları:** "Sepete Ekle" (Add to Cart) ve "Ödemeye Geç" (Checkout) butonları ekranın en yüksek kontrastlı öğeleri olmalı. Mobilde mutlaka "Başparmak Erişilebilirlik Bölgesi"nde (Thumb Zone) sabitlenmiş olmalıdır.
-
-## 6. OTONOM HATA AYIKLAMA (AUTONOMOUS DEBUGGING) & YEREL SUNUCU
-- Geliştirme her zaman yerel sunucuda (`localhost`) yapılmalıdır (`file:///` protokolünü ASLA referans alma).
-- Bir hata raporu aldığında (Console log veya derleme hatası), yardım istemeden doğrudan eyleme geç. Hatayı izole et, logları analiz et ve çöz.
-- Geliştirdiğin bir bileşeni veya sayfayı sunmadan önce "Kıdemli bir mühendis bu işi onaylar mıydı?" diyerek kendi iç eleştiri süzgecinden geçir. Testleri yapmadan "tamamlandı" deme.
-
-## 7. SAYFA AKIŞI VE UX MİMARİSİ (Sürtünmesiz Dönüşüm)
-- **Açılış (Preloader):** Site açılışında logo sadece CSS tabanlı (`transform/opacity`) metalik bir parlama/belirme ile gelmeli. Sayfayı yavaşlatacak ağır JS animasyonları yasaktır.
-- **Bölünmüş Yönlendirme:** Ana sayfa doğrudan markanın taşıyıcı kolonları olan **Bath**, **Interior** ve **Industrial** kategorilerine ayrılmalı.
-- **Felsefe ve Katalog:** Kategori tıklandığında üstte marka manifestosu, altta ise sonsuz kaydırmalı (lazy load) ürün ızgarası (grid) yer almalı.
-- **Yarım Sayfa Baloncuk (Off-canvas/Bottom Sheet):** Ürüne tıklandığında sayfa ASLA yenilenmemeli. Ürün detayları (Kod, DFMA bilgisi, Fiyat) ve "Sepete Ekle" butonu mevcut sayfanın üzerine katman olarak (Mobilde aşağıdan yukarı, masaüstünde sağdan sola) açılmalı.
-
-## 8. YÜKLEME DURUMLARI (Loading States) VE GÖRSEL PERFORMANS
-- Yüksek çözünürlüklü ürün fotoğrafları yüklenirken arayüz boş kalmamalıdır.
-- Sıradan dönen ikonlar (spinner) KULLANMA. Bunun yerine, markanın endüstriyel diline uygun "Skeleton Loader" (metalik yüzeyde kayan ışık/shimmer efekti) kullan.
-- Tüm görseller, site hızını maksimize etmek için `loading="lazy"` niteliği ile çağrılmalıdır.
-
-## 9. SEPET VE DURUM YÖNETİMİ (Persistent State Management)
-- Sepete ürün eklendiğinde sayfa KESİNLİKLE yenilenmemelidir (Asenkron işlem).
-- Sepet verisi tarayıcı belleğinde (Local Storage) tutulmalı, kullanıcı siteye saatler sonra dönse bile sepetini bıraktığı gibi bulmalıdır.
-- "Sepete Ekle" butonuna basıldığında, buton üzerinde anlık, tok ve net bir mikro-etkileşim (örneğin butonun antrasitten onay rengine dönmesi ve "Eklendi" yazması) ile kullanıcıya güven verilmelidir.
-
-## 10. SEMANTİK KOD VE TEKNİK SEO
-- Ürünlerin Google organik aramalarda öne çıkması için HTML yapısı kesinlikle semantik olmalıdır (div çöplüğü yerine `<article>`, `<section>`, `<header>` kullanımı).
-- Her ürün detayı için uygun "Schema Markup" (Rich Snippets) verileri JSON-LD formatında koda entegre edilmelidir. Meta etiketler uydurulmamalı, sayfa içeriğindeki dinamik verilerden çekilmelidir.
+Output constraints
+Keep responses under 500 words.
+Write artifacts (code, configs, PRDs) to FILES — never return them as inline text. Return only: file path + 1-line description.
+When indexing content, use descriptive source labels so others can ctx_search(source: "label") later.
+ctx commands
+Command	Action
+ctx stats	Call the ctx_stats MCP tool and display the full output verbatim
+ctx doctor	Call the ctx_doctor MCP tool, run the returned shell command, display as checklist
+ctx upgrade	Call the ctx_upgrade MCP tool, run the returned shell command, display as checklist
+ctx purge	Call the ctx_purge MCP tool with confirm: true. Warns before wiping the knowledge base.
+After /clear or /compact: knowledge base and session stats are preserved. Use ctx purge if you want to start fresh.

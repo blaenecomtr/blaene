@@ -27,6 +27,9 @@ interface BannerItem {
   image_url: string
   link_url: string
   active: boolean
+  text_animation?: boolean
+  image_fit?: 'cover' | 'contain' | 'fill'
+  image_position?: string
 }
 
 interface BroadcastLog {
@@ -46,6 +49,9 @@ function createBanner(): BannerItem {
     image_url: '',
     link_url: '',
     active: true,
+    text_animation: false,
+    image_fit: 'cover',
+    image_position: 'center',
   }
 }
 
@@ -363,6 +369,12 @@ export default function Marketing() {
 
   return (
     <div>
+      <style>{`
+        @keyframes slideText {
+          0%, 100% { transform: translateY(0); opacity: 1; }
+          50% { transform: translateY(-8px); opacity: 0.8; }
+        }
+      `}</style>
       <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Pazarlama / Kampanya</h2>
 
       <div style={panelStyle}>
@@ -606,6 +618,83 @@ export default function Marketing() {
                 style={{ ...inputStyle, minHeight: '64px', resize: 'vertical' }}
               />
             </div>
+            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '8px' }}>
+              <select
+                value={banner.image_fit || 'cover'}
+                onChange={(evt) =>
+                  setBanners((prev) => {
+                    const next = [...prev]
+                    next[idx] = { ...next[idx], image_fit: evt.target.value as 'cover' | 'contain' | 'fill' }
+                    return next
+                  })
+                }
+                style={inputStyle}
+              >
+                <option value="cover">Kapla (cover)</option>
+                <option value="contain">Sigt (contain)</option>
+                <option value="fill">Doldur (fill)</option>
+              </select>
+              <input
+                value={banner.image_position || 'center'}
+                onChange={(evt) =>
+                  setBanners((prev) => {
+                    const next = [...prev]
+                    next[idx] = { ...next[idx], image_position: evt.target.value }
+                    return next
+                  })
+                }
+                placeholder="Gorsel konumu (center, top, bottom)"
+                style={inputStyle}
+              />
+              <label style={checkLabelStyle}>
+                <input
+                  type="checkbox"
+                  checked={banner.text_animation || false}
+                  onChange={(evt) =>
+                    setBanners((prev) => {
+                      const next = [...prev]
+                      next[idx] = { ...next[idx], text_animation: evt.target.checked }
+                      return next
+                    })
+                  }
+                />
+                Akan yazı
+              </label>
+            </div>
+            {banner.image_url && (
+              <div style={{ marginTop: '12px', borderTop: '1px solid #334155', paddingTop: '12px' }}>
+                <p style={{ color: '#cbd5e1', fontSize: '12px', marginBottom: '8px' }}>Onizleme:</p>
+                <div
+                  style={{
+                    background: '#0f172a',
+                    border: '1px solid #334155',
+                    borderRadius: '6px',
+                    height: '160px',
+                    backgroundImage: `url(${banner.image_url})`,
+                    backgroundSize: banner.image_fit || 'cover',
+                    backgroundPosition: banner.image_position || 'center',
+                    backgroundRepeat: 'no-repeat',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      color: '#fff',
+                      textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)',
+                      animation: banner.text_animation ? 'slideText 8s ease-in-out infinite' : 'none',
+                    } as CSSProperties}
+                  >
+                    <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{banner.title}</div>
+                    {banner.description && <div style={{ fontSize: '13px', marginTop: '4px' }}>{banner.description}</div>}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         <input

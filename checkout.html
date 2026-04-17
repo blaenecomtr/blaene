@@ -254,6 +254,13 @@
               <label for="city">Sehir</label>
               <input id="city" />
             </div>
+            <div>
+              <label for="shipping-method">Kargo Yontemi *</label>
+              <select id="shipping-method" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:0.55rem 0.62rem;font:inherit;font-size:0.87rem;background:#fff;cursor:pointer;">
+                <option value="standard" selected>Standart Kargo - 300 TL</option>
+                <option value="free">Ucretsiz Kargo (3000 TL uzeri)</option>
+              </select>
+            </div>
             <div class="full">
               <label for="address">Adres *</label>
               <textarea id="address" required></textarea>
@@ -339,8 +346,8 @@
 
       const DEFAULT_CHECKOUT_SETTINGS = {
         shipping: {
-          free_shipping_threshold: 2000,
-          base_shipping_fee: 120,
+          free_shipping_threshold: 3000,
+          base_shipping_fee: 300,
           tiers: [],
         },
         payment: {

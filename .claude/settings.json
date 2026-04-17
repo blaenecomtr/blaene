@@ -1,4 +1,9 @@
 {
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-haiku-4-5-20251001"
+  },
   "permissions": {
     "allow": [
       "Bash(grep -l \"F2C94C\\\\|d4a520\\\\|242,201,76\" \"c:/Users/DELL/Desktop/blaene/\"*.html)",
@@ -25,7 +30,14 @@
       "Bash(nslookup www.blaene.com.tr)",
       "Bash(git show *)",
       "Bash(npx tsc *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(curl -s -o /dev/null -w \"Ana site: HTTP %{http_code}\\\\n\" https://www.blaene.com.tr/)",
+      "Bash(curl -s -o /dev/null -w \"Bath sayfasi: HTTP %{http_code}\\\\n\" https://www.blaene.com.tr/bath.html)",
+      "Bash(curl -s -o /dev/null -w \"Admin panel: HTTP %{http_code}\\\\n\" https://www.blaene.com.tr/admin/)",
+      "Bash(python -c ' *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\DELL\\.claude\\plans"
     ]
   }
 }
