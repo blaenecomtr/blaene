@@ -611,6 +611,10 @@
       <div class="header-meta">
         <button class="lang-toggle" id="lang-toggle" aria-label="Dil degistir">TR</button>
       </div>
+      <a id="header-cart-btn" href="checkout.html" aria-label="Sepetim" style="display:none;position:relative;background:none;border:none;cursor:pointer;padding:0.3rem;color:inherit;text-decoration:none;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span id="header-cart-count" style="position:absolute;top:-4px;right:-6px;min-width:17px;height:17px;border-radius:999px;background:#111827;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;"></span>
+      </a>
       <button class="hamburger" id="hamburger" aria-label="Menuyu ac" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"/>
@@ -1120,6 +1124,42 @@
       return '';
     }
 
+    async function createReturnRequest(orderId, orderNo) {
+      if (!orderId) return;
+      const reason = window.prompt('Iade sebebinizi kisaca yazin:');
+      if (!reason || !String(reason).trim()) return;
+
+      try {
+        const accessToken = window.BlaeneAuth ? await window.BlaeneAuth.getAccessToken() : null;
+        if (!accessToken) {
+          throw new Error('Iade talebi icin tekrar giris yapmaniz gerekiyor.');
+        }
+
+        const response = await fetch('/api/public/returns', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + accessToken
+          },
+          body: JSON.stringify({
+            order_id: orderId,
+            reason: String(reason).trim(),
+            details: 'Account panelinden olusturuldu. Siparis no: ' + (orderNo || '-')
+          })
+        });
+
+        const payload = await response.json().catch(function () { return null; });
+        if (!response.ok || !payload || payload.success !== true) {
+          const message = payload && payload.error ? payload.error : 'Iade talebi olusturulamadi.';
+          throw new Error(message);
+        }
+
+        window.alert('Iade talebiniz alindi. Ekibimiz en kisa surede inceleyecek.');
+      } catch (error) {
+        window.alert(error && error.message ? error.message : 'Iade talebi olusturulamadi.');
+      }
+    }
+
     function renderOrders(orders) {
       const box = document.getElementById('orders-container');
       if (!Array.isArray(orders) || !orders.length) {
@@ -1189,6 +1229,9 @@
         html += '<div class="line"><span>Kargo</span><strong>' + trackingText + '</strong></div>';
         html += '<div class="line total"><span>Toplam</span><strong>' + escapeHtml(formatPrice(order&&order.total||0)) + '</strong></div>';
         html += '</div>';
+        html += '<div style="margin-top:10px;display:flex;justify-content:flex-end;">';
+        html += '<button class="detail-btn return-btn" type="button" data-order-id="' + escapeHtml(order&&order.id||'') + '" data-order-no="' + orderNo + '">Iade Talebi Olustur</button>';
+        html += '</div>';
         html += '</div>';
         html += '</div>';
       });
@@ -1204,9 +1247,15 @@
           btn.textContent = hidden ? 'Kapat' : 'Detayı Görüntüle';
         });
       });
-    }
 
-    /* ── INIT ─────────────────────────────────────── */
+      box.querySelectorAll('.return-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const orderId = String(btn.getAttribute('data-order-id') || '').trim();
+          const orderNo = String(btn.getAttribute('data-order-no') || '').trim();
+          void createReturnRequest(orderId, orderNo);
+        });
+      });
+    }
     async function waitForAuth() {
       for (let i = 0; i < 120; i++) {
         if (window.BlaeneAuth && window.supabase) return true;
@@ -1329,8 +1378,7 @@
         if (!amount)  throw new Error('Tutar zorunlu.');
         if (!date)    throw new Error('Transfer tarihi zorunlu.');
 
-        /* Submit via audit_log or a simple email/notification API */
-        await fetch('/api/public/contact', {
+        const transferResponse = await fetch('/api/public/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1339,7 +1387,11 @@
             name: (currentUser&&currentUser.email)||'',
             email: (currentUser&&currentUser.email)||''
           })
-        }).catch(function () {});
+        });
+
+        if (!transferResponse.ok) {
+          throw new Error('Havale bildirimi gonderilemedi. Lutfen tekrar deneyin.');
+        }
 
         document.getElementById('transfer-form').reset();
         showAlert('transfer-alert', 'Havale bildiriminiz alındı. En kısa sürede kontrol edilecektir.', 'success');
@@ -1398,6 +1450,26 @@
       });
     }
   })();
+  </script>
+  <script src="assets/js/cart.js"></script>
+  <script>
+    (function () {
+      function syncHeaderCart() {
+        var btn = document.getElementById('header-cart-btn');
+        var countEl = document.getElementById('header-cart-count');
+        if (!btn || !countEl || !window.BlaeneCart) return;
+        var summary = window.BlaeneCart.getSummary();
+        var total = summary.totalItems || 0;
+        if (total > 0) {
+          countEl.textContent = total > 99 ? '99+' : String(total);
+          btn.style.display = '';
+        } else {
+          btn.style.display = 'none';
+        }
+      }
+      setTimeout(syncHeaderCart, 200);
+      window.addEventListener('blaene:cart:updated', syncHeaderCart);
+    })();
   </script>
   <script src="assets/js/traffic.js"></script>
 </body>

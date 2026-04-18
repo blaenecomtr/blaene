@@ -24,9 +24,11 @@ interface ContactSettings {
 interface PaymentSettings {
   paytr_enabled: boolean
   iyzico_enabled: boolean
+  provider_preference: 'iyzico' | 'paytr'
   paytr_merchant_id: string
   iyzico_api_key: string
   iyzico_secret_key: string
+  iyzico_base_url: string
 }
 
 const DEFAULT_SHIPPING: ShippingSettings = {
@@ -44,11 +46,13 @@ const DEFAULT_CONTACT: ContactSettings = {
 }
 
 const DEFAULT_PAYMENT: PaymentSettings = {
-  paytr_enabled: true,
-  iyzico_enabled: false,
+  paytr_enabled: false,
+  iyzico_enabled: true,
+  provider_preference: 'iyzico',
   paytr_merchant_id: '',
   iyzico_api_key: '',
   iyzico_secret_key: '',
+  iyzico_base_url: 'https://sandbox-api.iyzipay.com',
 }
 
 function parseNumber(value: string, fallback = 0) {
@@ -130,7 +134,7 @@ export default function SiteSettings() {
           <input
             value={String(shipping.free_shipping_threshold ?? 0)}
             onChange={(evt) => setShipping((prev) => ({ ...prev, free_shipping_threshold: parseNumber(evt.target.value, 0) }))}
-            placeholder="Ucretsiz kargo limiti (TL)"
+            placeholder="Ucretsiz kargo alt limiti (TL) - orn: 3000"
             style={inputStyle}
           />
           <input
@@ -254,7 +258,20 @@ export default function SiteSettings() {
             Iyzico aktif
           </label>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+          <select
+            value={payment.provider_preference}
+            onChange={(evt) =>
+              setPayment((prev) => ({
+                ...prev,
+                provider_preference: (evt.target.value as 'iyzico' | 'paytr') || 'iyzico',
+              }))
+            }
+            style={inputStyle}
+          >
+            <option value="iyzico">Oncelik: Iyzico</option>
+            <option value="paytr">Oncelik: PayTR</option>
+          </select>
           <input
             value={payment.paytr_merchant_id}
             onChange={(evt) => setPayment((prev) => ({ ...prev, paytr_merchant_id: evt.target.value }))}
@@ -271,6 +288,12 @@ export default function SiteSettings() {
             value={payment.iyzico_secret_key}
             onChange={(evt) => setPayment((prev) => ({ ...prev, iyzico_secret_key: evt.target.value }))}
             placeholder="Iyzico Secret Key"
+            style={inputStyle}
+          />
+          <input
+            value={payment.iyzico_base_url}
+            onChange={(evt) => setPayment((prev) => ({ ...prev, iyzico_base_url: evt.target.value }))}
+            placeholder="Iyzico Base URL"
             style={inputStyle}
           />
         </div>
