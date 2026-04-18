@@ -2625,8 +2625,8 @@ async function handleMigrations(req, res, ctx) {
   const { config } = ctx || {};
 
   if (req.method === 'POST') {
-    const body = await readJsonBody(req);
-    const { type } = body || {};
+    const { body: bodyData } = await readJsonBody(req);
+    const { type } = bodyData || {};
 
     if (type === 'add-archived-column') {
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
