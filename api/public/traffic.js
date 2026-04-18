@@ -38,6 +38,13 @@ module.exports = createApiHandler(
     const eventType = ALLOWED_EVENTS.includes(eventTypeRaw) ? eventTypeRaw : 'custom';
     const pagePath = normalizeText(body.page_path, 240) || getRequestPath(req) || '/';
 
+    const meta = sanitizeMetadata(body);
+    // Vercel edge headers override client-sent geo data (more reliable)
+    const vercelCity = normalizeText(req.headers['x-vercel-ip-city'] || '', 80) || null;
+    const vercelCountry = normalizeText(req.headers['x-vercel-ip-country-name'] || req.headers['x-vercel-ip-country'] || '', 80) || null;
+    if (vercelCity) meta.city = vercelCity;
+    if (vercelCountry) meta.country = vercelCountry;
+
     const payload = {
       actor_user_id: null,
       actor_email: null,
@@ -45,7 +52,7 @@ module.exports = createApiHandler(
       action: `traffic.${eventType}`,
       entity_type: 'traffic',
       entity_id: pagePath,
-      metadata: sanitizeMetadata(body),
+      metadata: meta,
       request_path: pagePath,
       request_method: 'POST',
       ip_address: getClientIp(req),
