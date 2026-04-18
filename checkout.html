@@ -9,15 +9,15 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
   <style>
     :root {
-      --bg: #f6f7fb;
+      --bg: #ececec;
       --surface: #ffffff;
-      --text: #111827;
+      --text: #121212;
       --muted: #6b7280;
-      --border: #dbe1ea;
-      --accent: #111827;
+      --border: #d7d7d7;
+      --accent: #232323;
       --danger: #b91c1c;
       --success: #166534;
-      --shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
+      --shadow: none;
     }
     * { box-sizing: border-box; }
     body {
@@ -27,17 +27,22 @@
       color: var(--text);
     }
     .wrap {
-      max-width: 1180px;
+      max-width: 1360px;
       margin: 0 auto;
-      padding: 1rem;
+      padding: 0.9rem 0.85rem 1.3rem;
     }
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.9rem;
+      margin-bottom: 0.7rem;
       gap: 0.8rem;
       flex-wrap: wrap;
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 800;
     }
     .topbar a {
       text-decoration: none;
@@ -50,49 +55,165 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 360px;
-      gap: 1rem;
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: 0;
+      align-items: stretch;
     }
     .panel {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      border: 1px solid #dbdbdb;
+      border-radius: 0;
       box-shadow: var(--shadow);
-      padding: 0.95rem;
+      padding: 1rem;
     }
-    h1 { margin: 0; font-size: 1.15rem; }
-    h2 { margin: 0; font-size: 0.97rem; }
+    .checkout-panel { border-right: 0; }
+    .summary-panel { background: #f6f6f6; }
+    h2 { margin: 0; font-size: 0.98rem; }
     p { margin: 0; }
     .muted {
       color: var(--muted);
       font-size: 0.8rem;
       margin-top: 0.4rem;
     }
+    .checkout-steps {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.9rem;
+      font-size: 0.82rem;
+      color: #707887;
+      font-weight: 600;
+    }
+    .step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .step-pill .num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid #b8c0ca;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #475569;
+      background: #fff;
+    }
+    .step-pill.active {
+      color: #111;
+      font-weight: 700;
+    }
+    .step-pill.active .num {
+      border-color: #111;
+      color: #fff;
+      background: #111;
+    }
+    .offer-box {
+      margin: 0.35rem 0 0.9rem;
+      border: 1px solid #f0c9c9;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .offer-timer {
+      background: #fdf2f2;
+      color: #b91c1c;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.44rem 0.6rem;
+      border-bottom: 1px solid #f4d3d3;
+    }
+    .offer-content {
+      padding: 0.75rem 0.8rem;
+    }
+    .offer-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .offer-sub {
+      font-size: 0.76rem;
+      color: #616977;
+      margin-bottom: 0.55rem;
+    }
+    .offer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+    .offer-actions button {
+      width: 100%;
+      margin: 0;
+      padding: 0.5rem 0.62rem;
+      font-size: 0.75rem;
+    }
+    .offer-actions button.secondary {
+      border-color: #d2d7de;
+    }
+    .step-section {
+      padding: 0.9rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .step-section:last-of-type {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.03rem;
+      font-weight: 800;
+      margin-bottom: 0.6rem;
+    }
+    .step-title .step-index {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid #111;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .step-note {
+      color: #6b7280;
+      font-size: 0.79rem;
+      margin-bottom: 0.45rem;
+    }
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.7rem;
-      margin-top: 0.9rem;
+      gap: 0.8rem;
+      margin-top: 0.55rem;
     }
     label {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: var(--muted);
       display: block;
-      margin-bottom: 0.28rem;
+      margin-bottom: 0.32rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
     }
     input, textarea {
       width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.55rem 0.62rem;
+      border: 1px solid #cfd5dd;
+      border-radius: 8px;
+      padding: 0.56rem 0.62rem;
       font: inherit;
-      font-size: 0.87rem;
+      font-size: 0.84rem;
       background: #fff;
     }
     textarea { min-height: 96px; resize: vertical; }
     .full { grid-column: 1 / -1; }
     .account-box {
-      border: 1px dashed var(--border);
+      border: 1px dashed #d3d8df;
       border-radius: 10px;
       background: #fbfcff;
       padding: 0.7rem;
@@ -114,7 +235,7 @@
       color: var(--muted);
     }
     .actions {
-      margin-top: 0.9rem;
+      margin-top: 0.95rem;
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
@@ -127,10 +248,11 @@
       padding: 0.55rem 0.85rem;
       font: inherit;
       font-size: 0.84rem;
+      font-weight: 700;
       cursor: pointer;
     }
     button.secondary {
-      border-color: var(--border);
+      border-color: #cfd5dd;
       background: #fff;
       color: var(--text);
     }
@@ -148,15 +270,16 @@
     .summary-list {
       display: grid;
       gap: 0.55rem;
-      margin-top: 0.7rem;
+      margin-top: 0.5rem;
     }
     .item {
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 0.54rem;
       display: grid;
       grid-template-columns: 56px 1fr;
       gap: 0.55rem;
+      background: #fff;
     }
     .item img {
       width: 56px;
@@ -189,8 +312,13 @@
       font-size: 0.95rem;
       font-weight: 700;
     }
+    .summary-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
     .iframe-wrap {
-      margin-top: 0.9rem;
+      margin-top: 0.75rem;
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
@@ -205,90 +333,120 @@
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
+      .checkout-panel { border-right: 1px solid #dbdbdb; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <h1>Odeme</h1>
+      <h1>Odeme Adimlari</h1>
       <a href="index.html">Ana sayfaya don</a>
     </div>
 
     <div class="grid">
-      <section class="panel">
-        <h2>Musteri Bilgileri</h2>
-        <p class="muted">Kart bilgileri bu sayfada tutulmaz. Odeme PayTR guvenli iFrame penceresinde tamamlanir.</p>
+      <section class="panel checkout-panel">
+        <div class="checkout-steps">
+          <span class="step-pill active"><span class="num">1</span>Adres</span>
+          <span class="step-pill"><span class="num">2</span>Kargo</span>
+          <span class="step-pill"><span class="num">3</span>Odeme</span>
+        </div>
 
-        <div id="checkout-alert"></div>
-
-        <!-- AUTH BANNER -->
-        <div id="auth-banner" style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:0.8rem;margin-bottom:0.8rem;display:none;">
-          <div id="auth-logged-in" style="display:none;">
-            <strong>Hoş geldiniz!</strong> <span id="auth-user-name"></span> —
-            <a href="#" id="auth-logout-link" style="color:#0369a1;text-decoration:none;font-weight:600;">Çıkış yap</a>
-          </div>
-          <div id="auth-not-logged-in" style="display:none;font-size:0.9rem;">
-            Sipariş geçmişinizi kaydetmek ister misiniz?
-            <a href="/auth.html?redirect=/checkout.html" style="color:#0369a1;text-decoration:none;font-weight:600;">Giriş yap</a> ·
-            <a href="/auth.html?redirect=/checkout.html" style="color:#0369a1;text-decoration:none;font-weight:600;">Hesap oluştur</a>
-            veya misafir olarak devam edin.
+        <div class="offer-box">
+          <div class="offer-timer">Kalan Sure: 04:46</div>
+          <div class="offer-content">
+            <div class="offer-title">Sepetine Ozel Teklif</div>
+            <p class="offer-sub">Verilerden bagimsiz mockup tasarimina uygun kampanya kutusu.</p>
+            <div class="offer-actions">
+              <button type="button" class="secondary">Teklifi Reddet</button>
+              <button type="button">Siparisime Ekle</button>
+            </div>
           </div>
         </div>
 
-        <form id="checkout-form">
-          <div class="form-grid">
-            <div>
-              <label for="name">Ad Soyad *</label>
-              <input id="name" required />
+        <div class="step-section">
+          <h2 class="step-title"><span class="step-index">1</span>Adres</h2>
+          <p class="step-note">Teslimat bilgilerinizi girin veya uye girisi ile otomatik doldurun.</p>
+
+          <div id="checkout-alert"></div>
+
+          <!-- AUTH BANNER -->
+          <div id="auth-banner" style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:0.8rem;margin-bottom:0.8rem;display:none;">
+            <div id="auth-logged-in" style="display:none;">
+              <strong>Hoş geldiniz!</strong> <span id="auth-user-name"></span> —
+              <a href="#" id="auth-logout-link" style="color:#0369a1;text-decoration:none;font-weight:600;">Çıkış yap</a>
             </div>
-            <div>
-              <label for="email">E-posta *</label>
-              <input id="email" type="email" required />
+            <div id="auth-not-logged-in" style="display:none;font-size:0.9rem;">
+              Sipariş geçmişinizi kaydetmek ister misiniz?
+              <a href="/auth.html?redirect=/checkout.html" style="color:#0369a1;text-decoration:none;font-weight:600;">Giriş yap</a> ·
+              <a href="/auth.html?redirect=/checkout.html" style="color:#0369a1;text-decoration:none;font-weight:600;">Hesap oluştur</a>
+              veya misafir olarak devam edin.
             </div>
-            <div>
-              <label for="phone">Telefon *</label>
-              <input id="phone" placeholder="05xx xxx xx xx" required />
-            </div>
-            <div>
-              <label for="city">Sehir</label>
-              <input id="city" />
-            </div>
-            <div class="full">
-              <label for="address">Adres *</label>
-              <textarea id="address" required></textarea>
-            </div>
-            <div class="full">
-              <label for="note">Siparis notu</label>
-              <textarea id="note" placeholder="Opsiyonel"></textarea>
-            </div>
-            <div class="full account-box">
-              <label class="inline-check" for="create-account">
-                <input id="create-account" type="checkbox" />
-                <span>Siparisle birlikte hesap olustur (kargo takibi icin)</span>
-              </label>
-              <div id="account-password-wrap" style="display:none;margin-top:0.55rem;">
-                <label for="account-password">Hesap sifresi *</label>
-                <input id="account-password" type="password" minlength="6" placeholder="En az 6 karakter" />
+          </div>
+
+          <form id="checkout-form">
+            <div class="form-grid">
+              <div>
+                <label for="name">Ad Soyad *</label>
+                <input id="name" required />
               </div>
-              <p class="account-hint">Hesap olusturursaniz siparisinizi <a href="/account.html">Hesabim</a> sayfasindan takip edebilirsiniz.</p>
+              <div>
+                <label for="email">E-posta *</label>
+                <input id="email" type="email" required />
+              </div>
+              <div>
+                <label for="phone">Telefon *</label>
+                <input id="phone" placeholder="05xx xxx xx xx" required />
+              </div>
+              <div>
+                <label for="city">Sehir</label>
+                <input id="city" />
+              </div>
+              <div class="full">
+                <label for="address">Adres *</label>
+                <textarea id="address" required></textarea>
+              </div>
+              <div class="full">
+                <label for="note">Siparis notu</label>
+                <textarea id="note" placeholder="Opsiyonel"></textarea>
+              </div>
+              <div class="full account-box">
+                <label class="inline-check" for="create-account">
+                  <input id="create-account" type="checkbox" />
+                  <span>Siparisle birlikte hesap olustur (kargo takibi icin)</span>
+                </label>
+                <div id="account-password-wrap" style="display:none;margin-top:0.55rem;">
+                  <label for="account-password">Hesap sifresi *</label>
+                  <input id="account-password" type="password" minlength="6" placeholder="En az 6 karakter" />
+                </div>
+                <p class="account-hint">Hesap olusturursaniz siparisinizi <a href="/account.html">Hesabim</a> sayfasindan takip edebilirsiniz.</p>
+              </div>
             </div>
-          </div>
 
-          <div class="actions">
-            <button id="pay-btn" type="submit">PayTR ile ode</button>
-            <button id="clear-cart-btn" type="button" class="secondary">Sepeti temizle</button>
-          </div>
-        </form>
+            <div class="actions">
+              <button id="pay-btn" type="submit">PayTR ile ode</button>
+              <button id="clear-cart-btn" type="button" class="secondary">Sepeti temizle</button>
+            </div>
+          </form>
+        </div>
 
-        <div id="payment-shell" style="display:none;">
-          <div class="alert success" id="order-created-message"></div>
-          <div class="iframe-wrap" id="iframe-wrap"></div>
+        <div class="step-section">
+          <h2 class="step-title"><span class="step-index">2</span>Kargo</h2>
+          <p class="step-note">Kargo secimi siparis tutarina gore otomatik hesaplanir.</p>
+        </div>
+
+        <div class="step-section">
+          <h2 class="step-title"><span class="step-index">3</span>Odeme</h2>
+          <p class="step-note">Kart bilgileri bu sayfada tutulmaz. Islem PayTR guvenli penceresinde tamamlanir.</p>
+          <div id="payment-shell" style="display:none;">
+            <div class="alert success" id="order-created-message"></div>
+            <div class="iframe-wrap" id="iframe-wrap"></div>
+          </div>
         </div>
       </section>
 
-      <aside class="panel">
-        <h2>Siparis Ozeti</h2>
+      <aside class="panel summary-panel">
+        <h2 class="summary-title">Siparis Ozeti</h2>
         <p class="muted" id="summary-note">Sepetinizdeki urunler</p>
         <div id="summary-list" class="summary-list"></div>
         <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border);">

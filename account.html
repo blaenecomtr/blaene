@@ -14,8 +14,8 @@
       --text: #111111;
       --muted: #6b7280;
       --border: #d7d7d7;
-      --accent: #e07020;
-      --accent-dark: #c05810;
+      --accent: #111111;
+      --accent-dark: #111111;
       --shadow: 0 12px 28px rgba(17,24,39,0.10);
       --radius: 14px;
     }
@@ -147,9 +147,9 @@
     /* ── PAGE LAYOUT ─────────────────────────────── */
     .wrap {
       position: relative;
-      max-width: 1080px;
+      max-width: 1480px;
       margin: 0 auto;
-      padding: 1.5rem 1rem 3rem;
+      padding: 1.5rem 1.2rem 3rem;
       z-index: 1;
     }
 
@@ -183,25 +183,26 @@
     /* ── ACCOUNT LAYOUT ──────────────────────────── */
     .account-layout {
       display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 1.2rem;
+      grid-template-columns: 430px 1fr;
+      gap: 2.35rem;
       align-items: start;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 980px) {
       .account-layout { grid-template-columns: 1fr; }
       .account-sidebar { position: static !important; }
     }
 
     /* ── SIDEBAR ─────────────────────────────────── */
     .account-sidebar {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      background: #efefef;
+      border: 1px solid #e2e2e2;
+      border-radius: 0;
+      box-shadow: none;
       overflow: hidden;
       position: sticky;
       top: 80px;
+      min-height: calc(100vh - 108px);
     }
 
     .sidebar-user {
@@ -251,7 +252,7 @@
     }
 
     .sidebar-nav-item.active {
-      background: #fff4ec;
+      background: #f8f8f8;
       color: var(--accent);
       border-left-color: var(--accent);
       font-weight: 700;
@@ -289,19 +290,19 @@
     }
 
     .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1.2rem;
-      margin-bottom: 1rem;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0 0 1rem;
+      margin-bottom: 0;
     }
 
     .card-title {
-      margin: 0 0 1rem;
-      font-size: 1.05rem;
+      margin: 0 0 1.15rem;
+      font-size: clamp(1.35rem, 1.15rem + 0.5vw, 1.85rem);
       font-weight: 800;
-      padding-bottom: 0.7rem;
+      padding-bottom: 0.8rem;
       border-bottom: 1px solid var(--border);
     }
 
@@ -387,17 +388,65 @@
 
     /* ── ORDERS ──────────────────────────────────── */
     .orders-table-wrap {
-      overflow-x: auto; border: 1px solid var(--border);
-      border-radius: 10px; background: #fff;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
     }
-    table { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 0.86rem; }
-    th, td { padding: 0.7rem 0.65rem; border-bottom: 1px solid #ececec; text-align: left; vertical-align: top; }
-    th {
-      background: #f7f7f7; font-size: 0.78rem;
-      letter-spacing: 0.03em; text-transform: uppercase;
-      color: #4b5563; font-weight: 700;
+    .orders-list {
+      border-top: 1px solid #d9d9d9;
     }
-    tbody tr:last-child td { border-bottom: none; }
+    .order-row {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.05rem 0;
+      border-bottom: 1px solid #d9d9d9;
+    }
+    .order-thumb {
+      width: 108px;
+      height: 108px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #d7d7d7;
+      background: #fff;
+    }
+    .order-thumb.placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .order-topline {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.3rem;
+      color: #4b5563;
+      font-size: 0.82rem;
+    }
+    .order-title {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #111;
+    }
+    .order-meta {
+      margin-top: 0.26rem;
+      color: #6b7280;
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+    .order-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
 
     .status {
       display: inline-flex; align-items: center;
@@ -411,23 +460,91 @@
     .status.paid { background: #dcfce7; color: #166534; }
 
     .detail-btn {
-      border: 0; border-radius: 7px; background: #111827; color: #fff;
-      font-size: 0.75rem; font-weight: 700; padding: 0.4rem 0.62rem;
-      font-family: inherit; cursor: pointer;
+      border: 1px solid #bfc4ca;
+      border-radius: 12px;
+      background: #fff;
+      color: #111827;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.56rem 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
     }
-    .detail-btn:hover { background: #1f2937; }
+    .detail-btn:hover {
+      border-color: #8f97a1;
+    }
 
-    .order-detail-row td {
-      background: #fafafa; border-top: 0;
-      padding-top: 0.2rem; padding-bottom: 0.8rem;
+    .order-detail-panel {
+      display: none;
+      border-bottom: 1px solid #d9d9d9;
+      padding: 0 0 1.05rem;
     }
     .order-detail-content {
-      border: 1px solid #e8e8e8; border-radius: 10px;
-      padding: 0.7rem; color: #1f2937;
-      font-size: 0.82rem; line-height: 1.5;
+      border: 1px solid #e3e6ea;
+      border-radius: 12px;
+      background: #fafafa;
+      padding: 0.82rem;
+      color: #1f2937;
+      font-size: 0.83rem;
+      line-height: 1.5;
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: minmax(0, 1fr) 270px;
     }
-
-    .empty { text-align: center; color: #6b7280; padding: 1.5rem; font-size: 0.9rem; }
+    .detail-items {
+      display: grid;
+      gap: 0.38rem;
+    }
+    .detail-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+      border-bottom: 1px dashed #d6dae0;
+      padding-bottom: 0.35rem;
+    }
+    .detail-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .detail-summary {
+      border: 1px solid #e0e4e9;
+      border-radius: 10px;
+      padding: 0.6rem 0.7rem;
+      background: #fff;
+      display: grid;
+      gap: 0.35rem;
+      align-content: start;
+    }
+    .detail-summary .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .detail-summary .line.total {
+      font-weight: 800;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 0.38rem;
+      margin-top: 0.2rem;
+    }
+    .empty { text-align: center; color: #6b7280; padding: 1.5rem 0.5rem; font-size: 0.9rem; }
+    @media (max-width: 980px) {
+      .order-row {
+        grid-template-columns: 84px minmax(0, 1fr);
+      }
+      .order-thumb {
+        width: 84px;
+        height: 84px;
+      }
+      .order-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+      .order-detail-content {
+        grid-template-columns: 1fr;
+      }
+    }
 
     /* ── WIRE TRANSFER ───────────────────────────── */
     .transfer-info {
@@ -965,13 +1082,33 @@
       return 'pending';
     }
 
+    function firstOrderImage(items) {
+      if (!Array.isArray(items) || !items.length) return '';
+      const first = items[0] || {};
+      const candidates = [
+        first.image_url,
+        first.image,
+        first.product_image,
+        first.product_image_url,
+        first.thumbnail,
+        first.thumbnail_url,
+        first.photo,
+      ];
+      for (const candidate of candidates) {
+        const value = String(candidate || '').trim();
+        if (value) return value;
+      }
+      return '';
+    }
+
     function renderOrders(orders) {
       const box = document.getElementById('orders-container');
       if (!Array.isArray(orders) || !orders.length) {
         box.innerHTML = '<div class="empty">Henüz bir siparişiniz yok.</div>';
         return;
       }
-      let html = '<table><thead><tr><th>Sipariş No</th><th>Tarih</th><th>Durum</th><th>Detay</th></tr></thead><tbody>';
+
+      let html = '<div class="orders-list">';
       orders.forEach(function (order, i) {
         const shState = String(order&&order.status||'').toLowerCase()||'pending';
         const pyState = String(order&&order.payment_status||'').toLowerCase()||'pending';
@@ -979,35 +1116,73 @@
         const rowId = 'od-' + i;
         const orderNo = escapeHtml(order&&order.order_no||'-');
         const items = Array.isArray(order&&order.order_items) ? order.order_items : [];
-        const itemsText = items.length
-          ? items.map(function (it) { return escapeHtml(it&&it.product_name||'Ürün') + ' (x' + Number(it&&it.quantity||0) + ')'; }).join(', ')
-          : 'Ürün bilgisi yok';
-        const tracking = order&&order.tracking_code
-          ? '<div><strong>Kargo:</strong> '+escapeHtml(order.shipping_provider||'Kargo')+' / '+escapeHtml(order.tracking_code)+'</div>'
-          : '<div><strong>Kargo:</strong> Bilgi yok</div>';
+        const mainItem = items[0] || {};
+        const orderTitle = escapeHtml(mainItem.product_name || ('Sipariş #' + orderNo));
+        const image = firstOrderImage(items);
+        const imageHtml = image
+          ? '<img class="order-thumb" src="' + escapeHtml(image) + '" alt="Sipariş ürünü" loading="lazy" />'
+          : '<div class="order-thumb placeholder">No Image</div>';
+        const extraCount = Math.max(items.length - 1, 0);
+        const qtyTotal = items.reduce(function (sum, it) { return sum + Number(it && it.quantity || 0); }, 0);
+        const dateText = escapeHtml(formatDate(order&&order.created_at));
+        const trackingText = order&&order.tracking_code
+          ? escapeHtml((order.shipping_provider || 'Kargo') + ' / ' + order.tracking_code)
+          : '-';
 
-        html += '<tr>';
-        html += '<td><strong>#'+orderNo+'</strong></td>';
-        html += '<td>'+escapeHtml(formatDate(order&&order.created_at))+'</td>';
-        html += '<td><span class="status '+escapeHtml(statusClass(mainState))+'">'+escapeHtml(statusLabel(mainState))+'</span></td>';
-        html += '<td><button class="detail-btn" type="button" data-target="'+rowId+'">İncele</button></td>';
-        html += '</tr>';
-        html += '<tr id="'+rowId+'" class="order-detail-row" style="display:none;"><td colspan="4"><div class="order-detail-content">';
-        html += '<div><strong>Ürünler:</strong> '+itemsText+'</div>';
-        html += '<div><strong>Tutar:</strong> '+escapeHtml(formatPrice(order&&order.total||0))+'</div>';
-        html += '<div><strong>Ödeme Durumu:</strong> '+escapeHtml(statusLabel(pyState))+'</div>';
-        html += tracking + '</div></td></tr>';
+        let detailItems = '<div class="detail-items">';
+        if (items.length) {
+          items.forEach(function (it) {
+            const name = escapeHtml(it&&it.product_name || 'Ürün');
+            const qty = Number(it&&it.quantity || 0);
+            detailItems += '<div class="detail-item"><span>' + name + '</span><strong>x' + qty + '</strong></div>';
+          });
+        } else {
+          detailItems += '<div class="detail-item"><span>Ürün bilgisi yok</span><strong>-</strong></div>';
+        }
+        detailItems += '</div>';
+
+        html += '<article class="order-row">';
+        html += imageHtml;
+        html += '<div>';
+        html += '<div class="order-topline">';
+        html += '<span>Sipariş Durumu:</span>';
+        html += '<span class="status ' + escapeHtml(statusClass(mainState)) + '">' + escapeHtml(statusLabel(mainState)) + '</span>';
+        html += '</div>';
+        html += '<h3 class="order-title">' + orderTitle + '</h3>';
+        html += '<div class="order-meta">';
+        html += '<div>Sipariş Tarihi: ' + dateText + '</div>';
+        html += '<div>#' + orderNo + ' numaralı sipariş';
+        if (extraCount > 0) {
+          html += ' + ' + extraCount + ' ek ürün';
+        }
+        html += '</div>';
+        html += '<div>Toplam adet: ' + qtyTotal + '</div>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="order-actions"><button class="detail-btn" type="button" data-target="' + rowId + '">Detayı Görüntüle</button></div>';
+        html += '</article>';
+
+        html += '<div id="' + rowId + '" class="order-detail-panel">';
+        html += '<div class="order-detail-content">';
+        html += detailItems;
+        html += '<div class="detail-summary">';
+        html += '<div class="line"><span>Ödeme Durumu</span><strong>' + escapeHtml(statusLabel(pyState)) + '</strong></div>';
+        html += '<div class="line"><span>Kargo</span><strong>' + trackingText + '</strong></div>';
+        html += '<div class="line total"><span>Toplam</span><strong>' + escapeHtml(formatPrice(order&&order.total||0)) + '</strong></div>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
       });
-      html += '</tbody></table>';
+      html += '</div>';
       box.innerHTML = html;
 
       box.querySelectorAll('[data-target]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          const row = document.getElementById(btn.dataset.target);
-          if (!row) return;
-          const hidden = row.style.display === 'none' || !row.style.display;
-          row.style.display = hidden ? 'table-row' : 'none';
-          btn.textContent = hidden ? 'Kapat' : 'İncele';
+          const panel = document.getElementById(btn.dataset.target);
+          if (!panel) return;
+          const hidden = panel.style.display === 'none' || !panel.style.display;
+          panel.style.display = hidden ? 'block' : 'none';
+          btn.textContent = hidden ? 'Kapat' : 'Detayı Görüntüle';
         });
       });
     }
