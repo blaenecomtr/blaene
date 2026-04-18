@@ -14,12 +14,13 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Product SEO fields
+-- Product SEO fields & soft delete
 -- ---------------------------------------------------------------------------
 alter table if exists public.products
   add column if not exists seo_title text,
   add column if not exists seo_description text,
-  add column if not exists seo_slug text;
+  add column if not exists seo_slug text,
+  add column if not exists archived boolean not null default false;
 
 create index if not exists idx_products_seo_slug on public.products(seo_slug);
 
