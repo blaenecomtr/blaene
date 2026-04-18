@@ -2637,27 +2637,27 @@ async function handleMigrations(req, res, ctx) {
 
       try {
         const sqlQuery = `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS archived boolean NOT NULL DEFAULT false;`;
-        const response = await fetch(`${supabaseUrl}/rest/v1/rpc/`, {
+        const response = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
           method: 'POST',
           headers: {
             apikey: serviceRoleKey,
             Authorization: `Bearer ${serviceRoleKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ sql: sqlQuery }),
+          body: JSON.stringify({ query: sqlQuery }),
         });
 
-        const responseText = await response.text();
+        const responseData = await response.json();
         if (!response.ok) {
-          console.error('Migration response error:', responseText, response.status);
-        } else {
-          console.log('Migration executed successfully');
+          console.error('Migration response error:', responseData, response.status);
+          return sendError(res, 500, `Migration failed: ${responseData.message || 'Unknown error'}`, 'MIGRATION_ERROR');
         }
 
+        console.log('Migration executed successfully:', responseData);
         return sendSuccess(res, { ok: true, message: 'Migration executed - archived column added or already exists' });
       } catch (err) {
         console.error('Migration error:', err);
-        return sendError(res, 500, 'Migration failed', 'MIGRATION_ERROR');
+        return sendError(res, 500, `Migration failed: ${err.message}`, 'MIGRATION_ERROR');
       }
     }
 
