@@ -9,6 +9,7 @@ interface Customer {
   phone: string | null
   default_address?: string | null
   default_city?: string | null
+  customer_type?: string | null
   consent_kvkk?: boolean | null
   consent_terms?: boolean | null
   consent_marketing_email?: boolean | null
@@ -71,6 +72,7 @@ export default function Users() {
       'telefon',
       'adres',
       'sehir',
+      'musteri_tipi',
       'kvkk',
       'sozlesme',
       'mail_izni',
@@ -88,6 +90,7 @@ export default function Users() {
           row.phone || '',
           row.default_address || '',
           row.default_city || '',
+          row.customer_type || '',
           boolLabel(row.consent_kvkk),
           boolLabel(row.consent_terms),
           boolLabel(row.consent_marketing_email),
@@ -147,6 +150,7 @@ export default function Users() {
                   <th style={thStyle}>Telefon</th>
                   <th style={thStyle}>Adres</th>
                   <th style={thStyle}>Sehir</th>
+                  <th style={thStyle}>Musteri Tipi</th>
                   <th style={thStyle}>KVKK</th>
                   <th style={thStyle}>Sozlesme</th>
                   <th style={thStyle}>Mail izni</th>
@@ -164,6 +168,7 @@ export default function Users() {
                     <td style={tdStyle}>{customer.phone || '-'}</td>
                     <td style={tdStyle}>{customer.default_address || '-'}</td>
                     <td style={tdStyle}>{customer.default_city || '-'}</td>
+                    <td style={tdStyle}>{customer.customer_type || '-'}</td>
                     <td style={tdStyle}>{boolLabel(customer.consent_kvkk)}</td>
                     <td style={tdStyle}>{boolLabel(customer.consent_terms)}</td>
                     <td style={tdStyle}>{boolLabel(customer.consent_marketing_email)}</td>

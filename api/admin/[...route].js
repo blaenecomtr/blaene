@@ -1177,6 +1177,8 @@ async function handleAnalytics(req, res, ctx) {
   const sourceCounts = {};
   const pageCounts = {};
   const clickCounts = {};
+  const countryCounts = {};
+  const cityCounts = {};
   const recentVisitors = [];
   const visitorSet = new Set();
   let pageViewCount = 0;
@@ -1234,6 +1236,11 @@ async function handleAnalytics(req, res, ctx) {
       pageViewCount += 1;
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       pageCounts[pagePath] = (pageCounts[pagePath] || 0) + 1;
+      const countryKey = country && country !== 'unknown' ? country : 'Bilinmeyen';
+      countryCounts[countryKey] = (countryCounts[countryKey] || 0) + 1;
+      const city = normalizeText(metadata.city, 80) || 'unknown';
+      const cityKey = city && city !== 'unknown' ? city : 'Bilinmeyen';
+      cityCounts[cityKey] = (cityCounts[cityKey] || 0) + 1;
       recentVisitors.push({
         at: row.created_at || null,
         source,
@@ -1242,6 +1249,7 @@ async function handleAnalytics(req, res, ctx) {
         referrer: normalizeText(metadata.referrer, 500) || null,
         device,
         country: country && country !== 'unknown' ? country : null,
+        city: city && city !== 'unknown' ? city : null,
       });
       return;
     }
@@ -1303,6 +1311,8 @@ async function handleAnalytics(req, res, ctx) {
       top_pages: sortObjectEntries(pageCounts, 'page'),
       top_products: sortObjectEntries(productCounts, 'product_id'),
       top_clicks: sortObjectEntries(clickCounts, 'label'),
+      visitor_by_country: sortObjectEntries(countryCounts, 'country'),
+      visitor_by_city: sortObjectEntries(cityCounts, 'city'),
       recent_visitors: recentVisitors
         .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))
         .slice(0, 20),
@@ -2453,7 +2463,7 @@ async function handleCustomers(req, res, ctx) {
     let rows = [];
     try {
       rows = await restSelect(config, 'customer_profiles', {
-        select: 'id,email,username,full_name,phone,default_address,default_city,consent_kvkk,consent_terms,consent_marketing_email,consent_marketing_sms,consent_marketing_call,created_at,updated_at',
+        select: 'id,email,username,full_name,phone,default_address,default_city,customer_type,consent_kvkk,consent_terms,consent_marketing_email,consent_marketing_sms,consent_marketing_call,created_at,updated_at',
         order: 'created_at.desc',
         limit: 5000,
       });

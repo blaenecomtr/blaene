@@ -449,10 +449,160 @@
       display: block;
     }
 
+    /* ── HEADER ────────────────────────────────── */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 64px;
+      background-color: transparent;
+      border-bottom: 1px solid transparent;
+      transition: background-color 0.3s, border-color 0.3s, top 0.35s ease, left 0.35s ease, right 0.35s ease, box-shadow 0.35s ease;
+    }
+    .site-header.scrolled {
+      background-color: rgba(236, 236, 236, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-color: var(--border);
+    }
+    @media (min-width: 769px) {
+      .site-header.scrolled {
+        top: 12px;
+        left: 1rem; right: 1rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      }
+    }
+
+    .header-logo { height: 16px; filter: none; opacity: 0.88; display: block; }
+
+    .header-nav { display: flex; align-items: center; gap: 2rem; }
+    @media (max-width: 768px) { .header-nav { display: none; } }
+
+    .nav-link {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #666666;
+      transition: color 0.15s;
+    }
+    .nav-link:hover { color: var(--text); }
+
+    .header-left { display: flex; align-items: center; gap: 0.85rem; }
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    .header-cta-group { display: flex; align-items: center; gap: 0.55rem; }
+    .teklif-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.42rem 0.9rem;
+      background-color: var(--accent);
+      color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.15s;
+      text-transform: uppercase;
+    }
+    .teklif-btn:hover { background-color: var(--accent-dark); }
+
+    .header-meta { display: flex; align-items: center; gap: 1rem; }
+    .lang-toggle {
+      background: transparent; border: 1px solid var(--border);
+      color: #666666; font-family: 'Montserrat', sans-serif;
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+      padding: 0.22rem 0.55rem; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .lang-toggle:hover { border-color: rgba(0,0,0,0.3); color: var(--text); }
+
+    .hamburger {
+      display: none;
+      background: transparent; border: none;
+      color: var(--text); cursor: pointer; padding: 0.25rem;
+    }
+    @media (max-width: 768px) { .hamburger { display: block; } }
+
+    /* ── MOBILE NAV OVERLAY ─────────────────────── */
+    #mobile-nav {
+      position: fixed; inset: 0; z-index: 1500;
+      background-color: rgba(236, 236, 236, 0.97);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+      display: flex; flex-direction: column;
+    }
+    #mobile-nav.open { opacity: 1; pointer-events: all; }
+
+    .mobile-nav-inner {
+      display: flex; flex-direction: column;
+      padding: 5.5rem 2.5rem 3rem;
+      height: 100%; position: relative;
+    }
+
+    #mobile-nav-close {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text); width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem; line-height: 1;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    #mobile-nav-close:hover { border-color: rgba(0,0,0,0.2); background-color: rgba(0,0,0,0.05); }
+
+    #mobile-nav nav {
+      display: flex; flex-direction: column;
+      flex: 1; justify-content: center; gap: 0;
+    }
+    #mobile-nav nav a {
+      font-size: 0.82rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      text-decoration: none; color: var(--text);
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    }
+    #mobile-nav nav a:hover { color: var(--accent); }
+
+    .mobile-nav-auth { display: flex; flex-direction: column; gap: 0.5rem; margin: 1.5rem 0; }
+    .mobile-nav-auth button,
+    .mobile-nav-auth a {
+      padding: 0.56rem 0.8rem;
+      font-size: 0.74rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      text-decoration: none; cursor: pointer;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text); transition: background-color 0.15s;
+    }
+    .mobile-nav-auth button.teklif-btn,
+    .mobile-nav-auth a.teklif-btn {
+      background: var(--accent); color: #ffffff; border: none;
+    }
+
+    .mobile-nav-footer { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .mobile-nav-footer a { display: block; font-size: 0.82rem; color: var(--accent); text-decoration: none; margin-bottom: 0.3rem; }
+    .mobile-nav-footer span { display: block; font-size: 0.74rem; color: #666666; }
+
+    /* Add padding to top of page for fixed header */
+    body { padding-top: 64px; }
+
+    @media (max-width: 560px) {
+      .lang-toggle { display: none; }
+      .site-header { padding: 0 1.25rem; }
+    }
+
     @media (max-width: 760px) {
       .topbar {
         flex-direction: column;
         align-items: flex-start;
+        margin-top: -20px;
       }
 
       .profile-head {
@@ -476,6 +626,66 @@
   </style>
 </head>
 <body>
+  <header class="site-header" id="site-header">
+    <div class="header-left">
+      <a href="/" aria-label="Blaene anasayfa">
+        <img src="logo/blaene-logo.png" alt="Blaene" class="header-logo">
+      </a>
+    </div>
+    <nav class="header-nav" aria-label="Ana navigasyon">
+      <a href="bath.html" class="nav-link">BANYO</a>
+      <a href="forge.html" class="nav-link">ATEŞ ÇUKURU</a>
+      <a href="industrial.html" class="nav-link">MODÜLER RAF & TAKIM ARABASI</a>
+      <a href="/account.html" class="nav-link">HESABIM</a>
+      <a href="/#why" class="nav-link">HAKKIMIZDA</a>
+      <a href="/#contact" class="nav-link">İLETİŞİM</a>
+    </nav>
+    <div class="header-actions">
+      <div class="header-cta-group">
+        <a href="https://wa.me/905320540019?text=Merhaba%2C%20urunleriniz%20hakkinda%20bilgi%20almak%20istiyorum."
+           target="_blank" rel="noopener noreferrer" class="teklif-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>
+          </svg>
+          <span>Teklif Al</span>
+        </a>
+        <button id="user-logout-btn" type="button" class="teklif-btn" style="display: none;" aria-label="Cikis yap">Cikis Yap</button>
+        <a id="user-login-link" href="/auth.html" class="teklif-btn" aria-label="Üye Ol">Üye Ol</a>
+      </div>
+      <div class="header-meta">
+        <button class="lang-toggle" id="lang-toggle" aria-label="Dil degistir">TR</button>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Menuyu ac" aria-expanded="false">
+        <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path class="menu-path-top" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"/>
+          <path d="M7 16 27 16"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="mobile-nav" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Mobil menü">
+    <div class="mobile-nav-inner">
+      <button id="mobile-nav-close" aria-label="Menüyü kapat">✕</button>
+      <nav aria-label="Mobil navigasyon">
+        <a href="bath.html">BANYO</a>
+        <a href="forge.html">ATEŞ ÇUKURU</a>
+        <a href="industrial.html">MODÜLER RAF & TAKIM ARABASI</a>
+        <a href="/account.html">HESABIM</a>
+        <a href="/#why">HAKKIMIZDA</a>
+        <a href="/#contact">İLETİŞİM</a>
+      </nav>
+      <div class="mobile-nav-auth">
+        <button id="mobile-logout-btn" type="button" style="display: none;">Cikis Yap</button>
+        <a id="mobile-login-link" href="/auth.html">Üye Ol</a>
+      </div>
+      <div class="mobile-nav-footer">
+        <a href="https://wa.me/905320540019">0532 054 0019</a>
+        <span>Çorum / Osmancık, Türkiye</span>
+      </div>
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="topbar">
       <h1>Hesabım</h1>
@@ -903,17 +1113,9 @@
 
       async function updateCustomerProfileWithType(updates, customerType) {
         const payloadWithType = Object.assign({}, updates, { customer_type: normalizeCustomerType(customerType) });
-        try {
-          await window.BlaeneAuth.updateCustomerProfile(payloadWithType);
-          return payloadWithType;
-        } catch (error) {
-          const message = String(error && error.message || '').toLowerCase();
-          if (message.includes('customer_type') || message.includes('column')) {
-            await window.BlaeneAuth.updateCustomerProfile(updates);
-            return payloadWithType;
-          }
-          throw error;
-        }
+        await window.BlaeneAuth.updateCustomerProfile(payloadWithType);
+        const updatedProfile = await window.BlaeneAuth.getCustomerProfile();
+        return updatedProfile;
       }
 
       async function loadProfile() {
@@ -966,21 +1168,34 @@
         saveBtn.disabled = true;
 
         try {
+          const fullNameValue = String(fullNameInput.value || '').trim();
+          const phoneValue = String(phoneInput.value || '').trim();
           const cityValue = String(cityInput.value || '').trim();
           const districtValue = String(districtInput.value || '').trim();
+          const addressValue = String(addressInput.value || '').trim();
+
+          if (!fullNameValue) {
+            throw new Error('Ad soyad zorunlu.');
+          }
+          if (!phoneValue) {
+            throw new Error('Telefon zorunlu.');
+          }
           if (!cityValue) {
             throw new Error('Lutfen bir il secin.');
           }
           if (!districtValue) {
             throw new Error('Lutfen bir ilce secin.');
           }
+          if (!addressValue) {
+            throw new Error('Adres zorunlu.');
+          }
 
           const selectedType = getSelectedCustomerType();
           const updates = {
-            full_name: String(fullNameInput.value || '').trim(),
-            phone: String(phoneInput.value || '').trim(),
+            full_name: fullNameValue,
+            phone: phoneValue,
             default_city: cityValue + ' / ' + districtValue,
-            default_address: String(addressInput.value || '').trim(),
+            default_address: addressValue,
           };
 
           const savedProfile = await updateCustomerProfileWithType(updates, selectedType);
@@ -1030,6 +1245,99 @@
         await loadProfile();
         if (currentUser) await loadOrders();
       })();
+
+      /* ── HEADER INTERACTIONS ────────────────────── */
+      var siteHeader = document.getElementById('site-header');
+      var hamburger = document.getElementById('hamburger');
+      var mobileNav = document.getElementById('mobile-nav');
+      var mobileNavClose = document.getElementById('mobile-nav-close');
+
+      if (siteHeader) {
+        window.addEventListener('scroll', function () {
+          if (window.scrollY > 8) {
+            siteHeader.classList.add('scrolled');
+          } else {
+            siteHeader.classList.remove('scrolled');
+          }
+        }, { passive: true });
+      }
+
+      if (hamburger && mobileNav) {
+        hamburger.addEventListener('click', function () {
+          mobileNav.classList.add('open');
+          hamburger.setAttribute('aria-expanded', 'true');
+        });
+      }
+
+      if (mobileNavClose && mobileNav) {
+        mobileNavClose.addEventListener('click', function () {
+          mobileNav.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      if (mobileNav) {
+        mobileNav.addEventListener('click', function (e) {
+          if (e.target === mobileNav) {
+            mobileNav.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      /* Update header auth buttons based on user state */
+      function updateHeaderAuthButtons(user) {
+        var logoutBtn = document.getElementById('user-logout-btn');
+        var loginLink = document.getElementById('user-login-link');
+        var mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+        var mobileLoginLink = document.getElementById('mobile-login-link');
+
+        if (user) {
+          if (logoutBtn) logoutBtn.style.display = '';
+          if (loginLink) loginLink.style.display = 'none';
+          if (mobileLogoutBtn) mobileLogoutBtn.style.display = '';
+          if (mobileLoginLink) mobileLoginLink.style.display = 'none';
+        } else {
+          if (logoutBtn) logoutBtn.style.display = 'none';
+          if (loginLink) loginLink.style.display = '';
+          if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
+          if (mobileLoginLink) mobileLoginLink.style.display = '';
+        }
+      }
+
+      if (window.BlaeneAuth) {
+        window.BlaeneAuth.onAuthStateChange(function (event, session) {
+          var user = session ? session.user : null;
+          updateHeaderAuthButtons(user);
+        });
+      }
+
+      var headerLogoutBtn = document.getElementById('user-logout-btn');
+      var mobileHeaderLogoutBtn = document.getElementById('mobile-logout-btn');
+      if (headerLogoutBtn) {
+        headerLogoutBtn.addEventListener('click', async function () {
+          headerLogoutBtn.disabled = true;
+          try {
+            await window.BlaeneAuth.signOut();
+            window.location.href = '/';
+          } catch (error) {
+            console.error('Sign out error:', error);
+            headerLogoutBtn.disabled = false;
+          }
+        });
+      }
+      if (mobileHeaderLogoutBtn) {
+        mobileHeaderLogoutBtn.addEventListener('click', async function () {
+          mobileHeaderLogoutBtn.disabled = true;
+          try {
+            await window.BlaeneAuth.signOut();
+            window.location.href = '/';
+          } catch (error) {
+            console.error('Sign out error:', error);
+            mobileHeaderLogoutBtn.disabled = false;
+          }
+        });
+      }
     })();
   </script>
   <script src="assets/js/traffic.js"></script>

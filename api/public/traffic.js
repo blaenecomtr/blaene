@@ -20,6 +20,8 @@ function sanitizeMetadata(body) {
     element_tag: normalizeText(body.element_tag, 40) || null,
     element_text: normalizeText(body.element_text, 160) || null,
     element_href: normalizeText(body.element_href, 1000) || null,
+    country: normalizeText(body.country, 80) || null,
+    city: normalizeText(body.city, 80) || null,
   };
 }
 

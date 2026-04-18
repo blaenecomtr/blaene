@@ -34,6 +34,8 @@ interface AnalyticsResponse {
     top_pages?: Array<TrafficRow & { page: string }>
     top_products?: Array<TrafficRow & { product_id: string }>
     top_clicks?: Array<TrafficRow & { label: string }>
+    visitor_by_country?: Array<{ country: string; count: number }>
+    visitor_by_city?: Array<{ city: string; count: number }>
     recent_visitors?: Array<{
       at?: string | null
       source?: string | null
@@ -42,6 +44,7 @@ interface AnalyticsResponse {
       referrer?: string | null
       device?: string | null
       country?: string | null
+      city?: string | null
     }>
   }
 }
@@ -119,6 +122,11 @@ export default function Dashboard() {
   const topProducts = Array.isArray(traffic?.top_products) ? traffic.top_products : []
   const topClicks = Array.isArray(traffic?.top_clicks) ? traffic.top_clicks : []
   const recentVisitors = Array.isArray(traffic?.recent_visitors) ? traffic.recent_visitors : []
+
+  const visitorsByCountry = Array.isArray(traffic?.visitor_by_country) ? traffic.visitor_by_country : []
+  const visitorsByCity = Array.isArray(traffic?.visitor_by_city) ? traffic.visitor_by_city : []
+  const webVisitors = recentVisitors.filter((v) => v.device !== 'mobile')
+  const mobileVisitors = recentVisitors.filter((v) => v.device === 'mobile')
 
   const openDetailModal = (type: string, data: any) => {
     setDetailModal({ type, data })
@@ -214,6 +222,70 @@ export default function Dashboard() {
         </div>
       )}
 
+      {visitorsByCountry.length > 0 && (
+        <div style={{ marginTop: '28px' }}>
+          <h3 style={sectionTitleStyle}>Ülkelere Göre Ziyaretçiler</h3>
+          <div style={panelStyle}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {visitorsByCountry.map((item, idx) => {
+                const maxCount = Math.max(...visitorsByCountry.map((v) => v.count), 1)
+                const barWidth = (item.count / maxCount) * 100
+                return (
+                  <div key={`country-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', minWidth: '100px' }}>{item.country || 'Bilinmeyen'}</div>
+                    <div style={{ flex: 1, height: '24px', background: '#334155', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          background: '#a855f7',
+                          width: `${barWidth}%`,
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#a855f7', fontWeight: 600, minWidth: '60px', textAlign: 'right' }}>
+                      {item.count}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {visitorsByCity.length > 0 && (
+        <div style={{ marginTop: '28px' }}>
+          <h3 style={sectionTitleStyle}>Şehirlere Göre Ziyaretçiler</h3>
+          <div style={panelStyle}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {visitorsByCity.map((item, idx) => {
+                const maxCount = Math.max(...visitorsByCity.map((v) => v.count), 1)
+                const barWidth = (item.count / maxCount) * 100
+                return (
+                  <div key={`city-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', minWidth: '120px' }}>{item.city || 'Bilinmeyen'}</div>
+                    <div style={{ flex: 1, height: '24px', background: '#334155', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          background: '#f59e0b',
+                          width: `${barWidth}%`,
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 600, minWidth: '60px', textAlign: 'right' }}>
+                      {item.count}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={trafficGridStyle}>
         <div style={panelStyle}>
           <h4 style={panelTitleStyle}>Baglanti kaynaklari</h4>
@@ -268,22 +340,32 @@ export default function Dashboard() {
           {!topProducts.length ? (
             <p style={emptyStyle}>Kayit yok.</p>
           ) : (
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Urun</th>
-                  <th style={thStyle}>Goruntuleme</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topProducts.map((item) => (
-                  <tr key={`product-${item.product_id}`}>
-                    <td style={tdStyle}>{item.product_id}</td>
-                    <td style={tdStyle}>{item.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {topProducts.map((item) => {
+                const maxCount = Math.max(...topProducts.map((p) => p.count), 1)
+                const barWidth = (item.count / maxCount) * 100
+                return (
+                  <div key={`product-${item.product_id}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', minWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.product_id}
+                    </div>
+                    <div style={{ flex: 1, height: '20px', background: '#334155', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          background: '#06b6d4',
+                          width: `${barWidth}%`,
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#06b6d4', fontWeight: 600, minWidth: '50px', textAlign: 'right' }}>
+                      {item.count}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       </div>
@@ -314,37 +396,59 @@ export default function Dashboard() {
         </div>
 
         <div style={panelStyle}>
-          <h4 style={panelTitleStyle}>Son ziyaretler</h4>
-          {!recentVisitors.length ? (
+          <h4 style={panelTitleStyle}>Son Ziyaretler - 💻 Web</h4>
+          {!webVisitors.length ? (
             <p style={emptyStyle}>Kayit yok.</p>
           ) : (
-            <div style={{ maxHeight: '290px', overflowY: 'auto' }}>
+            <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
               <table style={tableStyle}>
                 <thead>
                   <tr>
                     <th style={thStyle}>Saat</th>
                     <th style={thStyle}>Kaynak</th>
                     <th style={thStyle}>Sayfa</th>
-                    <th style={thStyle}>Cihaz</th>
                     <th style={thStyle}>Ülke</th>
-                    <th style={thStyle}>IP</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentVisitors.map((item, idx) => {
-                    const deviceLabel = item.device === 'mobile' ? '📱 Mobile' : '💻 Desktop'
-                    const deviceColor = item.device === 'mobile' ? '#f97316' : '#3b82f6'
-                    return (
-                      <tr key={`recent-${idx}`}>
-                        <td style={tdStyle}>{formatDate(item.at)}</td>
-                        <td style={tdStyle}>{item.source || 'direct'}</td>
-                        <td style={tdStyle}>{item.page || '-'}</td>
-                        <td style={{ ...tdStyle, color: deviceColor, fontWeight: 500 }}>{deviceLabel}</td>
-                        <td style={tdStyle}>{item.country || '-'}</td>
-                        <td style={tdStyle}>{item.ip || '-'}</td>
-                      </tr>
-                    )
-                  })}
+                  {webVisitors.map((item, idx) => (
+                    <tr key={`web-${idx}`}>
+                      <td style={tdStyle}>{formatDate(item.at)}</td>
+                      <td style={tdStyle}>{item.source || 'direct'}</td>
+                      <td style={tdStyle}>{item.page || '-'}</td>
+                      <td style={tdStyle}>{item.country || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div style={panelStyle}>
+          <h4 style={panelTitleStyle}>Son Ziyaretler - 📱 Mobile</h4>
+          {!mobileVisitors.length ? (
+            <p style={emptyStyle}>Kayit yok.</p>
+          ) : (
+            <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Saat</th>
+                    <th style={thStyle}>Kaynak</th>
+                    <th style={thStyle}>Sayfa</th>
+                    <th style={thStyle}>Ülke</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mobileVisitors.map((item, idx) => (
+                    <tr key={`mobile-${idx}`}>
+                      <td style={tdStyle}>{formatDate(item.at)}</td>
+                      <td style={tdStyle}>{item.source || 'direct'}</td>
+                      <td style={tdStyle}>{item.page || '-'}</td>
+                      <td style={tdStyle}>{item.country || '-'}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

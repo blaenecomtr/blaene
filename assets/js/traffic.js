@@ -28,7 +28,8 @@
   }
 
   function sendEvent(payload) {
-    const body = JSON.stringify(payload);
+    const enrichedPayload = { ...payload, ...geoData };
+    const body = JSON.stringify(enrichedPayload);
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: 'application/json' });
       navigator.sendBeacon(ENDPOINT, blob);
@@ -43,12 +44,29 @@
     }).catch(() => {});
   }
 
+  let geoData = { country: null, city: null };
+
+  async function fetchGeoData() {
+    try {
+      const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2000) });
+      if (res.ok) {
+        const data = await res.json();
+        geoData = {
+          country: data.country_name || null,
+          city: data.city || null,
+        };
+      }
+    } catch (_) {}
+  }
+
   const basePayload = {
     session_id: getSessionId(),
     page_url: normalizeText(window.location.href, 1000),
     page_path: normalizeText(window.location.pathname, 240) || '/',
     referrer: normalizeText(document.referrer, 1000) || null,
     ...getUtm(),
+    country: null,
+    city: null,
   };
 
   function trackPageView() {
@@ -98,11 +116,15 @@
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
-      trackPageView();
+      void fetchGeoData().then(() => {
+        trackPageView();
+      });
       bindClickTracking();
     });
   } else {
-    trackPageView();
+    void fetchGeoData().then(() => {
+      trackPageView();
+    });
     bindClickTracking();
   }
 })();
