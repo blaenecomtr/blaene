@@ -6,6 +6,7 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_uKwxlDCAxSOzus7W96aF9w_m2iDE2QA';
 
   let supabaseClient = null;
+  const DUPLICATE_EMAIL_ERROR = 'Bu e-posta ile zaten bir hesap var. Giriş yapın veya şifremi unuttum adımını kullanın.';
 
   function initSupabase() {
     if (!window.supabase || typeof window.supabase.createClient !== 'function') {
@@ -23,6 +24,25 @@
       return initSupabase();
     }
     return supabaseClient;
+  }
+
+  function isDuplicateEmailMessage(message) {
+    const text = String(message || '').trim().toLowerCase();
+    if (!text) return false;
+    return (
+      text.includes('already registered') ||
+      text.includes('already exists') ||
+      text.includes('already in use') ||
+      text.includes('email exists') ||
+      text.includes('user already') ||
+      text.includes('bu e-posta') ||
+      text.includes('kullanımda')
+    );
+  }
+
+  function isObfuscatedExistingUser(authData) {
+    const identities = authData && authData.user && authData.user.identities;
+    return Array.isArray(identities) && identities.length === 0;
   }
 
   async function signUp(email, password, fullName, phone, options = {}) {
@@ -73,7 +93,13 @@
     });
 
     if (authError) {
+      if (isDuplicateEmailMessage(authError.message)) {
+        throw new Error(DUPLICATE_EMAIL_ERROR);
+      }
       throw new Error(authError.message || 'Kayit basarisiz');
+    }
+    if (isObfuscatedExistingUser(authData)) {
+      throw new Error(DUPLICATE_EMAIL_ERROR);
     }
     if (!authData.user) {
       throw new Error('Kullanici olusturulamadi');
