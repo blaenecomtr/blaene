@@ -49,6 +49,26 @@
       "source": "/checkout/",
       "destination": "/checkout.html",
       "permanent": false
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/forgot-password.html",
+      "permanent": false
+    },
+    {
+      "source": "/forgot-password/",
+      "destination": "/forgot-password.html",
+      "permanent": false
+    },
+    {
+      "source": "/reset-password",
+      "destination": "/reset-password.html",
+      "permanent": false
+    },
+    {
+      "source": "/reset-password/",
+      "destination": "/reset-password.html",
+      "permanent": false
     }
   ]
 }
