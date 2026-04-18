@@ -743,145 +743,113 @@
         .mobile-nav-footer a { color: var(--text-3); text-decoration: none; }
         .mobile-nav-footer a:hover { color: var(--accent); }
 
-        .profile-edit-modal {
+        .account-drawer {
             position: fixed;
             inset: 0;
             z-index: 1400;
             display: none;
         }
-        .profile-edit-modal.is-open { display: block; }
+        .account-drawer.is-open { display: block; }
 
-        .profile-edit-backdrop {
+        .account-drawer-backdrop {
             position: absolute;
             inset: 0;
             background: rgba(15, 23, 42, 0.52);
             border: 0;
             padding: 0;
             margin: 0;
+            cursor: pointer;
         }
 
-        .profile-edit-panel {
+        .account-drawer-panel {
             position: absolute;
             top: 0;
             right: 0;
-            width: min(94vw, 430px);
+            width: min(94vw, 340px);
             height: 100%;
             background: #ffffff;
             color: #0f172a;
             border-left: 1px solid #e2e8f0;
             box-shadow: -8px 0 36px rgba(2, 6, 23, 0.24);
-            padding: 1rem;
+            padding: 1.5rem 1.25rem 1.25rem;
             overflow-y: auto;
             transform: translateX(100%);
             transition: transform 0.24s ease;
-        }
-        .profile-edit-modal.is-open .profile-edit-panel { transform: translateX(0); }
-
-        .profile-edit-head {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin-bottom: 0.9rem;
+            flex-direction: column;
         }
-        .profile-edit-title {
-            margin: 0;
-            font-size: 1.02rem;
-            font-weight: 700;
-            letter-spacing: 0.01em;
-        }
-        .profile-edit-close {
+        .account-drawer.is-open .account-drawer-panel { transform: translateX(0); }
+
+        .account-drawer-close {
+            align-self: flex-end;
             width: 34px;
             height: 34px;
             border: 1px solid #d1d5db;
-            border-radius: 10px;
-            background: #ffffff;
+            border-radius: 8px;
+            background: #fff;
             color: #111827;
             font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.8rem;
+            flex-shrink: 0;
+        }
+        .account-drawer-close:hover { background: #f3f4f6; }
+
+        .account-drawer-welcome { margin-bottom: 1.4rem; }
+        .account-drawer-greeting {
+            margin: 0 0 0.2rem;
+            font-size: 0.88rem;
+            color: #374151;
+            font-weight: 500;
+        }
+        .account-drawer-name {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
 
-        .profile-edit-feedback {
-            min-height: 1.1rem;
-            font-size: 0.76rem;
-            margin-bottom: 0.55rem;
-        }
-        .profile-edit-feedback.error { color: #b91c1c; }
-        .profile-edit-feedback.success { color: #166534; }
-
-        .profile-edit-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.62rem;
-        }
-        .profile-edit-field {
+        .account-drawer-menu {
             display: flex;
             flex-direction: column;
-            gap: 0.28rem;
+            gap: 0.45rem;
+            flex: 1;
         }
-        .profile-edit-field label {
-            font-size: 0.72rem;
-            color: #334155;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 700;
-        }
-        .profile-edit-field input,
-        .profile-edit-field textarea {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 0.6rem 0.68rem;
-            font-size: 0.88rem;
-            font-family: 'Montserrat', sans-serif;
+        .account-drawer-item {
+            display: block;
+            padding: 0.78rem 0.9rem;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
             color: #111827;
-            background: #ffffff;
-        }
-        .profile-edit-field textarea {
-            min-height: 92px;
-            resize: vertical;
-        }
-        .profile-edit-field input:focus,
-        .profile-edit-field textarea:focus {
-            outline: none;
-            border-color: #94a3b8;
-            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2);
-        }
-
-        .profile-edit-type {
-            display: flex;
-            align-items: center;
-            gap: 0.9rem;
-            flex-wrap: wrap;
-            padding-top: 0.15rem;
-        }
-        .profile-edit-type label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-size: 0.86rem;
-            text-transform: none;
-            letter-spacing: normal;
-            color: #0f172a;
+            text-decoration: none;
+            font-size: 0.85rem;
             font-weight: 600;
+            transition: background-color 0.15s, border-color 0.15s;
+            font-family: 'Montserrat', sans-serif;
         }
-        .profile-edit-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 0.78rem;
-        }
-        .profile-edit-save {
-            border: 0;
-            border-radius: 9px;
-            background: #111827;
-            color: #ffffff;
-            padding: 0.6rem 0.95rem;
-            font-size: 0.8rem;
+        .account-drawer-item:hover { background: #f9fafb; border-color: #9ca3af; }
+
+        .account-drawer-logout {
+            margin-top: 1.2rem;
+            width: 100%;
+            padding: 0.78rem;
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.88rem;
             font-weight: 700;
             font-family: 'Montserrat', sans-serif;
             cursor: pointer;
+            transition: background-color 0.15s;
         }
-        .profile-edit-save:hover { background: #1f2937; }
-        .profile-edit-save:disabled { opacity: 0.65; cursor: not-allowed; }
+        .account-drawer-logout:hover { background: #b91c1c; }
+        .account-drawer-logout:disabled { opacity: 0.65; cursor: not-allowed; }
 
         /* ── MOBILE ────────────────────────────────── */
         @media (max-width: 768px) {
@@ -964,44 +932,41 @@
     </div>
 </div>
 
-<div id="profile-edit-modal" class="profile-edit-modal" aria-hidden="true">
-    <button id="profile-edit-backdrop" type="button" class="profile-edit-backdrop" aria-label="Duzenleme penceresini kapat"></button>
-    <aside class="profile-edit-panel" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title">
-        <div class="profile-edit-head">
-            <h2 id="profile-edit-title" class="profile-edit-title">Bilgileri Duzenle</h2>
-            <button id="profile-edit-close" type="button" class="profile-edit-close" aria-label="Kapat">X</button>
+<div id="account-drawer" class="account-drawer" aria-hidden="true">
+    <button id="account-drawer-backdrop" type="button" class="account-drawer-backdrop" aria-label="Kapat"></button>
+    <aside class="account-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="account-drawer-title">
+        <button id="account-drawer-close" type="button" class="account-drawer-close" aria-label="Kapat">&#10005;</button>
+        <div class="account-drawer-welcome">
+            <div class="account-drawer-greeting">Hoş Geldiniz / Sn.</div>
+            <div id="account-drawer-name" class="account-drawer-name">...</div>
         </div>
-        <div id="profile-edit-feedback" class="profile-edit-feedback"></div>
-        <form id="profile-edit-form" autocomplete="on">
-            <div class="profile-edit-grid">
-                <div class="profile-edit-field">
-                    <label for="profile-edit-full-name">Ad Soyad</label>
-                    <input id="profile-edit-full-name" type="text" maxlength="140" placeholder="Ad Soyad" />
-                </div>
-                <div class="profile-edit-field">
-                    <label for="profile-edit-phone">Telefon</label>
-                    <input id="profile-edit-phone" type="tel" maxlength="60" placeholder="05xx xxx xx xx" />
-                </div>
-                <div class="profile-edit-field">
-                    <label for="profile-edit-city">Il / Ilce</label>
-                    <input id="profile-edit-city" type="text" maxlength="120" placeholder="Orn: Istanbul / Kadikoy" />
-                </div>
-                <div class="profile-edit-field">
-                    <label>Musteri Tipi</label>
-                    <div class="profile-edit-type">
-                        <label><input type="radio" name="profile-edit-customer-type" value="bireysel" checked /> Bireysel</label>
-                        <label><input type="radio" name="profile-edit-customer-type" value="kurumsal" /> Kurumsal</label>
-                    </div>
-                </div>
-                <div class="profile-edit-field">
-                    <label for="profile-edit-address">Adres</label>
-                    <textarea id="profile-edit-address" maxlength="500" placeholder="Adres bilginizi girin"></textarea>
-                </div>
-            </div>
-            <div class="profile-edit-actions">
-                <button id="profile-edit-save" type="submit" class="profile-edit-save">Kaydet</button>
-            </div>
-        </form>
+        <nav class="account-drawer-menu" aria-label="Hesap menüsü">
+            <a href="/account.html?section=bilgiler" class="account-drawer-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                Hesap Bilgileri
+            </a>
+            <a href="/account.html?section=siparisler" class="account-drawer-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Siparişlerim
+            </a>
+            <a href="/account.html?section=havale" class="account-drawer-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                Havale Bildirimi
+            </a>
+            <a href="/account.html?section=uye-bilgisi" class="account-drawer-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Üye Bilgisi Güncelleme
+            </a>
+            <a href="/account.html?section=puan" class="account-drawer-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Hediye Çekleri &amp; Puan
+            </a>
+            <a href="/account.html?section=favoriler" class="account-drawer-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Favori Ürünleri Listele
+            </a>
+        </nav>
+        <button id="account-drawer-logout" type="button" class="account-drawer-logout">Çıkış Yap</button>
     </aside>
 </div>
 
@@ -1451,55 +1416,13 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
         const mobileNav = document.getElementById('mobile-nav');
         const hamburger = document.getElementById('hamburger');
 
-        const profileEditModal = document.getElementById('profile-edit-modal');
-        const profileEditBackdrop = document.getElementById('profile-edit-backdrop');
-        const profileEditClose = document.getElementById('profile-edit-close');
-        const profileEditForm = document.getElementById('profile-edit-form');
-        const profileEditSave = document.getElementById('profile-edit-save');
-        const profileEditFeedback = document.getElementById('profile-edit-feedback');
-        const profileEditFullName = document.getElementById('profile-edit-full-name');
-        const profileEditPhone = document.getElementById('profile-edit-phone');
-        const profileEditCity = document.getElementById('profile-edit-city');
-        const profileEditAddress = document.getElementById('profile-edit-address');
-        const profileEditTypeInputs = document.querySelectorAll('input[name="profile-edit-customer-type"]');
+        const accountDrawer = document.getElementById('account-drawer');
+        const accountDrawerBackdrop = document.getElementById('account-drawer-backdrop');
+        const accountDrawerClose = document.getElementById('account-drawer-close');
+        const accountDrawerName = document.getElementById('account-drawer-name');
+        const accountDrawerLogout = document.getElementById('account-drawer-logout');
 
-        const CUSTOMER_TYPE_STORAGE_PREFIX = 'blaene_customer_type:';
         let activeUser = null;
-        let openingProfileEdit = false;
-
-        const normalizeCustomerType = (value) =>
-            String(value || '').toLowerCase() === 'kurumsal' ? 'kurumsal' : 'bireysel';
-
-        const getStoredCustomerType = (userId) =>
-            normalizeCustomerType(localStorage.getItem(CUSTOMER_TYPE_STORAGE_PREFIX + userId));
-
-        const setStoredCustomerType = (userId, value) => {
-            localStorage.setItem(CUSTOMER_TYPE_STORAGE_PREFIX + userId, normalizeCustomerType(value));
-        };
-
-        const setProfileCustomerTypeInputs = (value) => {
-            const normalized = normalizeCustomerType(value);
-            profileEditTypeInputs.forEach((input) => {
-                input.checked = input.value === normalized;
-            });
-        };
-
-        const getSelectedProfileCustomerType = () => {
-            const selected = Array.from(profileEditTypeInputs).find((input) => input.checked);
-            return normalizeCustomerType(selected ? selected.value : 'bireysel');
-        };
-
-        const setProfileFeedback = (message, type = '') => {
-            if (!profileEditFeedback) return;
-            profileEditFeedback.textContent = message || '';
-            profileEditFeedback.className = 'profile-edit-feedback' + (type ? ' ' + type : '');
-        };
-
-        const setProfileSaveLoading = (isLoading) => {
-            if (!profileEditSave) return;
-            profileEditSave.disabled = isLoading;
-            profileEditSave.textContent = isLoading ? 'Kaydediliyor...' : 'Kaydet';
-        };
 
         const closeMobileNavIfOpen = () => {
             if (!mobileNav || !hamburger || !mobileNav.classList.contains('open')) return;
@@ -1509,84 +1432,36 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
             hamburger.classList.remove('is-open');
         };
 
-        const closeProfileEditModal = () => {
-            if (!profileEditModal) return;
-            profileEditModal.classList.remove('is-open');
-            profileEditModal.setAttribute('aria-hidden', 'true');
+        const closeAccountDrawer = () => {
+            if (!accountDrawer) return;
+            accountDrawer.classList.remove('is-open');
+            accountDrawer.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
-            setProfileFeedback('');
-            setProfileSaveLoading(false);
         };
 
-        const populateProfileEditForm = (profile, user) => {
-            if (!profileEditFullName || !profileEditPhone || !profileEditCity || !profileEditAddress) return;
-
-            profileEditFullName.value = String(
-                (profile && profile.full_name) || (user && user.user_metadata && user.user_metadata.full_name) || ''
-            );
-            profileEditPhone.value = String(
-                (profile && profile.phone) || (user && user.user_metadata && user.user_metadata.phone) || ''
-            );
-            profileEditCity.value = String(
-                (profile && profile.default_city) || (user && user.user_metadata && user.user_metadata.default_city) || ''
-            );
-            profileEditAddress.value = String(
-                (profile && profile.default_address) || (user && user.user_metadata && user.user_metadata.default_address) || ''
-            );
-
-            const selectedType = normalizeCustomerType(
-                (profile && (profile.customer_type || profile.customer_kind || profile.customer_category)) ||
-                (user && user.user_metadata && user.user_metadata.customer_type) ||
-                (user && user.id ? getStoredCustomerType(user.id) : 'bireysel')
-            );
-            setProfileCustomerTypeInputs(selectedType);
-        };
-
-        const updateCustomerProfileWithType = async (updates, customerType) => {
-            const payloadWithType = Object.assign({}, updates, { customer_type: normalizeCustomerType(customerType) });
-            try {
-                await window.BlaeneAuth.updateCustomerProfile(payloadWithType);
-                return payloadWithType;
-            } catch (error) {
-                const message = String(error && error.message || '').toLowerCase();
-                if (message.includes('customer_type') || message.includes('column')) {
-                    await window.BlaeneAuth.updateCustomerProfile(updates);
-                    return payloadWithType;
-                }
-                throw error;
-            }
-        };
-
-        const openProfileEditModal = async () => {
-            if (!profileEditModal || openingProfileEdit) return;
-            openingProfileEdit = true;
-            setProfileFeedback('');
-
+        const openAccountDrawer = async () => {
             try {
                 let user = activeUser;
                 if (!user) {
                     user = await window.BlaeneAuth.getCurrentUser();
                     activeUser = user || null;
                 }
-
                 if (!user) {
                     window.location.href = '/auth.html?redirect=/';
                     return;
                 }
-
                 closeMobileNavIfOpen();
-                const profile = await window.BlaeneAuth.getCustomerProfile();
-                populateProfileEditForm(profile, user);
 
-                profileEditModal.classList.add('is-open');
-                profileEditModal.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
-                if (profileEditFullName) profileEditFullName.focus();
+                const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email || '';
+                if (accountDrawerName) accountDrawerName.textContent = displayName;
+
+                if (accountDrawer) {
+                    accountDrawer.classList.add('is-open');
+                    accountDrawer.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                }
             } catch (error) {
-                console.error('Profile modal load error:', error);
-                alert('Profil bilgileri yuklenemedi. Lutfen tekrar deneyin.');
-            } finally {
-                openingProfileEdit = false;
+                console.error('Account drawer open error:', error);
             }
         };
 
@@ -1603,74 +1478,30 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
                 mobileLogoutBtn.style.display = isLoggedIn ? '' : 'none';
                 mobileLoginLink.style.display = isLoggedIn ? 'none' : '';
             }
-            if (!isLoggedIn) closeProfileEditModal();
-        };
-
-        const setLogoutLoading = (isLoading) => {
-            [logoutBtn, mobileLogoutBtn].forEach((btn) => {
-                if (btn) btn.disabled = isLoading;
-            });
+            if (!isLoggedIn) closeAccountDrawer();
         };
 
         const handleLogout = async () => {
-            setLogoutLoading(true);
             try {
                 await window.BlaeneAuth.signOut();
+                closeAccountDrawer();
                 applyHeaderAuthState(null);
             } catch (error) {
-                console.error('Sign out from header failed:', error);
-                alert('Cikis yapilamadi. Lutfen tekrar deneyin.');
-            } finally {
-                setLogoutLoading(false);
+                console.error('Sign out error:', error);
             }
         };
 
-        if (accountLink) accountLink.addEventListener('click', () => { void openProfileEditModal(); });
-        if (mobileAccountLink) mobileAccountLink.addEventListener('click', () => { void openProfileEditModal(); });
+        if (accountLink) accountLink.addEventListener('click', () => { void openAccountDrawer(); });
+        if (mobileAccountLink) mobileAccountLink.addEventListener('click', () => { void openAccountDrawer(); });
         if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
         if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
-        if (profileEditClose) profileEditClose.addEventListener('click', closeProfileEditModal);
-        if (profileEditBackdrop) profileEditBackdrop.addEventListener('click', closeProfileEditModal);
-
-        if (profileEditForm) {
-            profileEditForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                if (!activeUser || !activeUser.id) {
-                    setProfileFeedback('Oturum bilgisi bulunamadi. Lutfen tekrar giris yapin.', 'error');
-                    return;
-                }
-
-                setProfileSaveLoading(true);
-                setProfileFeedback('');
-
-                try {
-                    const selectedType = getSelectedProfileCustomerType();
-                    const updates = {
-                        full_name: String(profileEditFullName && profileEditFullName.value || '').trim(),
-                        phone: String(profileEditPhone && profileEditPhone.value || '').trim(),
-                        default_city: String(profileEditCity && profileEditCity.value || '').trim(),
-                        default_address: String(profileEditAddress && profileEditAddress.value || '').trim(),
-                    };
-
-                    await updateCustomerProfileWithType(updates, selectedType);
-                    setStoredCustomerType(activeUser.id, selectedType);
-                    setProfileFeedback('Bilgileriniz guncellendi.', 'success');
-                    setTimeout(closeProfileEditModal, 500);
-                } catch (error) {
-                    console.error('Profile update error:', error);
-                    setProfileFeedback(
-                        error && error.message ? error.message : 'Bilgileriniz guncellenemedi. Lutfen tekrar deneyin.',
-                        'error'
-                    );
-                } finally {
-                    setProfileSaveLoading(false);
-                }
-            });
-        }
+        if (accountDrawerClose) accountDrawerClose.addEventListener('click', closeAccountDrawer);
+        if (accountDrawerBackdrop) accountDrawerBackdrop.addEventListener('click', closeAccountDrawer);
+        if (accountDrawerLogout) accountDrawerLogout.addEventListener('click', handleLogout);
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && profileEditModal && profileEditModal.classList.contains('is-open')) {
-                closeProfileEditModal();
+            if (event.key === 'Escape' && accountDrawer && accountDrawer.classList.contains('is-open')) {
+                closeAccountDrawer();
             }
         });
 
