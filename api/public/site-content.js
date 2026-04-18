@@ -3,7 +3,15 @@ const { sendError, sendSuccess } = require('../../lib/api/response');
 const { normalizeText } = require('../../lib/api/validation');
 const { restSelect } = require('../../lib/api/supabase');
 
-const ALLOWED_KEYS = new Set(['homepage_banners']);
+const ALLOWED_KEYS = new Set(['homepage_banners', 'contracts']);
+
+function sanitizeContracts(value) {
+  if (!value || typeof value !== 'object') return { kvkk: '', distance_sales: '' };
+  return {
+    kvkk: String(value.kvkk || '').slice(0, 50000),
+    distance_sales: String(value.distance_sales || '').slice(0, 50000),
+  };
+}
 
 function sanitizeBanners(value) {
   if (!Array.isArray(value)) return [];
@@ -48,6 +56,7 @@ module.exports = createApiHandler(
       key,
       updated_at: row?.updated_at || null,
       banners: key === 'homepage_banners' ? sanitizeBanners(row?.value_json) : [],
+      contracts: key === 'contracts' ? sanitizeContracts(row?.value_json) : null,
     };
 
     return sendSuccess(res, payload);
