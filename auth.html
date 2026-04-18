@@ -595,6 +595,11 @@
         });
       });
 
+      (function () {
+        const tab = new URLSearchParams(location.search).get('tab');
+        if (tab === 'register' || tab === 'signup') switchTab('signup');
+      })();
+
       signupCity.addEventListener('change', function () {
         populateDistricts(signupCity.value);
       });

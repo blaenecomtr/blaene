@@ -240,7 +240,10 @@
         .header-cta-group #user-login-link {
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            display: none;
+        }
+        .header-cta-group #user-signup-link {
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
         .header-cta-group #user-account-link {
             background-color: var(--accent);
@@ -871,7 +874,6 @@
     </div>
     <div class="header-actions">
         <div class="header-cta-group">
-        <button id="user-account-link" type="button" class="teklif-btn" style="display: none;" aria-label="Hesabım" data-i18n="account-btn-txt">Hesabım</button>
         <a href="https://wa.me/905320540019?text=Merhaba%2C%20urunleriniz%20hakkinda%20bilgi%20almak%20istiyorum."
            target="_blank" rel="noopener noreferrer" class="teklif-btn">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -879,6 +881,9 @@
             </svg>
             <span data-i18n="teklif-btn-txt">Teklif Al</span>
         </a>
+        <a id="user-signup-link" href="/auth.html?tab=register" class="teklif-btn" aria-label="Üye Ol">Üye Ol</a>
+        <a id="user-login-link" href="/auth.html" class="teklif-btn" aria-label="Üye Girişi">Üye Girişi</a>
+        <button id="user-account-link" type="button" class="teklif-btn" style="display: none;" aria-label="Hesabım" data-i18n="account-btn-txt">Hesabım</button>
         </div>
         <div class="header-meta">
             <span class="currency-ticker" id="currency-ticker" aria-live="polite" aria-label="USD/TRY kuru">
@@ -1398,6 +1403,7 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
         const accountLink = document.getElementById('user-account-link');
         const logoutBtn = document.getElementById('user-logout-btn');
         const loginLink = document.getElementById('user-login-link');
+        const signupLink = document.getElementById('user-signup-link');
         const mobileAccountLink = document.getElementById('mobile-account-link');
         const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
         const mobileLoginLink = document.getElementById('mobile-login-link');
@@ -1456,14 +1462,13 @@ document.querySelectorAll('.section-head, .why-card, .contact-item, #wa-card').f
         const applyHeaderAuthState = (user) => {
             const isLoggedIn = Boolean(user);
             activeUser = user || null;
-            if (accountLink && loginLink && logoutBtn) {
-                accountLink.style.display = isLoggedIn ? '' : 'none';
-                logoutBtn.style.display = isLoggedIn ? '' : 'none';
-                loginLink.style.display = isLoggedIn ? 'none' : '';
-            }
+            if (accountLink) accountLink.style.display = isLoggedIn ? '' : 'none';
+            if (loginLink) loginLink.style.display = isLoggedIn ? 'none' : '';
+            if (signupLink) signupLink.style.display = isLoggedIn ? 'none' : '';
+            if (logoutBtn) logoutBtn.style.display = 'none';
             if (mobileAccountLink && mobileLoginLink && mobileLogoutBtn) {
                 mobileAccountLink.style.display = isLoggedIn ? '' : 'none';
-                mobileLogoutBtn.style.display = isLoggedIn ? '' : 'none';
+                mobileLogoutBtn.style.display = 'none';
                 mobileLoginLink.style.display = isLoggedIn ? 'none' : '';
             }
             if (!isLoggedIn) closeAccountDrawer();
