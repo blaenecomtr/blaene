@@ -256,8 +256,8 @@
             font-size: 0.7rem;
         }
         .header-cta-group #user-account-link:hover { background-color: var(--accent-dark); }
-        .header-cta-group #user-logout-btn {
-            display: none;
+        #user-logout-btn {
+            display: none !important;
         }
         .teklif-btn:hover { background-color: var(--accent-dark); }
         .teklif-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -623,18 +623,18 @@
             .lang-toggle { display: none; }
         }
         .currency-ticker {
-            font-size: 0.65rem; letter-spacing: 0.06em; color: var(--text-2);
+            font-size: 0.65rem; letter-spacing: 0.06em; color: #ffffff;
             display: flex; align-items: center; gap: 0.3rem;
         }
         .currency-ticker .rate-val { color: var(--accent); font-weight: 600; }
         .lang-toggle {
-            background: transparent; border: 1px solid var(--border);
-            color: var(--text-2); font-family: 'Montserrat', sans-serif;
+            background: transparent; border: 1px solid rgba(255,255,255,0.35);
+            color: #ffffff; font-family: 'Montserrat', sans-serif;
             font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
             padding: 0.22rem 0.55rem; cursor: pointer;
             transition: border-color 0.15s, color 0.15s;
         }
-        .lang-toggle:hover { border-color: rgba(255,255,255,0.22); color: var(--foreground); }
+        .lang-toggle:hover { border-color: rgba(255,255,255,0.6); color: #ffffff; }
         .lang-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 
         /* ── FLOATING WA ───────────────────────────── */
