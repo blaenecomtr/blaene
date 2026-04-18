@@ -663,7 +663,7 @@
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <div class="sidebar-user">
-            <div class="sidebar-user-greeting">Hoş Geldiniz / Sn.</div>
+            <div class="sidebar-user-greeting" id="sidebar-greeting">Hoş Geldiniz / Sn.</div>
             <div class="sidebar-user-name" id="sidebar-name">...</div>
           </div>
           <nav class="sidebar-nav" aria-label="Hesap menüsü">
@@ -974,6 +974,21 @@
       return parts.length >= 2 ? (parts[0][0]+parts[1][0]).toUpperCase() : s.slice(0,2).toUpperCase();
     }
 
+    function resolveFullName(profile, user) {
+      const profileName = String(profile&&profile.full_name || '').trim();
+      if (profileName) return profileName;
+
+      const meta = (user && user.user_metadata) || {};
+      const metaFull = String(meta.full_name || meta.name || '').trim();
+      if (metaFull) return metaFull;
+
+      const metaPair = [meta.first_name, meta.last_name].filter(Boolean).join(' ').trim();
+      if (metaPair) return metaPair;
+
+      const emailPrefix = String((user&&user.email) || '').split('@')[0].replace(/[._-]+/g, ' ').trim();
+      return emailPrefix || '-';
+    }
+
     function normalizeType(v) {
       return String(v||'').toLowerCase() === 'kurumsal' ? 'kurumsal' : 'bireysel';
     }
@@ -1037,14 +1052,18 @@
 
     /* ── PROFILE VIEW ─────────────────────────────── */
     function updateProfileView(profile, user) {
-      const name  = (profile&&profile.full_name) || (user&&user.user_metadata&&user.user_metadata.full_name) || '-';
+      const name  = resolveFullName(profile, user);
       const email = (user&&user.email) || '-';
       const phone = (profile&&profile.phone) || '-';
       const cp    = parseCityDistrict((profile&&profile.default_city)||'');
       const addr  = (profile&&profile.default_address) || '-';
       const type  = normalizeType((profile&&(profile.customer_type||profile.customer_kind))||getStoredType());
 
+      const greetingEl = document.getElementById('sidebar-greeting');
       document.getElementById('sidebar-name').textContent = name;
+      if (greetingEl) {
+        greetingEl.textContent = name && name !== '-' ? ('Hoş Geldiniz / Sn. ' + name) : 'Hoş Geldiniz / Sn.';
+      }
       document.getElementById('view-name').textContent = name;
       document.getElementById('view-email').textContent = email;
       document.getElementById('view-phone').textContent = phone;
@@ -1265,8 +1284,23 @@
         if (!address)  throw new Error('Adres zorunlu.');
 
         const type = normalizeType(Array.from(document.querySelectorAll('input[name="customer-type"]')).find(function (r) { return r.checked; })?.value||'bireysel');
-        const updates = { full_name: fullName, phone: phone, default_city: city+' / '+district, default_address: address, customer_type: type };
-        await window.BlaeneAuth.updateCustomerProfile(updates);
+        const baseUpdates = {
+          full_name: fullName,
+          phone: phone,
+          default_city: city + ' / ' + district,
+          default_address: address,
+        };
+        const updates = Object.assign({}, baseUpdates, { customer_type: type, customer_kind: type });
+
+        try {
+          await window.BlaeneAuth.updateCustomerProfile(updates);
+        } catch (updateErr) {
+          const msg = String(updateErr && updateErr.message || '');
+          const hasMissingTypeColumn = msg.includes('customer_type') || msg.includes('customer_kind');
+          if (!hasMissingTypeColumn) throw updateErr;
+          await window.BlaeneAuth.updateCustomerProfile(baseUpdates);
+        }
+
         const updated = await window.BlaeneAuth.getCustomerProfile();
         updateProfileView(updated, currentUser);
         setStoredType(type);

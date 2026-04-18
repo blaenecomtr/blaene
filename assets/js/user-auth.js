@@ -330,7 +330,104 @@
       throw new Error('Siparisler yuklenemedi');
     }
 
-    return data || [];
+    const orders = Array.isArray(data) ? data : [];
+    if (!orders.length) return orders;
+
+    const codeSet = new Set();
+    const nameSet = new Set();
+    orders.forEach((order) => {
+      const items = Array.isArray(order && order.order_items) ? order.order_items : [];
+      items.forEach((item) => {
+        const code = String(item && item.product_code || '').trim();
+        const name = String(item && item.product_name || '').trim().toLowerCase();
+        if (code) codeSet.add(code);
+        if (name) nameSet.add(name);
+      });
+    });
+
+    if (!codeSet.size && !nameSet.size) return orders;
+
+    const imageByCode = new Map();
+    const imageByName = new Map();
+
+    function extractFirstImage(imagesValue) {
+      if (Array.isArray(imagesValue)) {
+        const first = imagesValue.map((v) => String(v || '').trim()).find(Boolean);
+        return first || '';
+      }
+      if (typeof imagesValue === 'string') {
+        const raw = imagesValue.trim();
+        if (!raw) return '';
+        if (raw.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              const first = parsed.map((v) => String(v || '').trim()).find(Boolean);
+              if (first) return first;
+            }
+          } catch (_) {
+            /* ignore JSON parse errors, fallback to raw string */
+          }
+        }
+        return raw;
+      }
+      return '';
+    }
+
+    async function pullProductImagesByCodes(codes) {
+      if (!codes.length) return;
+      const { data: products, error: productError } = await client
+        .from('products')
+        .select('code,name,images')
+        .in('code', codes);
+      if (productError) {
+        console.warn('Products by code fetch failed:', productError);
+        return;
+      }
+      (products || []).forEach((product) => {
+        const firstImage = extractFirstImage(product && product.images);
+        if (!firstImage) return;
+        const code = String(product && product.code || '').trim();
+        const name = String(product && product.name || '').trim().toLowerCase();
+        if (code) imageByCode.set(code, firstImage);
+        if (name && !imageByName.has(name)) imageByName.set(name, firstImage);
+      });
+    }
+
+    async function pullProductImagesByNames(names) {
+      if (!names.length) return;
+      const { data: products, error: productError } = await client
+        .from('products')
+        .select('code,name,images')
+        .in('name', names.map((n) => String(n)));
+      if (productError) {
+        console.warn('Products by name fetch failed:', productError);
+        return;
+      }
+      (products || []).forEach((product) => {
+        const firstImage = extractFirstImage(product && product.images);
+        if (!firstImage) return;
+        const code = String(product && product.code || '').trim();
+        const name = String(product && product.name || '').trim().toLowerCase();
+        if (code && !imageByCode.has(code)) imageByCode.set(code, firstImage);
+        if (name) imageByName.set(name, firstImage);
+      });
+    }
+
+    await pullProductImagesByCodes(Array.from(codeSet));
+    await pullProductImagesByNames(Array.from(nameSet));
+
+    orders.forEach((order) => {
+      const items = Array.isArray(order && order.order_items) ? order.order_items : [];
+      items.forEach((item) => {
+        const code = String(item && item.product_code || '').trim();
+        const name = String(item && item.product_name || '').trim().toLowerCase();
+        const mappedImage = imageByCode.get(code) || imageByName.get(name) || '';
+        if (mappedImage) item.image_url = mappedImage;
+      });
+    });
+
+    return orders;
   }
 
   function onAuthStateChange(callback) {
