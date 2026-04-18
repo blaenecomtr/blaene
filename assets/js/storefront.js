@@ -448,6 +448,7 @@
       .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, stock_quantity, display_order')
       .eq('category', category)
       .eq('active', true)
+      .eq('archived', false)
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: true });
 
@@ -895,6 +896,7 @@
       .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, stock_quantity, display_order')
       .eq('code', code)
       .eq('active', true)
+      .eq('archived', false)
       .maybeSingle();
 
     if (!data && !error) {
@@ -903,6 +905,7 @@
         .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, stock_quantity, display_order')
         .ilike('code', code)
         .eq('active', true)
+        .eq('archived', false)
         .limit(1);
       if (!fallback.error && Array.isArray(fallback.data) && fallback.data.length) {
         data = fallback.data[0];
