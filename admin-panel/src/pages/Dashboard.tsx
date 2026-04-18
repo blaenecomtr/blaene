@@ -33,7 +33,7 @@ interface AnalyticsResponse {
     top_sources?: Array<TrafficRow & { source: string }>
     top_pages?: Array<TrafficRow & { page: string }>
     top_products?: Array<TrafficRow & { product_id: string }>
-    top_clicks?: Array<TrafficRow & { label: string }>
+    top_clicks?: Array<TrafficRow & { label: string; product_id?: string | null }>
     visitor_by_country?: Array<{ country: string; count: number }>
     visitor_by_city?: Array<{ city: string; count: number }>
     recent_visitors?: Array<{
@@ -380,6 +380,7 @@ export default function Dashboard() {
               <thead>
                 <tr>
                   <th style={thStyle}>Oge</th>
+                  <th style={thStyle}>Urun Kodu</th>
                   <th style={thStyle}>Tiklama</th>
                 </tr>
               </thead>
@@ -387,6 +388,7 @@ export default function Dashboard() {
                 {topClicks.map((item) => (
                   <tr key={`click-${item.label}`}>
                     <td style={tdStyle}>{item.label}</td>
+                    <td style={tdStyle}>{item.product_id || '-'}</td>
                     <td style={tdStyle}>{item.count}</td>
                   </tr>
                 ))}
@@ -408,6 +410,7 @@ export default function Dashboard() {
                     <th style={thStyle}>Kaynak</th>
                     <th style={thStyle}>Sayfa</th>
                     <th style={thStyle}>Ülke</th>
+                    <th style={thStyle}>Şehir</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -417,6 +420,7 @@ export default function Dashboard() {
                       <td style={tdStyle}>{item.source || 'direct'}</td>
                       <td style={tdStyle}>{item.page || '-'}</td>
                       <td style={tdStyle}>{item.country || '-'}</td>
+                      <td style={tdStyle}>{item.city || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -438,6 +442,7 @@ export default function Dashboard() {
                     <th style={thStyle}>Kaynak</th>
                     <th style={thStyle}>Sayfa</th>
                     <th style={thStyle}>Ülke</th>
+                    <th style={thStyle}>Şehir</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -447,6 +452,7 @@ export default function Dashboard() {
                       <td style={tdStyle}>{item.source || 'direct'}</td>
                       <td style={tdStyle}>{item.page || '-'}</td>
                       <td style={tdStyle}>{item.country || '-'}</td>
+                      <td style={tdStyle}>{item.city || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

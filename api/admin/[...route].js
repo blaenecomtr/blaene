@@ -1261,7 +1261,12 @@ async function handleAnalytics(req, res, ctx) {
         normalizeText(metadata.element_href, 220) ||
         normalizeText(metadata.element_tag, 40) ||
         'unknown';
-      clickCounts[clickLabel] = (clickCounts[clickLabel] || 0) + 1;
+      const productId = getProductNameFromPath(metadata.element_href);
+      clickCounts[clickLabel] = clickCounts[clickLabel] || { count: 0, product_id: null };
+      if (!clickCounts[clickLabel].product_id && productId) {
+        clickCounts[clickLabel].product_id = productId;
+      }
+      clickCounts[clickLabel].count += 1;
     }
   });
 
@@ -1273,11 +1278,18 @@ async function handleAnalytics(req, res, ctx) {
     }
   });
 
-  const sortObjectEntries = (obj, keyLabel) =>
-    Object.entries(obj)
-      .map(([key, value]) => ({ [keyLabel]: key, count: Number(value || 0) }))
+  const sortObjectEntries = (obj, keyLabel, includeProductId = false) => {
+    return Object.entries(obj)
+      .map(([key, value]) => {
+        const result = { [keyLabel]: key, count: Number(typeof value === 'number' ? value : value?.count || 0) };
+        if (includeProductId && typeof value === 'object' && value?.product_id) {
+          result.product_id = value.product_id;
+        }
+        return result;
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 12);
+  };
 
   return sendSuccess(res, {
     range,
@@ -1310,7 +1322,7 @@ async function handleAnalytics(req, res, ctx) {
       top_sources: sortObjectEntries(sourceCounts, 'source'),
       top_pages: sortObjectEntries(pageCounts, 'page'),
       top_products: sortObjectEntries(productCounts, 'product_id'),
-      top_clicks: sortObjectEntries(clickCounts, 'label'),
+      top_clicks: sortObjectEntries(clickCounts, 'label', true),
       visitor_by_country: sortObjectEntries(countryCounts, 'country'),
       visitor_by_city: sortObjectEntries(cityCounts, 'city'),
       recent_visitors: recentVisitors
