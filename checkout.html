@@ -352,15 +352,12 @@
           <span class="step-pill"><span class="num">3</span>Odeme</span>
         </div>
 
-        <div class="offer-box">
-          <div class="offer-timer">Kalan Sure: 04:46</div>
-          <div class="offer-content">
-            <div class="offer-title">Sepetine Ozel Teklif</div>
-            <p class="offer-sub">Verilerden bagimsiz mockup tasarimina uygun kampanya kutusu.</p>
-            <div class="offer-actions">
-              <button type="button" class="secondary">Teklifi Reddet</button>
-              <button type="button">Siparisime Ekle</button>
-            </div>
+        <div id="shipping-offer-box" style="display:none;margin:0.35rem 0 0.9rem;border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fff;">
+          <div style="background:#fefce8;color:#713f12;text-align:center;font-size:0.78rem;font-weight:700;padding:0.44rem 0.6rem;border-bottom:1px solid #fde68a;" id="shipping-offer-timer-text"></div>
+          <div style="padding:0.75rem 0.8rem;">
+            <div style="font-size:0.82rem;font-weight:700;margin-bottom:0.2rem;">Ücretsiz Kargo Fırsatı!</div>
+            <p style="font-size:0.76rem;color:#713f12;margin:0 0 0.5rem;" id="shipping-offer-sub"></p>
+            <div id="shipping-offer-product"></div>
           </div>
         </div>
 
@@ -457,17 +454,10 @@
           </div>
           <div id="promo-message" style="margin-top: 0.3rem; font-size: 0.75rem; display: none;"></div>
         </div>
-        <div id="free-shipping-banner" style="display:none;margin-top:0.7rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:0.5rem 0.75rem;font-size:0.78rem;color:#166534;font-weight:600;">
-          🎉 Ücretsiz kargo kazandınız!
-        </div>
-        <div id="shipping-nudge" style="display:none;margin-top:0.7rem;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:0.55rem 0.75rem;font-size:0.76rem;color:#713f12;">
-          <div id="shipping-nudge-text"></div>
-          <div id="shipping-nudge-product" style="margin-top:0.45rem;"></div>
-        </div>
         <div class="totals">
           <div class="row"><span>Ara toplam</span><strong id="subtotal">0 TL</strong></div>
           <div id="discount-row" class="row" style="display: none; color: var(--success);"><span>İndirim</span><strong id="discount-amount">-0 TL</strong></div>
-          <div class="row"><span>Kargo</span><span id="shipping">0 TL</span></div>
+          <div class="row"><span>Kargo</span><span id="shipping">—</span></div>
           <div class="row grand"><span>Toplam</span><strong id="grand-total">0 TL</strong></div>
         </div>
       </aside>
@@ -843,29 +833,33 @@
         } else {
           discountRow.style.display = 'none';
         }
-        shippingEl.textContent = shippingFee === 0 && discountedSubtotal > 0 ? 'Ücretsiz' : formatPrice(shippingFee);
+        if (shippingFee === 0 && discountedSubtotal > 0) {
+          shippingEl.textContent = 'Ücretsiz';
+          shippingEl.style.color = '#166534';
+          shippingEl.style.fontWeight = '700';
+        } else {
+          shippingEl.textContent = discountedSubtotal > 0 ? formatPrice(shippingFee) : '—';
+          shippingEl.style.color = '';
+          shippingEl.style.fontWeight = '';
+        }
         grandTotalEl.textContent = formatPrice(grandTotal);
 
-        const freeShippingBanner = document.getElementById('free-shipping-banner');
-        const shippingNudge = document.getElementById('shipping-nudge');
-        const shippingNudgeText = document.getElementById('shipping-nudge-text');
-        const shippingNudgeProduct = document.getElementById('shipping-nudge-product');
+        const offerBox = document.getElementById('shipping-offer-box');
+        const offerTimerText = document.getElementById('shipping-offer-timer-text');
+        const offerSub = document.getElementById('shipping-offer-sub');
+        const offerProduct = document.getElementById('shipping-offer-product');
 
         const shippingSettings = normalizeShippingSettings(checkoutSettings && checkoutSettings.shipping);
         const threshold = shippingSettings.free_shipping_threshold;
 
-        if (discountedSubtotal > 0 && threshold > 0 && discountedSubtotal >= threshold) {
-          freeShippingBanner.style.display = '';
-          shippingNudge.style.display = 'none';
-        } else if (discountedSubtotal > 0 && threshold > 0 && discountedSubtotal < threshold) {
-          freeShippingBanner.style.display = 'none';
+        if (discountedSubtotal > 0 && threshold > 0 && shippingFee > 0) {
           const remaining = Math.ceil(threshold - discountedSubtotal);
-          shippingNudgeText.textContent = formatPrice(threshold) + ' ve üzeri alışverişlerde kargo ücretsiz! ' + formatPrice(remaining) + ' daha ekleyin.';
-          loadNudgeProduct(discountedSubtotal, threshold, shippingNudgeProduct);
-          shippingNudge.style.display = '';
+          offerTimerText.textContent = formatPrice(remaining) + ' daha ekleyin — kargo ücretsiz!';
+          offerSub.textContent = formatPrice(threshold) + ' ve üzeri alışverişlerde kargo ücretsiz. Sepetinize ürün ekleyin.';
+          loadNudgeProduct(discountedSubtotal, threshold, offerProduct);
+          offerBox.style.display = '';
         } else {
-          freeShippingBanner.style.display = 'none';
-          shippingNudge.style.display = 'none';
+          offerBox.style.display = 'none';
         }
 
         if (!items.length) {

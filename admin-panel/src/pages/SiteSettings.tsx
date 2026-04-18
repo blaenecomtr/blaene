@@ -131,18 +131,24 @@ export default function SiteSettings() {
       <div style={panelStyle}>
         <h3 style={panelTitleStyle}>Kargo baremleri</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-          <input
-            value={String(shipping.free_shipping_threshold ?? 0)}
-            onChange={(evt) => setShipping((prev) => ({ ...prev, free_shipping_threshold: parseNumber(evt.target.value, 0) }))}
-            placeholder="Ucretsiz kargo alt limiti (TL) - orn: 3000"
-            style={inputStyle}
-          />
-          <input
-            value={String(shipping.base_shipping_fee ?? 0)}
-            onChange={(evt) => setShipping((prev) => ({ ...prev, base_shipping_fee: parseNumber(evt.target.value, 0) }))}
-            placeholder="Temel kargo ucreti (TL)"
-            style={inputStyle}
-          />
+          <div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Ücretsiz kargo alt limiti (TL)</div>
+            <input
+              value={String(shipping.free_shipping_threshold ?? 0)}
+              onChange={(evt) => setShipping((prev) => ({ ...prev, free_shipping_threshold: parseNumber(evt.target.value, 0) }))}
+              placeholder="orn: 3000"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Temel kargo ücreti (TL)</div>
+            <input
+              value={String(shipping.base_shipping_fee ?? 0)}
+              onChange={(evt) => setShipping((prev) => ({ ...prev, base_shipping_fee: parseNumber(evt.target.value, 0) }))}
+              placeholder="orn: 120"
+              style={inputStyle}
+            />
+          </div>
         </div>
         <div style={{ marginBottom: '8px', color: '#cbd5e1', fontSize: '12px' }}>Ek kargo baremleri</div>
         {(Array.isArray(shipping.tiers) ? shipping.tiers : []).map((tier, idx) => (
