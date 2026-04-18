@@ -1216,9 +1216,9 @@ async function handleAnalytics(req, res, ctx) {
   const productCache = {};
 
   const getProductNameFromPath = (pagePath) => {
-    if (!pagePath || !pagePath.includes('/urun/')) return null;
-    const match = pagePath.match(/\/urun\/([a-z0-9\-]+)/i);
-    return match ? match[1] : null;
+    if (!pagePath) return null;
+    const match = pagePath.match(/\/(urun|product)\/([a-z0-9\-]+)/i);
+    return match ? match[2] : null;
   };
 
   scopedTraffic.forEach((row) => {
