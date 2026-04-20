@@ -177,7 +177,7 @@
     .type-options,
     .check-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.9rem;
       flex-wrap: wrap;
     }
@@ -185,7 +185,7 @@
     .type-options label,
     .check-row label {
       display: inline-flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.35rem;
       font-size: 0.9rem;
       color: #1f2937;
@@ -194,6 +194,22 @@
       font-weight: 600;
       margin: 0;
     }
+    .check-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      flex: 0 0 auto;
+    }
+    .check-row label {
+      line-height: 1.45;
+    }
+    .corporate-fields {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      background: #fafafa;
+    }
+    .corporate-fields[hidden] { display: none !important; }
 
     .consent-box {
       border: 1px solid var(--border);
@@ -238,6 +254,23 @@
     }
 
     .btn.secondary:hover { background: #f9fafb; }
+
+    .google-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+    }
+
+    .google-btn .google-icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .google-btn.is-loading .google-icon {
+      opacity: 0.35;
+    }
 
     .btn:disabled {
       opacity: 0.7;
@@ -355,6 +388,22 @@
     <div class="panel">
       <div id="alert-box"></div>
 
+      <div id="reset-password-container" style="display:none;">
+        <p style="color:#6b7280;font-size:0.9rem;margin:0 0 1rem;">Yeni şifrenizi belirleyin.</p>
+        <form id="reset-password-form">
+          <div class="field full" style="margin-bottom:0.8rem;">
+            <label for="reset-new-password">Yeni Şifre</label>
+            <input id="reset-new-password" type="password" minlength="6" required />
+          </div>
+          <div class="field full" style="margin-bottom:0.8rem;">
+            <label for="reset-confirm-password">Şifre Tekrar</label>
+            <input id="reset-confirm-password" type="password" minlength="6" required />
+          </div>
+          <button type="submit" class="btn primary" id="reset-password-btn">Şifremi Güncelle</button>
+        </form>
+      </div>
+
+      <div id="auth-tabs-container">
       <div class="tabs">
         <button class="tab-btn active" data-tab="login">Giriş Yap</button>
         <button class="tab-btn" data-tab="signup">Hesap Oluştur</button>
@@ -374,7 +423,15 @@
           </div>
           <button type="submit" class="btn primary" id="login-btn">Giriş Yap</button>
         </form>
-        <button type="button" class="btn secondary" id="login-google-btn">Google ile bağlan</button>
+        <button type="button" class="btn secondary google-btn" id="login-google-btn">
+          <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-1.9 3.1l3.1 2.4c1.8-1.7 2.8-4.2 2.8-7.1 0-.7-.1-1.5-.2-2.2H12z"/>
+            <path fill="#34A853" d="M12 21.8c2.6 0 4.8-.9 6.4-2.3l-3.1-2.4c-.9.6-2 .9-3.3.9-2.5 0-4.6-1.7-5.4-4l-3.2 2.5c1.6 3.1 4.8 5.3 8.6 5.3z"/>
+            <path fill="#4A90E2" d="M6.6 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L3.4 7.5C2.8 8.8 2.5 10.3 2.5 12s.3 3.2.9 4.5L6.6 14z"/>
+            <path fill="#FBBC05" d="M12 6c1.4 0 2.7.5 3.7 1.4l2.8-2.8C16.8 3 14.6 2 12 2 8.2 2 5 4.2 3.4 7.5L6.6 10c.8-2.3 2.9-4 5.4-4z"/>
+          </svg>
+          <span>Google ile bağlan</span>
+        </button>
         <div class="forgot-password-link">
           <a href="forgot-password.html">Şifremi unuttum</a>
         </div>
@@ -408,6 +465,26 @@
               <div class="type-options">
                 <label><input type="radio" name="signup-customer-type" value="bireysel" checked /> Bireysel</label>
                 <label><input type="radio" name="signup-customer-type" value="kurumsal" /> Kurumsal</label>
+              </div>
+            </div>
+            <div class="field full corporate-fields" id="signup-corporate-fields" hidden>
+              <div class="form-grid" style="margin:0;">
+                <div class="field">
+                  <label for="signup-company-name">Firma Adı *</label>
+                  <input id="signup-company-name" type="text" maxlength="180" placeholder="Firma unvanı" />
+                </div>
+                <div class="field">
+                  <label for="signup-national-id">TC Kimlik No *</label>
+                  <input id="signup-national-id" type="text" maxlength="20" placeholder="11 haneli TC no" />
+                </div>
+                <div class="field">
+                  <label for="signup-tax-number">Vergi No *</label>
+                  <input id="signup-tax-number" type="text" maxlength="20" placeholder="Vergi numarası" />
+                </div>
+                <div class="field">
+                  <label for="signup-tax-office">Vergi Dairesi *</label>
+                  <input id="signup-tax-office" type="text" maxlength="120" placeholder="Vergi dairesi" />
+                </div>
               </div>
             </div>
             <div class="field full">
@@ -459,7 +536,16 @@
           </div>
           <button type="submit" class="btn primary" id="signup-btn">Hesap Oluştur</button>
         </form>
-        <button type="button" class="btn secondary" id="signup-google-btn">Google ile hızlı kayıt / giriş</button>
+        <button type="button" class="btn secondary google-btn" id="signup-google-btn">
+          <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-1.9 3.1l3.1 2.4c1.8-1.7 2.8-4.2 2.8-7.1 0-.7-.1-1.5-.2-2.2H12z"/>
+            <path fill="#34A853" d="M12 21.8c2.6 0 4.8-.9 6.4-2.3l-3.1-2.4c-.9.6-2 .9-3.3.9-2.5 0-4.6-1.7-5.4-4l-3.2 2.5c1.6 3.1 4.8 5.3 8.6 5.3z"/>
+            <path fill="#4A90E2" d="M6.6 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2L3.4 7.5C2.8 8.8 2.5 10.3 2.5 12s.3 3.2.9 4.5L6.6 14z"/>
+            <path fill="#FBBC05" d="M12 6c1.4 0 2.7.5 3.7 1.4l2.8-2.8C16.8 3 14.6 2 12 2 8.2 2 5 4.2 3.4 7.5L6.6 10c.8-2.3 2.9-4 5.4-4z"/>
+          </svg>
+          <span>Google ile kaydol</span>
+        </button>
+      </div>
       </div>
     </div>
   </div>
@@ -580,6 +666,11 @@
       const signupCity = document.getElementById('signup-city');
       const signupDistrict = document.getElementById('signup-district');
       const signupCustomerTypeInputs = document.querySelectorAll('input[name="signup-customer-type"]');
+      const signupCorporateFields = document.getElementById('signup-corporate-fields');
+      const signupCompanyName = document.getElementById('signup-company-name');
+      const signupNationalId = document.getElementById('signup-national-id');
+      const signupTaxNumber = document.getElementById('signup-tax-number');
+      const signupTaxOffice = document.getElementById('signup-tax-office');
       const redirectAfterAuth = (function sanitizeRedirectPath(value) {
         const raw = String(value || '').trim();
         if (!raw) return '/account.html';
@@ -709,20 +800,31 @@
         return selected && selected.value === 'kurumsal' ? 'kurumsal' : 'bireysel';
       }
 
+      function applySignupCorporateVisibility(type) {
+        const isCorporate = type === 'kurumsal';
+        if (signupCorporateFields) signupCorporateFields.hidden = !isCorporate;
+        if (signupCompanyName) signupCompanyName.required = isCorporate;
+        if (signupNationalId) signupNationalId.required = isCorporate;
+        if (signupTaxNumber) signupTaxNumber.required = isCorporate;
+        if (signupTaxOffice) signupTaxOffice.required = isCorporate;
+      }
+
       async function runGoogleAuth(button, fallbackMessage) {
         if (!window.BlaeneAuth || !window.BlaeneAuth.signInWithGoogle) {
           showAlert('Google ile giriş şu an kullanılamıyor.', 'error');
           return;
         }
-        const initialText = button.textContent;
+        const initialHtml = button.innerHTML;
         button.disabled = true;
-        button.textContent = 'Google yönlendirmesi...';
+        button.classList.add('is-loading');
+        button.innerHTML = '<span>Google y�nlendirmesi...</span>';
         try {
           await window.BlaeneAuth.signInWithGoogle(redirectAfterAuth);
         } catch (error) {
           showAlert((error && error.message) || fallbackMessage, 'error');
           button.disabled = false;
-          button.textContent = initialText;
+          button.classList.remove('is-loading');
+          button.innerHTML = initialHtml;
         }
       }
 
@@ -747,6 +849,11 @@
 
       signupCity.addEventListener('change', function () {
         populateDistricts(signupCity.value);
+      });
+      signupCustomerTypeInputs.forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          applySignupCorporateVisibility(getSelectedSignupCustomerType());
+        });
       });
 
       loginForm.addEventListener('submit', async function (event) {
@@ -777,9 +884,22 @@
             window.location.href = redirectAfterAuth;
           }, 700);
         } catch (error) {
-          recordLoginAttempt();
-          updateLoginCooldownDisplay();
-          showAlert((error && error.message) || 'Giriş başarısız.', 'error');
+          var errorMessage = (error && error.message) || 'Giris basarisiz.';
+          var isVerificationError =
+            Boolean(error && (
+              error.code === 'AUTH_EMAIL_NOT_CONFIRMED' ||
+              error.code === 'AUTH_EMAIL_RESEND_RATE_LIMIT' ||
+              error.code === 'AUTH_EMAIL_RATE_LIMIT'
+            )) ||
+            String(errorMessage).toLowerCase().includes('dogrulanmamis') ||
+            String(errorMessage).toLowerCase().includes('dogrulama') ||
+            String(errorMessage).toLowerCase().includes('e-posta kullanim limiti') ||
+            String(errorMessage).toLowerCase().includes('email rate limit');
+          if (!isVerificationError) {
+            recordLoginAttempt();
+            updateLoginCooldownDisplay();
+          }
+          showAlert(errorMessage, 'error');
           if (!isInLoginCooldown()) {
             loginBtn.disabled = false;
             loginBtn.textContent = 'Giriş Yap';
@@ -802,6 +922,10 @@
           const address = String(document.getElementById('signup-address').value || '').trim();
           const password = document.getElementById('signup-password').value;
           const customerType = getSelectedSignupCustomerType();
+          const companyName = String(signupCompanyName && signupCompanyName.value || '').trim();
+          const nationalId = String(signupNationalId && signupNationalId.value || '').trim();
+          const taxNumber = String(signupTaxNumber && signupTaxNumber.value || '').trim();
+          const taxOffice = String(signupTaxOffice && signupTaxOffice.value || '').trim();
           const consentKvkk = Boolean(document.getElementById('consent-kvkk').checked);
           const consentTerms = Boolean(document.getElementById('consent-terms').checked);
           const consentEmail = Boolean(document.getElementById('consent-email').checked);
@@ -810,11 +934,18 @@
 
           if (!city) throw new Error('Lütfen il seçin.');
           if (!district) throw new Error('Lütfen ilçe seçin.');
+          if (customerType === 'kurumsal' && (!companyName || !nationalId || !taxNumber || !taxOffice)) {
+            throw new Error('Kurumsal hesap için firma adı, TC, vergi no ve vergi dairesi zorunludur.');
+          }
 
           const createdUser = await window.BlaeneAuth.signUp(email, password, fullName, phone, {
             default_address: address,
             default_city: city + ' / ' + district,
             customer_type: customerType,
+            company_name: companyName,
+            national_id: nationalId,
+            tax_number: taxNumber,
+            tax_office: taxOffice,
             consent_kvkk: consentKvkk,
             consent_terms: consentTerms,
             consent_marketing_email: consentEmail,
@@ -826,12 +957,48 @@
             localStorage.setItem(CUSTOMER_TYPE_STORAGE_PREFIX + createdUser.id, customerType);
           }
 
-          showAlert('Hesabınız başarıyla oluşturuldu. Yönlendiriliyorsunuz...', 'success');
-          setTimeout(function () {
-            window.location.href = redirectAfterAuth;
-          }, 1100);
+          var sessionAfterSignup = null;
+          try {
+            if (window.BlaeneAuth && typeof window.BlaeneAuth.getSession === 'function') {
+              sessionAfterSignup = await window.BlaeneAuth.getSession();
+            }
+          } catch (_) {
+            sessionAfterSignup = null;
+          }
+
+          if (sessionAfterSignup && sessionAfterSignup.user) {
+            showAlert('Hesabiniz basariyla olusturuldu. Yonlendiriliyorsunuz...', 'success');
+            setTimeout(function () {
+              window.location.href = redirectAfterAuth;
+            }, 1100);
+          } else {
+            showAlert('Kayit tamamlandi. E-posta dogrulamasi gerekebilir; dogrulayip giris yapin.', 'info');
+            switchTab('login');
+            var loginEmailInput = document.getElementById('login-email');
+            if (loginEmailInput && !loginEmailInput.value) loginEmailInput.value = email;
+            signupBtn.disabled = false;
+            signupBtn.textContent = 'Hesap Olustur';
+          }
         } catch (error) {
-          showAlert((error && error.message) || 'Hesap oluşturulamadı.', 'error');
+          const errorMessage = (error && error.message) || 'Hesap oluşturulamadı.';
+          const errorCode = String(error && error.code || '').toUpperCase();
+          const normalizedMessage = String(errorMessage).toLowerCase();
+          const shouldSwitchToLogin =
+            errorCode === 'AUTH_EMAIL_RATE_LIMIT' ||
+            errorCode === 'AUTH_EMAIL_NOT_CONFIRMED' ||
+            normalizedMessage.includes('dogrulama') ||
+            normalizedMessage.includes('dogrulan') ||
+            normalizedMessage.includes('kullanim limiti') ||
+            normalizedMessage.includes('rate limit');
+
+          showAlert(errorMessage, shouldSwitchToLogin ? 'info' : 'error');
+          if (shouldSwitchToLogin) {
+            switchTab('login');
+            var loginEmailInputOnSignupError = document.getElementById('login-email');
+            if (loginEmailInputOnSignupError && !loginEmailInputOnSignupError.value) {
+              loginEmailInputOnSignupError.value = String(document.getElementById('signup-email').value || '').trim();
+            }
+          }
           signupBtn.disabled = false;
           signupBtn.textContent = 'Hesap Oluştur';
         }
@@ -900,6 +1067,7 @@
       (async function init() {
         populateCities();
         populateDistricts('');
+        applySignupCorporateVisibility(getSelectedSignupCustomerType());
         updateLoginCooldownDisplay();
         const ready = await waitForAuthReady();
         if (!ready) {
@@ -907,9 +1075,70 @@
           return;
         }
         window.BlaeneAuth.initSupabase();
+
+        // Şifre sıfırlama linki kontrolü
+        const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+        const queryParams = new URLSearchParams(window.location.search);
+        const hashType = hashParams.get('type');
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const tokenHash = queryParams.get('token_hash');
+        const queryType = queryParams.get('type');
+
+        async function showResetForm() {
+          document.getElementById('auth-tabs-container').style.display = 'none';
+          document.getElementById('reset-password-container').style.display = 'block';
+          document.querySelector('h1').textContent = 'Şifre Sıfırla';
+        }
+
+        if (hashType === 'recovery' && accessToken) {
+          const supabase = window.supabase.createClient(
+            'https://myufpjuyfjmpbunrkozy.supabase.co',
+            'sb_publishable_uKwxlDCAxSOzus7W96aF9w_m2iDE2QA'
+          );
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || '' });
+          await showResetForm();
+        } else if (queryType === 'recovery' && tokenHash) {
+          const supabase = window.supabase.createClient(
+            'https://myufpjuyfjmpbunrkozy.supabase.co',
+            'sb_publishable_uKwxlDCAxSOzus7W96aF9w_m2iDE2QA'
+          );
+          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
+          if (error) {
+            showAlert('Bağlantı geçersiz veya süresi dolmuş. Lütfen tekrar deneyin.', 'error');
+          } else {
+            await showResetForm();
+          }
+        }
+
+        document.getElementById('reset-password-form').addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const newPwd = document.getElementById('reset-new-password').value;
+          const confirmPwd = document.getElementById('reset-confirm-password').value;
+          if (newPwd !== confirmPwd) { showAlert('Şifreler eşleşmiyor.', 'error'); return; }
+          if (newPwd.length < 6) { showAlert('Şifre en az 6 karakter olmalı.', 'error'); return; }
+          const btn = document.getElementById('reset-password-btn');
+          btn.disabled = true;
+          btn.textContent = 'Güncelleniyor...';
+          const supabase = window.supabase.createClient(
+            'https://myufpjuyfjmpbunrkozy.supabase.co',
+            'sb_publishable_uKwxlDCAxSOzus7W96aF9w_m2iDE2QA'
+          );
+          const { error } = await supabase.auth.updateUser({ password: newPwd });
+          if (error) {
+            btn.disabled = false;
+            btn.textContent = 'Şifremi Güncelle';
+            showAlert(error.message || 'Şifre güncellenemedi.', 'error');
+            return;
+          }
+          showAlert('<strong>Şifreniz güncellendi!</strong> Giriş sayfasına yönlendiriliyorsunuz...', 'success');
+          setTimeout(function () { window.location.href = 'auth.html'; }, 2500);
+        });
       })();
     })();
   </script>
   <script src="assets/js/traffic.js"></script>
 </body>
 </html>
+
+
