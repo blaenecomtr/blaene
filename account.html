@@ -189,8 +189,18 @@
     }
 
     @media (max-width: 980px) {
-      .account-layout { grid-template-columns: 1fr; }
-      .account-sidebar { position: static !important; }
+      .account-layout {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      .account-sidebar {
+        position: static !important;
+        top: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+      }
+      .sidebar-nav { padding-bottom: 0; }
+      .sidebar-logout { margin-bottom: 0.4rem; }
     }
 
     /* ── SIDEBAR ─────────────────────────────────── */
@@ -365,6 +375,13 @@
       font-size: 0.9rem; color: #1f2937; text-transform: none;
       letter-spacing: normal; font-weight: 600;
     }
+    .corporate-fields {
+      border: 1px dashed #d3d8df;
+      border-radius: 10px;
+      background: #fbfcff;
+      padding: 0.72rem;
+    }
+    .corporate-fields[hidden] { display: none !important; }
 
     .form-actions {
       display: flex; justify-content: flex-end; margin-top: 0.8rem;
@@ -474,6 +491,14 @@
     .detail-btn:hover {
       border-color: #8f97a1;
     }
+    .detail-btn.cancel-btn {
+      border-color: #ef4444;
+      color: #b91c1c;
+      background: #fff;
+    }
+    .detail-btn.cancel-btn:hover {
+      background: #fef2f2;
+    }
 
     .order-detail-panel {
       display: none;
@@ -504,6 +529,26 @@
       border-bottom: 1px dashed #d6dae0;
       padding-bottom: 0.35rem;
     }
+    .detail-item-main {
+      min-width: 0;
+      display: grid;
+      gap: 0.14rem;
+    }
+    .detail-item-name {
+      font-weight: 600;
+      color: #111827;
+      word-break: break-word;
+    }
+    .detail-item-meta {
+      color: #6b7280;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .detail-item-qty {
+      white-space: nowrap;
+      font-weight: 700;
+    }
     .detail-item:last-child {
       border-bottom: 0;
       padding-bottom: 0;
@@ -518,9 +563,17 @@
       align-content: start;
     }
     .detail-summary .line {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      align-items: start;
       gap: 0.5rem;
+    }
+    .detail-summary .line span {
+      color: #6b7280;
+    }
+    .detail-summary .line strong {
+      text-align: right;
+      word-break: break-word;
     }
     .detail-summary .line.total {
       font-weight: 800;
@@ -667,7 +720,7 @@
         <!-- Sidebar -->
         <aside class="account-sidebar">
           <div class="sidebar-user">
-            <div class="sidebar-user-greeting" id="sidebar-greeting">Hoş Geldiniz / Sn.</div>
+            <div class="sidebar-user-greeting" id="sidebar-greeting">Sn.</div>
             <div class="sidebar-user-name" id="sidebar-name">...</div>
           </div>
           <nav class="sidebar-nav" aria-label="Hesap menüsü">
@@ -694,6 +747,10 @@
             <a href="?section=favoriler" class="sidebar-nav-item" data-section="favoriler">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
               Favori Ürünleri Listele
+            </a>
+            <a href="?section=sifre" class="sidebar-nav-item" data-section="sifre">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Şifre Değiştir
             </a>
           </nav>
           <button id="sidebar-logout-btn" class="sidebar-logout" type="button">Çıkış Yap</button>
@@ -758,11 +815,11 @@
               <div class="bank-details">
                 <div class="bank-row">
                   <span class="bank-label">Banka</span>
-                  <span class="bank-value">Ziraat Bankası</span>
+                  <span class="bank-value" id="bank-name">Ziraat Bankası</span>
                 </div>
                 <div class="bank-row">
                   <span class="bank-label">Alıcı</span>
-                  <span class="bank-value">Blaene Metal Ürünleri</span>
+                  <span class="bank-value" id="bank-recipient">Blaene Metal Ürünleri</span>
                 </div>
                 <div class="bank-row">
                   <span class="bank-label">IBAN</span>
@@ -838,6 +895,26 @@
                     <label for="address-input">Varsayılan Adres</label>
                     <textarea id="address-input" maxlength="500" placeholder="Adres bilginizi girin"></textarea>
                   </div>
+                  <div class="field full corporate-fields" id="corporate-fields" hidden>
+                    <div class="form-grid" style="margin:0;">
+                      <div class="field">
+                        <label for="company-name-input">Firma Adi *</label>
+                        <input id="company-name-input" type="text" maxlength="180" placeholder="Firma unvani" />
+                      </div>
+                      <div class="field">
+                        <label for="national-id-input">TC Kimlik No *</label>
+                        <input id="national-id-input" type="text" maxlength="20" placeholder="11 haneli TC no" />
+                      </div>
+                      <div class="field">
+                        <label for="tax-number-input">Vergi No *</label>
+                        <input id="tax-number-input" type="text" maxlength="20" placeholder="Vergi numarasi" />
+                      </div>
+                      <div class="field">
+                        <label for="tax-office-input">Vergi Dairesi *</label>
+                        <input id="tax-office-input" type="text" maxlength="120" placeholder="Vergi dairesi" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div class="form-actions">
                   <button class="save-btn" id="save-btn" type="submit">Bilgileri Kaydet</button>
@@ -868,6 +945,25 @@
             </div>
           </div>
 
+          <!-- Şifre Değiştir -->
+          <div class="section-panel" data-panel="sifre">
+            <div class="card">
+              <h2 class="card-title">Şifre Değiştir</h2>
+              <div id="sifre-alert"></div>
+              <form id="sifre-form" style="max-width:400px;">
+                <div style="display:flex;flex-direction:column;gap:0.34rem;margin-bottom:0.8rem;">
+                  <label style="font-size:0.76rem;letter-spacing:0.04em;text-transform:uppercase;color:#6b7280;font-weight:700;">Yeni Şifre</label>
+                  <input id="sifre-new" type="password" minlength="6" required style="width:100%;border:1px solid #cfd5dd;border-radius:10px;padding:0.62rem 0.72rem;font-size:0.9rem;font-family:inherit;background:#fff;color:#111827;outline:none;" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.34rem;margin-bottom:1rem;">
+                  <label style="font-size:0.76rem;letter-spacing:0.04em;text-transform:uppercase;color:#6b7280;font-weight:700;">Yeni Şifre Tekrar</label>
+                  <input id="sifre-confirm" type="password" minlength="6" required style="width:100%;border:1px solid #cfd5dd;border-radius:10px;padding:0.62rem 0.72rem;font-size:0.9rem;font-family:inherit;background:#fff;color:#111827;outline:none;" />
+                </div>
+                <button type="submit" id="sifre-btn" style="background:#111827;color:#fff;border:0;border-radius:9px;padding:0.7rem 1.4rem;font-size:0.9rem;font-weight:700;font-family:inherit;cursor:pointer;">Şifremi Güncelle</button>
+              </form>
+            </div>
+          </div>
+
         </div><!-- /account-content -->
       </div><!-- /account-layout -->
     </div><!-- /account-main -->
@@ -881,7 +977,7 @@
   <script src="./assets/js/user-auth.js"></script>
   <script>
   (function () {
-    const CITY_LIST = [
+    let CITY_LIST = [
       'Adana','Adiyaman','Afyonkarahisar','Agri','Aksaray','Amasya','Ankara','Antalya','Ardahan','Artvin',
       'Aydin','Balikesir','Bartin','Batman','Bayburt','Bilecik','Bingol','Bitlis','Bolu','Burdur',
       'Bursa','Canakkale','Cankiri','Corum','Denizli','Diyarbakir','Duzce','Edirne','Elazig','Erzincan',
@@ -892,7 +988,7 @@
       'Sirnak','Sivas','Tekirdag','Tokat','Trabzon','Tunceli','Usak','Van','Yalova','Yozgat','Zonguldak'
     ];
 
-    const DISTRICT_MAP = {
+    let DISTRICT_MAP = {
       Istanbul: ['Adalar','Arnavutkoy','Atasehir','Avcilar','Bagcilar','Bahcelievler','Bakirkoy','Basaksehir','Bayrampasa','Besiktas','Beykoz','Beylikduzu','Beyoglu','Buyukcekmece','Catalca','Cekmekoy','Esenler','Esenyurt','Eyupsultan','Fatih','Gaziosmanpasa','Gungoren','Kadikoy','Kagithane','Kartal','Kucukcekmece','Maltepe','Pendik','Sancaktepe','Sariyer','Silivri','Sisli','Sultanbeyli','Sultangazi','Tuzla','Umraniye','Uskudar','Zeytinburnu'],
       Ankara: ['Altindag','Cankaya','Etimesgut','Kecioren','Mamak','Sincan','Yenimahalle','Golbasi','Polatli','Pursaklar'],
       Izmir: ['Aliaga','Balcova','Bayrakli','Bornova','Buca','Cigli','Gaziemir','Guzelbahce','Karabaglar','Karaburun','Karsiyaka','Kemalpasa','Konak','Menderes','Menemen','Narlidere','Seferihisar','Torbali','Urla'],
@@ -907,8 +1003,70 @@
       Kayseri: ['Kocasinan','Melikgazi','Talas','Develi'],
       Balikesir: ['Altieylul','Karesi','Bandirma','Edremit','Gonen'],
       Manisa: ['Sehzadeler','Yunusemre','Akhisar','Salihli','Turgutlu'],
-      Aydin: ['Efeler','Didim','Kusadasi','Nazilli','Soke']
+      Aydin: ['Efeler','Didim','Kusadasi','Nazilli','Soke'],
+      Trabzon: ['Akcaabat','Arakli','Arsin','Besikduzu','Carsibasi','Caykara','Dernekpazari','Duzkoy','Hayrat','Koprubasi','Macka','Of','Ortahisar','Salpazari','Surmene','Tonya','Vakfikebir','Yomra','Merkez'],
+      Corum: ['Alaca','Bayat','Bogazkale','Dodurga','Iskilip','Kargi','Lacin','Mecitozu','Merkez','Oguzlar','Ortakoy','Osmancik','Sungurlu','Ugurludag']
     };
+
+    function titleCaseTr(value) {
+      const lower = String(value || '').trim().toLocaleLowerCase('tr-TR');
+      if (!lower) return '';
+      return lower
+        .split(/(\s+|-)/)
+        .map(function (part) {
+          if (!part || /^\s+$/.test(part) || part === '-') return part;
+          return part.charAt(0).toLocaleUpperCase('tr-TR') + part.slice(1);
+        })
+        .join('');
+    }
+
+    async function loadGeoDataset() {
+      try {
+        const [citiesRes, districtsRes] = await Promise.all([
+          fetch('assets/data/tr-cities.json', { method: 'GET', cache: 'force-cache' }),
+          fetch('assets/data/tr-districts.json', { method: 'GET', cache: 'force-cache' }),
+        ]);
+        if (!citiesRes.ok || !districtsRes.ok) return;
+
+        const [citiesRaw, districtsRaw] = await Promise.all([
+          citiesRes.json().catch(function () { return []; }),
+          districtsRes.json().catch(function () { return []; }),
+        ]);
+        if (!Array.isArray(citiesRaw) || !Array.isArray(districtsRaw)) return;
+
+        const nextCities = [];
+        const citySeen = new Set();
+        citiesRaw.forEach(function (row) {
+          const cityName = titleCaseTr(row && row.cityName);
+          if (!cityName) return;
+          const key = normalizeGeoText(cityName);
+          if (citySeen.has(key)) return;
+          citySeen.add(key);
+          nextCities.push(cityName);
+        });
+        nextCities.sort(function (a, b) { return a.localeCompare(b, 'tr-TR'); });
+
+        const nextMap = {};
+        districtsRaw.forEach(function (row) {
+          const cityName = titleCaseTr(row && row.cityName);
+          const districtName = titleCaseTr(row && row.districtName);
+          if (!cityName || !districtName) return;
+          if (!Array.isArray(nextMap[cityName])) nextMap[cityName] = [];
+          const exists = nextMap[cityName].some(function (d) {
+            return normalizeGeoText(d) === normalizeGeoText(districtName);
+          });
+          if (!exists) nextMap[cityName].push(districtName);
+        });
+        Object.keys(nextMap).forEach(function (cityName) {
+          nextMap[cityName].sort(function (a, b) { return a.localeCompare(b, 'tr-TR'); });
+        });
+
+        if (nextCities.length) CITY_LIST = nextCities;
+        if (Object.keys(nextMap).length) DISTRICT_MAP = nextMap;
+      } catch (_) {
+        /* fallback to static city/district map */
+      }
+    }
 
     const CUSTOMER_TYPE_PREFIX = 'blaene_customer_type:';
     let currentUser = null;
@@ -1010,33 +1168,109 @@
     /* ── CITY / DISTRICT ──────────────────────────── */
     const cityInput = document.getElementById('city-input');
     const districtInput = document.getElementById('district-input');
+    const corporateFields = document.getElementById('corporate-fields');
+    const companyNameInput = document.getElementById('company-name-input');
+    const nationalIdInput = document.getElementById('national-id-input');
+    const taxNumberInput = document.getElementById('tax-number-input');
+    const taxOfficeInput = document.getElementById('tax-office-input');
+
+    function normalizeGeoText(v) {
+      return String(v || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\u00e7\u00c7]/g, 'c')
+        .replace(/[\u011f\u011e]/g, 'g')
+        .replace(/[\u0131I]/g, 'i')
+        .replace(/[\u00f6\u00d6]/g, 'o')
+        .replace(/[\u015f\u015e]/g, 's')
+        .replace(/[\u00fc\u00dc]/g, 'u');
+    }
+
+    function findCityKey(city) {
+      const raw = String(city || '').trim();
+      if (!raw) return '';
+      if (CITY_LIST.includes(raw)) return raw;
+      const normalized = normalizeGeoText(raw);
+      return CITY_LIST.find(function (c) {
+        return normalizeGeoText(c) === normalized;
+      }) || '';
+    }
+
+    function getDistrictList(city) {
+      const cityKey = findCityKey(city) || String(city || '').trim();
+      if (!cityKey) return [];
+      if (Array.isArray(DISTRICT_MAP[cityKey]) && DISTRICT_MAP[cityKey].length) return DISTRICT_MAP[cityKey];
+      const normalized = normalizeGeoText(cityKey);
+      const mappedKey = Object.keys(DISTRICT_MAP).find(function (k) {
+        return normalizeGeoText(k) === normalized;
+      });
+      if (mappedKey && Array.isArray(DISTRICT_MAP[mappedKey]) && DISTRICT_MAP[mappedKey].length) {
+        return DISTRICT_MAP[mappedKey];
+      }
+      return ['Merkez'];
+    }
+
+    function applyCorporateVisibility(type) {
+      const isCorporate = normalizeType(type) === 'kurumsal';
+      if (corporateFields) corporateFields.hidden = !isCorporate;
+      if (companyNameInput) companyNameInput.required = isCorporate;
+      if (nationalIdInput) nationalIdInput.required = isCorporate;
+      if (taxNumberInput) taxNumberInput.required = isCorporate;
+      if (taxOfficeInput) taxOfficeInput.required = isCorporate;
+    }
 
     function populateCities(selected) {
       cityInput.innerHTML = '<option value="">İl seçin</option>';
+      const selectedKey = findCityKey(selected);
       CITY_LIST.forEach(function (c) {
         const o = document.createElement('option');
-        o.value = c; o.textContent = c;
-        if (c === selected) o.selected = true;
+        o.value = c;
+        o.textContent = c;
+        if (c === selectedKey) o.selected = true;
         cityInput.appendChild(o);
       });
+      if (selectedKey) {
+        cityInput.value = selectedKey;
+      } else if (selected) {
+        const custom = document.createElement('option');
+        custom.value = String(selected).trim();
+        custom.textContent = String(selected).trim();
+        custom.selected = true;
+        cityInput.appendChild(custom);
+      }
     }
 
     function populateDistricts(city, selected) {
       districtInput.innerHTML = '';
-      if (!city) {
+      const cityKey = findCityKey(city);
+      if (!cityKey) {
         districtInput.innerHTML = '<option value="">Önce il seçin</option>';
         districtInput.disabled = true;
         return;
       }
       districtInput.disabled = false;
-      const list = DISTRICT_MAP[city] || ['Merkez'];
+      const list = getDistrictList(cityKey);
+      const normalizedSelected = normalizeGeoText(selected);
+      let foundSelected = false;
       districtInput.innerHTML = '<option value="">İlçe seçin</option>';
       list.forEach(function (d) {
         const o = document.createElement('option');
-        o.value = d; o.textContent = d;
-        if (d === selected) o.selected = true;
+        o.value = d;
+        o.textContent = d;
+        if (normalizedSelected && normalizeGeoText(d) === normalizedSelected) {
+          o.selected = true;
+          foundSelected = true;
+        }
         districtInput.appendChild(o);
       });
+      if (cityInput && cityInput.value !== cityKey) cityInput.value = cityKey;
+      if (selected && !foundSelected) {
+        const custom = document.createElement('option');
+        custom.value = String(selected).trim();
+        custom.textContent = String(selected).trim();
+        custom.selected = true;
+        districtInput.appendChild(custom);
+      }
     }
 
     function parseCityDistrict(raw) {
@@ -1053,20 +1287,26 @@
     cityInput.addEventListener('change', function () {
       populateDistricts(cityInput.value, '');
     });
+    document.querySelectorAll('input[name="customer-type"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        applyCorporateVisibility(radio.value);
+      });
+    });
 
     /* ── PROFILE VIEW ─────────────────────────────── */
     function updateProfileView(profile, user) {
+      const meta = (user && user.user_metadata) || {};
       const name  = resolveFullName(profile, user);
       const email = (user&&user.email) || '-';
-      const phone = (profile&&profile.phone) || '-';
-      const cp    = parseCityDistrict((profile&&profile.default_city)||'');
-      const addr  = (profile&&profile.default_address) || '-';
-      const type  = normalizeType((profile&&(profile.customer_type||profile.customer_kind))||getStoredType());
+      const phone = (profile&&profile.phone) || meta.phone || '-';
+      const cp    = parseCityDistrict((profile&&profile.default_city) || meta.default_city || '');
+      const addr  = (profile&&profile.default_address) || meta.default_address || '-';
+      const type  = normalizeType((profile&&(profile.customer_type||profile.customer_kind)) || meta.customer_type || meta.customer_kind || getStoredType());
 
       const greetingEl = document.getElementById('sidebar-greeting');
       document.getElementById('sidebar-name').textContent = name;
       if (greetingEl) {
-        greetingEl.textContent = name && name !== '-' ? ('Hoş Geldiniz / Sn. ' + name) : 'Hoş Geldiniz / Sn.';
+        greetingEl.textContent = name && name !== '-' ? ('Sn. ' + name) : 'Sn.';
       }
       document.getElementById('view-name').textContent = name;
       document.getElementById('view-email').textContent = email;
@@ -1086,6 +1326,11 @@
         r.checked = r.value === type;
       });
       setStoredType(type);
+      applyCorporateVisibility(type);
+      if (companyNameInput) companyNameInput.value = String((profile&&profile.company_name) || meta.company_name || '');
+      if (nationalIdInput) nationalIdInput.value = String((profile&&profile.national_id) || meta.national_id || '');
+      if (taxNumberInput) taxNumberInput.value = String((profile&&profile.tax_number) || meta.tax_number || '');
+      if (taxOfficeInput) taxOfficeInput.value = String((profile&&profile.tax_office) || meta.tax_office || '');
     }
 
     /* ── ORDERS ───────────────────────────────────── */
@@ -1160,6 +1405,106 @@
       }
     }
 
+    function paymentMethodLabel(order) {
+      const method = String(order && order.payment_method || '').toLowerCase();
+      if (method === 'bank_transfer') return 'Havale / EFT';
+      if (method === 'card') return 'Kredi / Banka Karti';
+      return 'Belirtilmedi';
+    }
+
+    function providerLabel(value, fallback, paymentMethod) {
+      const method = String(paymentMethod || '').trim().toLowerCase();
+      if (method === 'bank_transfer') return 'Havale';
+      const normalized = String(value || '').trim();
+      if (!normalized) return fallback || '-';
+      const key = normalized.toLowerCase();
+      if (key === 'manual' || key === 'bank_transfer' || key === 'havale' || key === 'eft') return 'Havale';
+      const map = {
+        iyzico: 'iyzico',
+        paytr: 'PayTR',
+        yurtici: 'Yurtici Kargo',
+        mng: 'MNG Kargo',
+        aras: 'Aras Kargo',
+      };
+      return map[key] || normalized;
+    }
+
+    function firstText() {
+      for (let i = 0; i < arguments.length; i++) {
+        const value = String(arguments[i] || '').trim();
+        if (value) return value;
+      }
+      return '';
+    }
+
+    function buildAddressLine(order) {
+      const city = firstText(
+        order && order.city,
+        order && order.shipping_city,
+        order && order.delivery_city
+      );
+      const district = firstText(
+        order && order.district,
+        order && order.shipping_district,
+        order && order.delivery_district
+      );
+      let address = firstText(
+        order && order.address,
+        order && order.shipping_address,
+        order && order.delivery_address,
+        order && order.user_address
+      );
+      if (!address) {
+        address = firstText(order && order.billing_address);
+      }
+      const cityDistrict = city ? (city + (district ? ' / ' + district : '')) : '';
+      if (!address && !cityDistrict) return '-';
+      if (!address) return cityDistrict;
+      if (!cityDistrict) return address;
+      return cityDistrict + ' - ' + address;
+    }
+
+    function buildBillingLine(order) {
+      const same = order && order.billing_same_as_shipping === true;
+      if (same) return 'Teslimat adresi ile ayni';
+      const city = String(order && order.billing_city || '').trim();
+      const district = String(order && order.billing_district || '').trim();
+      const address = String(order && order.billing_address || '').trim();
+      const name = String(order && order.billing_name || '').trim();
+      const cityDistrict = city ? (city + (district ? ' / ' + district : '')) : '';
+      const parts = [];
+      if (name) parts.push(name);
+      if (cityDistrict) parts.push(cityDistrict);
+      if (address) parts.push(address);
+      return parts.length ? parts.join(' - ') : '-';
+    }
+
+    function canCancelOrder(order) {
+      const shippingState = String(order && order.status || '').toLowerCase();
+      const paymentState = String(order && order.payment_status || '').toLowerCase();
+      return (shippingState === 'pending' || shippingState === 'processing') && paymentState !== 'paid';
+    }
+
+    async function cancelOrderRequest(orderId, orderNo) {
+      if (!orderId) return;
+      const confirmCancel = window.confirm('Siparis #' + (orderNo || '-') + ' iptal edilsin mi? Emin misiniz?');
+      if (!confirmCancel) return;
+
+      if (!window.BlaeneAuth || typeof window.BlaeneAuth.cancelCustomerOrder !== 'function') {
+        window.alert('Siparis iptal ozelligi su an kullanilamiyor.');
+        return;
+      }
+
+      try {
+        await window.BlaeneAuth.cancelCustomerOrder(orderId);
+        window.alert('Siparisiniz iptal edildi.');
+        const orders = await window.BlaeneAuth.getCustomerOrders();
+        renderOrders(orders);
+      } catch (error) {
+        window.alert(error && error.message ? error.message : 'Siparis iptal edilemedi.');
+      }
+    }
+
     function renderOrders(orders) {
       const box = document.getElementById('orders-container');
       if (!Array.isArray(orders) || !orders.length) {
@@ -1172,11 +1517,14 @@
         const shState = String(order&&order.status||'').toLowerCase()||'pending';
         const pyState = String(order&&order.payment_status||'').toLowerCase()||'pending';
         const mainState = shState === 'pending' ? pyState : shState;
+        const canCreateReturn = shState === 'delivered';
+        const canCancel = canCancelOrder(order);
         const rowId = 'od-' + i;
-        const orderNo = escapeHtml(order&&order.order_no||'-');
+        const orderNoRaw = String(order&&order.order_no||'-');
+        const orderNo = escapeHtml(orderNoRaw);
         const items = Array.isArray(order&&order.order_items) ? order.order_items : [];
         const mainItem = items[0] || {};
-        const orderTitle = escapeHtml(mainItem.product_name || ('Sipariş #' + orderNo));
+        const orderTitle = escapeHtml(mainItem.product_name || ('Sipariş #' + orderNoRaw));
         const image = firstOrderImage(items);
         const imageHtml = image
           ? '<img class="order-thumb" src="' + escapeHtml(image) + '" alt="Sipariş ürünü" loading="lazy" />'
@@ -1184,16 +1532,31 @@
         const extraCount = Math.max(items.length - 1, 0);
         const qtyTotal = items.reduce(function (sum, it) { return sum + Number(it && it.quantity || 0); }, 0);
         const dateText = escapeHtml(formatDate(order&&order.created_at));
+        const paymentProvider = providerLabel(order && order.payment_provider, '-', order && order.payment_method);
+        const shippingProvider = providerLabel(order && order.shipping_provider, 'Kargo');
         const trackingText = order&&order.tracking_code
-          ? escapeHtml((order.shipping_provider || 'Kargo') + ' / ' + order.tracking_code)
+          ? escapeHtml(shippingProvider + ' / ' + order.tracking_code)
           : '-';
+        const shippingAddress = buildAddressLine(order);
+        const billingAddress = buildBillingLine(order);
+        const discount = Number(order && order.discount_amount || 0);
+        const promoCode = String(order && order.promo_code || '').trim();
+        const hasDiscount = Number.isFinite(discount) && discount > 0;
 
         let detailItems = '<div class="detail-items">';
         if (items.length) {
           items.forEach(function (it) {
             const name = escapeHtml(it&&it.product_name || 'Ürün');
             const qty = Number(it&&it.quantity || 0);
-            detailItems += '<div class="detail-item"><span>' + name + '</span><strong>x' + qty + '</strong></div>';
+            const productCode = escapeHtml(String(it&&it.product_code || '').trim() || '-');
+            const productColor = escapeHtml(String(it && (it.product_color || it.color) || '').trim() || '-');
+            detailItems += '<div class="detail-item">';
+            detailItems += '<div class="detail-item-main">';
+            detailItems += '<span class="detail-item-name">' + name + '</span>';
+            detailItems += '<small class="detail-item-meta">Ürün Kodu: ' + productCode + ' | Renk: ' + productColor + '</small>';
+            detailItems += '</div>';
+            detailItems += '<strong class="detail-item-qty">x' + qty + '</strong>';
+            detailItems += '</div>';
           });
         } else {
           detailItems += '<div class="detail-item"><span>Ürün bilgisi yok</span><strong>-</strong></div>';
@@ -1225,12 +1588,35 @@
         html += '<div class="order-detail-content">';
         html += detailItems;
         html += '<div class="detail-summary">';
+        html += '<div class="line"><span>Ödeme Şekli</span><strong>' + escapeHtml(paymentMethodLabel(order)) + '</strong></div>';
+        html += '<div class="line"><span>Ödeme Sağlayıcısı</span><strong>' + escapeHtml(paymentProvider) + '</strong></div>';
         html += '<div class="line"><span>Ödeme Durumu</span><strong>' + escapeHtml(statusLabel(pyState)) + '</strong></div>';
-        html += '<div class="line"><span>Kargo</span><strong>' + trackingText + '</strong></div>';
+        html += '<div class="line"><span>Kargo Firması</span><strong>' + escapeHtml(shippingProvider) + '</strong></div>';
+        html += '<div class="line"><span>Kargo Takip</span><strong>' + trackingText + '</strong></div>';
+        html += '<div class="line"><span>Teslimat Adresi</span><strong>' + escapeHtml(shippingAddress) + '</strong></div>';
+        html += '<div class="line"><span>Fatura Adresi</span><strong>' + escapeHtml(billingAddress) + '</strong></div>';
+        html += '<div class="line"><span>Ara Toplam</span><strong>' + escapeHtml(formatPrice(order&&order.subtotal||0)) + '</strong></div>';
+        html += '<div class="line"><span>Kargo Ücreti</span><strong>' + escapeHtml(formatPrice(order&&order.shipping||0)) + '</strong></div>';
+        if (hasDiscount) {
+          const discountText = '-' + escapeHtml(formatPrice(discount));
+          html += '<div class="line"><span>İndirim</span><strong>' + discountText + '</strong></div>';
+        } else {
+          html += '<div class="line"><span>İndirim</span><strong>Yok</strong></div>';
+        }
+        if (promoCode) {
+          html += '<div class="line"><span>Kupon</span><strong>' + escapeHtml(promoCode) + '</strong></div>';
+        }
         html += '<div class="line total"><span>Toplam</span><strong>' + escapeHtml(formatPrice(order&&order.total||0)) + '</strong></div>';
         html += '</div>';
         html += '<div style="margin-top:10px;display:flex;justify-content:flex-end;">';
-        html += '<button class="detail-btn return-btn" type="button" data-order-id="' + escapeHtml(order&&order.id||'') + '" data-order-no="' + orderNo + '">Iade Talebi Olustur</button>';
+        if (canCreateReturn) {
+          html += '<button class="detail-btn return-btn" type="button" data-order-id="' + escapeHtml(order&&order.id||'') + '" data-order-no="' + orderNo + '">Iade Talebi Olustur</button>';
+        } else {
+          html += '<span style="font-size:12px;color:#6b7280;">Iade icin siparisin teslim edilmis olmasi gerekir.</span>';
+        }
+        if (canCancel) {
+          html += '<button class="detail-btn cancel-btn" type="button" data-cancel-order-id="' + escapeHtml(order&&order.id||'') + '" data-cancel-order-no="' + orderNo + '" style="margin-left:8px;">Siparisi Iptal Et</button>';
+        }
         html += '</div>';
         html += '</div>';
         html += '</div>';
@@ -1255,7 +1641,55 @@
           void createReturnRequest(orderId, orderNo);
         });
       });
+      box.querySelectorAll('.cancel-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const orderId = String(btn.getAttribute('data-cancel-order-id') || '').trim();
+          const orderNo = String(btn.getAttribute('data-cancel-order-no') || '').trim();
+          void cancelOrderRequest(orderId, orderNo);
+        });
+      });
     }
+    function normalizeBankTransferAccounts(raw) {
+      if (!Array.isArray(raw)) return [];
+      return raw
+        .map(function (item) {
+          if (!item || typeof item !== 'object') return null;
+          const bankName = String(item.bank_name || item.bank || '').trim();
+          const accountName = String(item.account_name || item.recipient || item.alici || '').trim();
+          const iban = String(item.iban || '').trim().toUpperCase();
+          if (!bankName && !accountName && !iban) return null;
+          return { bank_name: bankName, account_name: accountName, iban: iban };
+        })
+        .filter(Boolean);
+    }
+
+    async function loadTransferBankInfo() {
+      const bankNameEl = document.getElementById('bank-name');
+      const recipientEl = document.getElementById('bank-recipient');
+      const ibanEl = document.getElementById('bank-iban');
+      const descHintEl = document.getElementById('bank-desc-hint');
+      if (!bankNameEl || !recipientEl || !ibanEl) return;
+
+      try {
+        const response = await fetch('/api/public/checkout-settings', { method: 'GET' });
+        if (!response.ok) return;
+        const payload = await response.json().catch(function () { return null; });
+        const scoped = payload && payload.data && typeof payload.data === 'object' ? payload.data : payload;
+        const payment = scoped && scoped.payment && typeof scoped.payment === 'object' ? scoped.payment : {};
+        const accounts = normalizeBankTransferAccounts(payment.bank_transfer_accounts);
+        const first = accounts[0] || null;
+        if (!first) return;
+        const companyName = String(payment.bank_transfer_company_name || '').trim();
+
+        if (first.bank_name) bankNameEl.textContent = first.bank_name;
+        if (first.account_name || companyName) recipientEl.textContent = first.account_name || companyName;
+        if (first.iban) ibanEl.textContent = first.iban;
+        if (descHintEl) descHintEl.textContent = 'Sipariş numaranızı yazın';
+      } catch (_) {
+        /* keep static fallback */
+      }
+    }
+
     async function waitForAuth() {
       for (let i = 0; i < 120; i++) {
         if (window.BlaeneAuth && window.supabase) return true;
@@ -1265,6 +1699,8 @@
     }
 
     (async function init() {
+      await loadGeoDataset();
+      await loadTransferBankInfo();
       populateCities('');
       populateDistricts('', '');
 
@@ -1339,17 +1775,34 @@
           default_city: city + ' / ' + district,
           default_address: address,
         };
-        const updates = Object.assign({}, baseUpdates, { customer_type: type, customer_kind: type });
+        const updates = Object.assign({}, baseUpdates, {
+          customer_type: type,
+          customer_kind: type,
+          company_name: null,
+          national_id: null,
+          tax_number: null,
+          tax_office: null,
+        });
+        if (type === 'kurumsal') {
+          const companyName = String(companyNameInput && companyNameInput.value || '').trim();
+          const nationalId = String(nationalIdInput && nationalIdInput.value || '').trim();
+          const taxNumber = String(taxNumberInput && taxNumberInput.value || '').trim();
+          const taxOffice = String(taxOfficeInput && taxOfficeInput.value || '').trim();
 
-        try {
-          await window.BlaeneAuth.updateCustomerProfile(updates);
-        } catch (updateErr) {
-          const msg = String(updateErr && updateErr.message || '');
-          const hasMissingTypeColumn = msg.includes('customer_type') || msg.includes('customer_kind');
-          if (!hasMissingTypeColumn) throw updateErr;
-          await window.BlaeneAuth.updateCustomerProfile(baseUpdates);
+          if (!companyName) throw new Error('Firma adı zorunlu.');
+          if (!nationalId) throw new Error('TC Kimlik No zorunlu.');
+          if (!taxNumber) throw new Error('Vergi No zorunlu.');
+          if (!taxOffice) throw new Error('Vergi dairesi zorunlu.');
+
+          updates.company_name = companyName;
+          updates.national_id = nationalId;
+          updates.tax_number = taxNumber;
+          updates.tax_office = taxOffice;
         }
 
+        await window.BlaeneAuth.updateCustomerProfile(updates);
+
+        currentUser = await window.BlaeneAuth.getCurrentUser();
         const updated = await window.BlaeneAuth.getCustomerProfile();
         updateProfileView(updated, currentUser);
         setStoredType(type);
@@ -1384,6 +1837,13 @@
           body: JSON.stringify({
             subject: 'Havale Bildirimi: Siparis #' + orderNo,
             message: 'Siparis: ' + orderNo + '\nTutar: ' + amount + ' TL\nTarih: ' + date + '\nBanka: ' + (bank||'-') + '\nNot: ' + (note||'-'),
+            category: 'transfer',
+            type: 'transfer',
+            order_no: orderNo,
+            transfer_amount: amount,
+            transfer_date: date,
+            transfer_bank: bank,
+            transfer_note: note,
             name: (currentUser&&currentUser.email)||'',
             email: (currentUser&&currentUser.email)||''
           })
@@ -1472,5 +1932,46 @@
     })();
   </script>
   <script src="assets/js/traffic.js"></script>
+  <script>
+    (function () {
+      const sifreForm = document.getElementById('sifre-form');
+      const sifreAlert = document.getElementById('sifre-alert');
+      if (!sifreForm) return;
+
+      sifreForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        sifreAlert.innerHTML = '';
+        const newPwd = document.getElementById('sifre-new').value;
+        const confirmPwd = document.getElementById('sifre-confirm').value;
+
+        if (newPwd !== confirmPwd) {
+          sifreAlert.innerHTML = '<div style="background:#fef2f2;border:1px solid #f9b7b7;color:#9f1239;border-radius:10px;padding:0.7rem 0.8rem;font-size:0.84rem;margin-bottom:0.75rem;">Şifreler eşleşmiyor.</div>';
+          return;
+        }
+        if (newPwd.length < 6) {
+          sifreAlert.innerHTML = '<div style="background:#fef2f2;border:1px solid #f9b7b7;color:#9f1239;border-radius:10px;padding:0.7rem 0.8rem;font-size:0.84rem;margin-bottom:0.75rem;">Şifre en az 6 karakter olmalı.</div>';
+          return;
+        }
+
+        const btn = document.getElementById('sifre-btn');
+        btn.disabled = true;
+        btn.textContent = 'Güncelleniyor...';
+
+        try {
+          const sb = window.BlaeneAuth.getSupabase();
+          const { error } = await sb.auth.updateUser({ password: newPwd });
+          if (error) throw error;
+          sifreAlert.innerHTML = '<div style="background:#ecfdf3;border:1px solid #9be6bb;color:#166534;border-radius:10px;padding:0.7rem 0.8rem;font-size:0.84rem;margin-bottom:0.75rem;"><strong>Şifreniz güncellendi!</strong></div>';
+          sifreForm.reset();
+        } catch (err) {
+          sifreAlert.innerHTML = '<div style="background:#fef2f2;border:1px solid #f9b7b7;color:#9f1239;border-radius:10px;padding:0.7rem 0.8rem;font-size:0.84rem;margin-bottom:0.75rem;">' + (err.message || 'Şifre güncellenemedi.') + '</div>';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Şifremi Güncelle';
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
+
