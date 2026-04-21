@@ -839,7 +839,7 @@
                   </div>
                   <div class="field">
                     <label for="transfer-amount">Transfer Tutarı (TL)</label>
-                    <input id="transfer-amount" type="text" placeholder="Örn: 1250.00" maxlength="20" required />
+                    <input id="transfer-amount" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?" placeholder="Örn: 1250.00" maxlength="20" required />
                   </div>
                   <div class="field">
                     <label for="transfer-date">Transfer Tarihi</label>
@@ -847,7 +847,37 @@
                   </div>
                   <div class="field">
                     <label for="transfer-bank">Gönderen Banka</label>
-                    <input id="transfer-bank" type="text" placeholder="Örn: Garanti Bankası" maxlength="80" />
+                    <select id="transfer-bank" required>
+                      <option value="">Banka seçiniz...</option>
+                      <option value="Ziraat Bankası">Ziraat Bankası</option>
+                      <option value="VakıfBank">VakıfBank</option>
+                      <option value="Halkbank">Halkbank</option>
+                      <option value="Türkiye İş Bankası">Türkiye İş Bankası</option>
+                      <option value="Garanti BBVA">Garanti BBVA</option>
+                      <option value="Yapı Kredi">Yapı Kredi</option>
+                      <option value="Akbank">Akbank</option>
+                      <option value="QNB Finansbank">QNB Finansbank</option>
+                      <option value="DenizBank">DenizBank</option>
+                      <option value="TEB">TEB</option>
+                      <option value="ING Bank">ING Bank</option>
+                      <option value="HSBC">HSBC</option>
+                      <option value="Şekerbank">Şekerbank</option>
+                      <option value="Anadolubank">Anadolubank</option>
+                      <option value="Fibabanka">Fibabanka</option>
+                      <option value="Odeabank">Odeabank</option>
+                      <option value="Alternatif Bank">Alternatif Bank</option>
+                      <option value="Burgan Bank">Burgan Bank</option>
+                      <option value="ICBC Turkey">ICBC Turkey</option>
+                      <option value="Turkish Bank">Turkish Bank</option>
+                      <option value="Türkiye Finans">Türkiye Finans Katılım</option>
+                      <option value="Kuveyt Türk">Kuveyt Türk</option>
+                      <option value="Albaraka Türk">Albaraka Türk</option>
+                      <option value="Ziraat Katılım">Ziraat Katılım</option>
+                      <option value="Vakıf Katılım">Vakıf Katılım</option>
+                      <option value="Emlak Katılım">Emlak Katılım</option>
+                      <option value="Enpara">Enpara.com</option>
+                      <option value="Diğer">Diğer</option>
+                    </select>
                   </div>
                   <div class="field full">
                     <label for="transfer-note">Ek Not</label>
@@ -1815,6 +1845,51 @@
     });
 
     /* ── TRANSFER FORM ────────────────────────────── */
+    (function initTransferFormFilters() {
+      const amountInput = document.getElementById('transfer-amount');
+      const dateInput   = document.getElementById('transfer-date');
+      const bankSelect  = document.getElementById('transfer-bank');
+
+      if (amountInput) {
+        const sanitizeAmount = function (raw) {
+          let v = String(raw || '').replace(/,/g, '.').replace(/[^\d.]/g, '');
+          const firstDot = v.indexOf('.');
+          if (firstDot !== -1) {
+            v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
+            const parts = v.split('.');
+            if (parts[1] && parts[1].length > 2) parts[1] = parts[1].slice(0, 2);
+            v = parts.join('.');
+          }
+          return v;
+        };
+        amountInput.addEventListener('input', function () {
+          const cleaned = sanitizeAmount(this.value);
+          if (cleaned !== this.value) this.value = cleaned;
+        });
+        amountInput.addEventListener('paste', function (ev) {
+          ev.preventDefault();
+          const pasted = (ev.clipboardData || window.clipboardData).getData('text');
+          this.value = sanitizeAmount(pasted);
+        });
+      }
+
+      if (dateInput) {
+        const today = new Date();
+        const pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+        const todayStr = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+        dateInput.setAttribute('max', todayStr);
+      }
+
+      if (bankSelect) {
+        bankSelect.addEventListener('invalid', function () {
+          this.setCustomValidity('Lütfen bir banka seçin.');
+        });
+        bankSelect.addEventListener('change', function () {
+          this.setCustomValidity('');
+        });
+      }
+    })();
+
     document.getElementById('transfer-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       const btn = document.getElementById('transfer-submit-btn');
@@ -1822,14 +1897,19 @@
       showAlert('transfer-alert', '', '');
       try {
         const orderNo = String(document.getElementById('transfer-order-no').value||'').trim();
-        const amount  = String(document.getElementById('transfer-amount').value||'').trim();
+        const amountRaw = String(document.getElementById('transfer-amount').value||'').trim();
+        const amount  = amountRaw.replace(',', '.');
         const date    = String(document.getElementById('transfer-date').value||'').trim();
         const bank    = String(document.getElementById('transfer-bank').value||'').trim();
         const note    = String(document.getElementById('transfer-note').value||'').trim();
 
         if (!orderNo) throw new Error('Sipariş numarası zorunlu.');
         if (!amount)  throw new Error('Tutar zorunlu.');
+        if (!/^\d+(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0) throw new Error('Geçerli bir tutar girin (örn: 1250.00).');
         if (!date)    throw new Error('Transfer tarihi zorunlu.');
+        const todayIso = new Date().toISOString().slice(0, 10);
+        if (date > todayIso) throw new Error('Transfer tarihi bugünden ileri olamaz.');
+        if (!bank)    throw new Error('Lütfen gönderen bankayı seçin.');
 
         const transferResponse = await fetch('/api/public/contact', {
           method: 'POST',
