@@ -247,6 +247,10 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
   const row = (show: boolean, label: string, value: string) =>
     show ? `<p><strong>${label}:</strong> ${value || '-'}</p>` : ''
 
+  const borderCss = s.border_enabled
+    ? `border:${s.border_width}px ${s.border_style} ${s.border_color};border-radius:${s.border_radius}px;padding:${s.border_padding}px;`
+    : 'padding:20px;'
+
   return `
     <html>
       <head>
@@ -254,6 +258,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+          .slip-wrap { ${borderCss} }
           .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
           .meta { margin-bottom: 16px; }
@@ -261,10 +266,11 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
           th { background: #f3f4f6; }
-          @media print { body { padding: 10px; } }
+          @media print { body { padding: 0; } .slip-wrap { margin: 10px; } }
         </style>
       </head>
       <body>
+        <div class="slip-wrap">
         <div class="header">
           <div class="logo-block">
             ${logoBlock}
@@ -298,6 +304,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
             ${itemRows || '<tr><td colspan="4">Satir bulunamadi</td></tr>'}
           </tbody>
         </table>` : ''}
+        </div>
       </body>
     </html>
   `

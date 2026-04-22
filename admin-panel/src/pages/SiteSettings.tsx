@@ -47,6 +47,12 @@ export interface SlipSettings {
   show_total: boolean
   show_date: boolean
   show_items_table: boolean
+  border_enabled: boolean
+  border_width: number
+  border_color: string
+  border_style: string
+  border_radius: number
+  border_padding: number
 }
 
 interface ManualSlipItem {
@@ -123,6 +129,12 @@ export const DEFAULT_SLIP: SlipSettings = {
   show_total: true,
   show_date: true,
   show_items_table: true,
+  border_enabled: true,
+  border_width: 2,
+  border_color: '#111111',
+  border_style: 'solid',
+  border_radius: 0,
+  border_padding: 16,
 }
 
 const DEFAULT_MANUAL_SLIP: ManualSlip = {
@@ -317,17 +329,23 @@ export default function SiteSettings() {
       })
       .join('')
 
+    const borderCss = s.border_enabled
+      ? `border:${s.border_width}px ${s.border_style} ${s.border_color};border-radius:${s.border_radius}px;padding:${s.border_padding}px;`
+      : 'padding:20px;'
+
     return `<html><head><meta charset="UTF-8"/><title>Manuel Kargo Fisi</title>
     <style>
       body{font-family:Arial,sans-serif;padding:20px;color:#111;}
+      .slip-wrap{${borderCss}}
       .header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:12px;}
       .logo-block{display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
       .meta p{margin:4px 0;font-size:13px;}
       table{width:100%;border-collapse:collapse;margin-top:12px;}
       th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px;}
       th{background:#f3f4f6;}
-      @media print{body{padding:10px;}}
+      @media print{body{padding:0;} .slip-wrap{margin:10px;}}
     </style></head><body>
+    <div class="slip-wrap">
     <div class="header">
       <div class="logo-block">${s.show_logo ? logoBlock : ''} ${siteUrlHtml}</div>
       ${qrHtml}
@@ -341,6 +359,7 @@ export default function SiteSettings() {
       <p><strong>Tarih:</strong> ${new Date().toLocaleDateString('tr-TR')}</p>
     </div>
     ${s.show_items_table && itemRows ? `<table><thead><tr><th>Urun</th><th>Adet</th><th>Birim Fiyat</th><th>Tutar</th></tr></thead><tbody>${itemRows}</tbody></table>` : ''}
+    </div>
     </body></html>`
   }
 
@@ -762,11 +781,48 @@ export default function SiteSettings() {
           </div>
           <div>
             <div style={labelStyle}>QR boyutu (px)</div>
-            <input type="number" value={slip.qr_size} onChange={(e) => setSlip((p) => ({ ...p, qr_size: Number(e.target.value) || 80 }))} style={inputStyle} min={40} max={200} />
+            <input type="number" value={slip.qr_size} onChange={(e) => setSlip((p) => ({ ...p, qr_size: Number(e.target.value) || 150 }))} style={inputStyle} min={40} max={300} />
           </div>
           <div>
             <div style={labelStyle}>Site adresi metni</div>
             <input value={slip.site_url} onChange={(e) => setSlip((p) => ({ ...p, site_url: e.target.value }))} style={inputStyle} placeholder="www.blaene.com.tr" />
+          </div>
+        </div>
+
+        {/* Çerçeve */}
+        <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Cerceve (Border)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr 1fr 1fr', gap: '10px', alignItems: 'end', marginBottom: '16px' }}>
+          <label style={checkLabelStyle}>
+            <input type="checkbox" checked={slip.border_enabled} onChange={(e) => setSlip((p) => ({ ...p, border_enabled: e.target.checked }))} />
+            Aktif
+          </label>
+          <div>
+            <div style={labelStyle}>Kalinlik (px)</div>
+            <input type="number" value={slip.border_width} onChange={(e) => setSlip((p) => ({ ...p, border_width: Number(e.target.value) || 1 }))} style={inputStyle} min={1} max={20} disabled={!slip.border_enabled} />
+          </div>
+          <div>
+            <div style={labelStyle}>Renk</div>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <input type="color" value={slip.border_color} onChange={(e) => setSlip((p) => ({ ...p, border_color: e.target.value }))} style={{ ...inputStyle, padding: '2px', width: '42px', height: '34px', cursor: 'pointer' }} disabled={!slip.border_enabled} />
+              <input value={slip.border_color} onChange={(e) => setSlip((p) => ({ ...p, border_color: e.target.value }))} style={{ ...inputStyle, flex: 1 }} placeholder="#111111" disabled={!slip.border_enabled} />
+            </div>
+          </div>
+          <div>
+            <div style={labelStyle}>Stil</div>
+            <select value={slip.border_style} onChange={(e) => setSlip((p) => ({ ...p, border_style: e.target.value }))} style={inputStyle} disabled={!slip.border_enabled}>
+              <option value="solid">Solid (düz)</option>
+              <option value="dashed">Dashed (kesik)</option>
+              <option value="dotted">Dotted (noktalı)</option>
+              <option value="double">Double (çift)</option>
+            </select>
+          </div>
+          <div>
+            <div style={labelStyle}>Yuvarlatma (px)</div>
+            <input type="number" value={slip.border_radius} onChange={(e) => setSlip((p) => ({ ...p, border_radius: Number(e.target.value) || 0 }))} style={inputStyle} min={0} max={40} disabled={!slip.border_enabled} />
+          </div>
+          <div>
+            <div style={labelStyle}>İç boşluk (px)</div>
+            <input type="number" value={slip.border_padding} onChange={(e) => setSlip((p) => ({ ...p, border_padding: Number(e.target.value) || 0 }))} style={inputStyle} min={0} max={60} disabled={!slip.border_enabled} />
           </div>
         </div>
 
@@ -800,8 +856,24 @@ export default function SiteSettings() {
           ))}
         </div>
 
-        <button onClick={() => void saveSiteSetting(token, 'slip_settings', slip, 'Kargo fisi tasarim ve alan ayarlari').then(() => setMessage('Kargo fisi ayarlari kaydedildi'))} style={primaryButton}>
-          Kargo fisi ayarlarini kaydet
+        <button
+          onClick={() => void (async () => {
+            setSaving(true)
+            setError('')
+            setMessage('')
+            try {
+              await saveSiteSetting(token, 'slip_settings', slip, 'Kargo fisi tasarim ve alan ayarlari')
+              setMessage('Kargo fisi ayarlari kaydedildi')
+            } catch (err: unknown) {
+              setError(err instanceof Error ? err.message : 'Kaydedilemedi')
+            } finally {
+              setSaving(false)
+            }
+          })()}
+          disabled={saving}
+          style={primaryButton}
+        >
+          {saving ? 'Kaydediliyor...' : 'Kargo fisi ayarlarini kaydet'}
         </button>
       </div>
 
