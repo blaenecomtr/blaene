@@ -278,9 +278,9 @@
     .sidebar-logout {
       margin: 0.4rem 0.7rem 0.7rem;
       width: calc(100% - 1.4rem);
-      background: #fff0f0;
-      border: 1px solid #f9b7b7;
-      color: #9f1239;
+      background: #ffedd5;
+      border: 1px solid #fdba74;
+      color: #9a3412;
       border-radius: 8px;
       padding: 0.6rem;
       font-size: 0.8rem;
@@ -289,7 +289,7 @@
       cursor: pointer;
       transition: background 0.12s;
     }
-    .sidebar-logout:hover { background: #ffe4e6; }
+    .sidebar-logout:hover { background: #fed7aa; }
 
     /* ── CONTENT AREA ────────────────────────────── */
     .account-content .section-panel {
@@ -523,11 +523,36 @@
     }
     .detail-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 0.7rem;
       border-bottom: 1px dashed #d6dae0;
       padding-bottom: 0.35rem;
+    }
+    .detail-item-left {
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+    }
+    .detail-item-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid #d7d7d7;
+      background: #fff;
+      flex: 0 0 44px;
+    }
+    .detail-item-thumb.placeholder {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: #f9fafb;
     }
     .detail-item-main {
       min-width: 0;
@@ -744,13 +769,13 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
               Hediye Çekleri &amp; Puan
             </a>
-            <a href="?section=favoriler" class="sidebar-nav-item" data-section="favoriler">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              Favori Ürünleri Listele
-            </a>
             <a href="?section=sifre" class="sidebar-nav-item" data-section="sifre">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               Şifre Değiştir
+            </a>
+            <a href="?section=kvkk" class="sidebar-nav-item" data-section="kvkk">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Gizlilik &amp; KVKK
             </a>
           </nav>
           <button id="sidebar-logout-btn" class="sidebar-logout" type="button">Çıkış Yap</button>
@@ -827,7 +852,7 @@
                 </div>
                 <div class="bank-row">
                   <span class="bank-label">Açıklama</span>
-                  <span class="bank-value" id="bank-desc-hint">Sipariş numaranızı yazın</span>
+                  <span class="bank-value" id="bank-desc-hint">Sipariş numaranızı seçin</span>
                 </div>
               </div>
               <div id="transfer-alert"></div>
@@ -835,7 +860,9 @@
                 <div class="form-grid">
                   <div class="field">
                     <label for="transfer-order-no">Sipariş No</label>
-                    <input id="transfer-order-no" type="text" placeholder="Örn: 12345" maxlength="40" required />
+                    <select id="transfer-order-no" required>
+                      <option value="">Sipariş seçiniz...</option>
+                    </select>
                   </div>
                   <div class="field">
                     <label for="transfer-amount">Transfer Tutarı (TL)</label>
@@ -904,7 +931,7 @@
                   </div>
                   <div class="field">
                     <label for="phone-input">Telefon</label>
-                    <input id="phone-input" type="tel" maxlength="60" placeholder="05xx xxx xx xx" required />
+                    <input id="phone-input" type="tel" inputmode="numeric" maxlength="14" minlength="14" pattern="^05[0-9]{2}\s[0-9]{3}\s[0-9]{2}\s[0-9]{2}$" title="Telefon formati: 05xx xxx xx xx" placeholder="05xx xxx xx xx" required />
                   </div>
                   <div class="field">
                     <label for="city-input">İl</label>
@@ -964,17 +991,6 @@
             </div>
           </div>
 
-          <!-- Favori Ürünleri Listele -->
-          <div class="section-panel" data-panel="favoriler">
-            <div class="card">
-              <h2 class="card-title">Favori Ürünleri Listele</h2>
-              <div class="placeholder-box">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                <p>Favori ürünleriniz burada listelenecektir.</p>
-              </div>
-            </div>
-          </div>
-
           <!-- Şifre Değiştir -->
           <div class="section-panel" data-panel="sifre">
             <div class="card">
@@ -991,6 +1007,37 @@
                 </div>
                 <button type="submit" id="sifre-btn" style="background:#111827;color:#fff;border:0;border-radius:9px;padding:0.7rem 1.4rem;font-size:0.9rem;font-weight:700;font-family:inherit;cursor:pointer;">Şifremi Güncelle</button>
               </form>
+            </div>
+          </div>
+
+          <!-- Gizlilik & KVKK -->
+          <div class="section-panel" data-panel="kvkk">
+            <div class="card">
+              <h2 class="card-title">Gizlilik &amp; KVKK</h2>
+
+              <div style="margin-bottom:1.5rem;">
+                <h3 style="font-size:0.85rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#6b7280;margin-bottom:0.75rem;">Google ile Giriş — Veri Kullanımı</h3>
+                <div style="background:#f0f4ff;border:1px solid #c7d7f8;border-radius:10px;padding:1.25rem 1.5rem;">
+                  <p style="font-size:0.9rem;margin-bottom:0.75rem;">Hesabınızı Google ile oluşturduysanız aşağıdaki veriler işlenmektedir:</p>
+                  <ul style="font-size:0.88rem;line-height:1.9;margin-left:1.25rem;color:#333;">
+                    <li><strong>Erişilen veriler:</strong> E-posta adresiniz ve adınız-soyadınız (<code>email</code>, <code>profile</code>, <code>openid</code>).</li>
+                    <li><strong>Kullanım amacı:</strong> Yalnızca hesap oluşturma, kimlik doğrulama ve sipariş yönetimi.</li>
+                    <li><strong>Saklama:</strong> Supabase altyapısında güvenli biçimde saklanmaktadır.</li>
+                    <li><strong>Paylaşım:</strong> Hiçbir üçüncü tarafla paylaşılmamakta, reklam veya yapay zeka eğitimi için kullanılmamaktadır.</li>
+                  </ul>
+                  <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener" style="display:inline-block;margin-top:0.75rem;font-size:0.8rem;color:#1e40af;">Google API Hizmetleri Kullanıcı Verileri Politikası &rarr;</a>
+                </div>
+              </div>
+
+              <div style="margin-bottom:1.5rem;">
+                <h3 style="font-size:0.85rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#6b7280;margin-bottom:0.75rem;">KVKK Aydınlatma Metni</h3>
+                <p style="font-size:0.9rem;">Kişisel verilerinizin nasıl işlendiğine dair tam bilgi için <a href="/kvkk.html" style="color:#111;font-weight:600;">KVKK Aydınlatma Metni</a> sayfamızı inceleyebilirsiniz.</p>
+              </div>
+
+              <div>
+                <h3 style="font-size:0.85rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#6b7280;margin-bottom:0.75rem;">Veri Silme Talebi</h3>
+                <p style="font-size:0.9rem;">Hesabınızın ve tüm verilerinizin silinmesini talep etmek için <a href="mailto:info@blaene.com.tr" style="color:#111;font-weight:600;">info@blaene.com.tr</a> adresine e-posta gönderebilirsiniz.</p>
+              </div>
             </div>
           </div>
 
@@ -1100,10 +1147,14 @@
 
     const CUSTOMER_TYPE_PREFIX = 'blaene_customer_type:';
     let currentUser = null;
+    let currentProfile = null;
+    let customerOrdersCache = [];
+    let customerOrdersPromise = null;
+    let customerOrdersFetched = false;
 
     /* ── SECTION ROUTING ──────────────────────────── */
     const DEFAULT_SECTION = 'bilgiler';
-    const SECTIONS = ['bilgiler','siparisler','havale','uye-bilgisi','puan','favoriler','sifre'];
+    const SECTIONS = ['bilgiler','siparisler','havale','uye-bilgisi','puan','sifre'];
 
     function getActiveSection() {
       const raw = new URLSearchParams(window.location.search).get('section') || '';
@@ -1159,6 +1210,99 @@
       return new Intl.NumberFormat('tr-TR', { style:'currency', currency:'TRY' }).format(Number(v)||0);
     }
 
+    function sumOrderQuantity(order) {
+      const items = Array.isArray(order && order.order_items) ? order.order_items : [];
+      return items.reduce(function (sum, item) {
+        return sum + Math.max(0, Number(item && item.quantity || 0));
+      }, 0);
+    }
+
+    function formatShortDate(value) {
+      if (!value) return '-';
+      const dt = new Date(value);
+      if (isNaN(dt)) return '-';
+      return dt.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function buildTransferOrderOptionLabel(order) {
+      const orderNo = String(order && order.order_no || '').trim() || '-';
+      const qty = sumOrderQuantity(order);
+      const total = formatPrice(order && order.total || 0);
+      const createdAt = formatShortDate(order && order.created_at);
+      return '#' + orderNo + ' • ' + qty + ' adet • ' + total + ' • ' + createdAt;
+    }
+
+    function populateTransferOrderOptions(orders) {
+      const orderSelect = document.getElementById('transfer-order-no');
+      if (!orderSelect) return;
+
+      const selectedOrderNo = String(orderSelect.value || '').trim();
+      const safeOrders = Array.isArray(orders) ? orders : [];
+
+      orderSelect.innerHTML = '';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = safeOrders.length ? 'Sipariş seçiniz...' : 'Seçilebilir sipariş bulunamadı';
+      orderSelect.appendChild(defaultOption);
+
+      if (!safeOrders.length) {
+        orderSelect.disabled = true;
+        return;
+      }
+
+      orderSelect.disabled = false;
+      safeOrders.forEach(function (order) {
+        const orderNo = String(order && order.order_no || '').trim();
+        if (!orderNo) return;
+        const option = document.createElement('option');
+        option.value = orderNo;
+        option.textContent = buildTransferOrderOptionLabel(order);
+        orderSelect.appendChild(option);
+      });
+
+      if (selectedOrderNo) {
+        const exists = safeOrders.some(function (order) {
+          return String(order && order.order_no || '').trim() === selectedOrderNo;
+        });
+        if (exists) {
+          orderSelect.value = selectedOrderNo;
+        }
+      }
+    }
+
+    function findOrderByOrderNo(orderNo) {
+      const safeOrderNo = String(orderNo || '').trim();
+      if (!safeOrderNo) return null;
+      return customerOrdersCache.find(function (order) {
+        return String(order && order.order_no || '').trim() === safeOrderNo;
+      }) || null;
+    }
+
+    async function loadCustomerOrders(forceRefresh) {
+      if (!window.BlaeneAuth || typeof window.BlaeneAuth.getCustomerOrders !== 'function') return [];
+
+      const force = forceRefresh === true;
+      if (!force && customerOrdersFetched) return customerOrdersCache;
+      if (customerOrdersPromise) return customerOrdersPromise;
+
+      customerOrdersPromise = window.BlaeneAuth.getCustomerOrders()
+        .then(function (orders) {
+          customerOrdersCache = Array.isArray(orders) ? orders : [];
+          customerOrdersFetched = true;
+          return customerOrdersCache;
+        })
+        .catch(function (error) {
+          customerOrdersPromise = null;
+          throw error;
+        });
+
+      try {
+        return await customerOrdersPromise;
+      } finally {
+        customerOrdersPromise = null;
+      }
+    }
+
     function initials(name, email) {
       const s = String(name||'').trim() || String(email||'').trim();
       if (!s) return 'BL';
@@ -1198,6 +1342,7 @@
     /* ── CITY / DISTRICT ──────────────────────────── */
     const cityInput = document.getElementById('city-input');
     const districtInput = document.getElementById('district-input');
+    const phoneInput = document.getElementById('phone-input');
     const corporateFields = document.getElementById('corporate-fields');
     const companyNameInput = document.getElementById('company-name-input');
     const nationalIdInput = document.getElementById('national-id-input');
@@ -1317,6 +1462,17 @@
     cityInput.addEventListener('change', function () {
       populateDistricts(cityInput.value, '');
     });
+    if (phoneInput) {
+      phoneInput.addEventListener('focus', function () {
+        if (!phoneInput.value.trim()) phoneInput.value = '05';
+      });
+      phoneInput.addEventListener('input', function () {
+        phoneInput.value = formatTurkishMobilePhone(phoneInput.value);
+      });
+      phoneInput.addEventListener('blur', function () {
+        phoneInput.value = formatTurkishMobilePhone(phoneInput.value);
+      });
+    }
     document.querySelectorAll('input[name="customer-type"]').forEach(function (radio) {
       radio.addEventListener('change', function () {
         applyCorporateVisibility(radio.value);
@@ -1340,7 +1496,8 @@
       }
       document.getElementById('view-name').textContent = name;
       document.getElementById('view-email').textContent = email;
-      document.getElementById('view-phone').textContent = phone;
+      const formattedPhone = formatTurkishMobilePhone(phone);
+      document.getElementById('view-phone').textContent = phone === '-' ? '-' : (formattedPhone || '-');
       document.getElementById('view-city').textContent = cp.city ? (cp.city + (cp.district ? ' / '+cp.district : '')) : '-';
       document.getElementById('view-customer-type').textContent = type === 'kurumsal' ? 'Kurumsal' : 'Bireysel';
       document.getElementById('view-address').textContent = addr;
@@ -1348,7 +1505,7 @@
 
       /* pre-fill edit form */
       document.getElementById('full-name-input').value = name === '-' ? '' : name;
-      document.getElementById('phone-input').value = phone === '-' ? '' : phone;
+      document.getElementById('phone-input').value = phone === '-' ? '' : formatTurkishMobilePhone(phone);
       populateCities(cp.city);
       populateDistricts(cp.city, cp.district);
       document.getElementById('address-input').value = addr === '-' ? '' : addr;
@@ -1383,20 +1540,68 @@
     function firstOrderImage(items) {
       if (!Array.isArray(items) || !items.length) return '';
       const first = items[0] || {};
+      return resolveOrderItemImage(first);
+    }
+
+    function resolveOrderItemImage(item) {
+      if (!item || typeof item !== 'object') return '';
       const candidates = [
-        first.image_url,
-        first.image,
-        first.product_image,
-        first.product_image_url,
-        first.thumbnail,
-        first.thumbnail_url,
-        first.photo,
+        item.image_url,
+        item.image,
+        item.product_image,
+        item.product_image_url,
+        item.thumbnail,
+        item.thumbnail_url,
+        item.photo,
       ];
       for (const candidate of candidates) {
         const value = String(candidate || '').trim();
         if (value) return value;
       }
+      const imagesRaw = item.images;
+      if (Array.isArray(imagesRaw) && imagesRaw.length) {
+        const firstImage = String(imagesRaw[0] || '').trim();
+        if (firstImage) return firstImage;
+      }
+      if (typeof imagesRaw === 'string') {
+        try {
+          const parsed = JSON.parse(imagesRaw);
+          if (Array.isArray(parsed) && parsed.length) {
+            const firstImage = String(parsed[0] || '').trim();
+            if (firstImage) return firstImage;
+          }
+        } catch (_) {
+          /* ignore invalid json */
+        }
+      }
       return '';
+    }
+
+    function normalizePhoneDigits(raw) {
+      return String(raw || '').replace(/\D/g, '');
+    }
+
+    function sanitizeTurkishMobileDigits(raw) {
+      let digits = normalizePhoneDigits(raw);
+      if (digits.startsWith('90')) digits = '0' + digits.slice(2);
+      if (!digits) return '';
+      if (digits[0] !== '0') return '';
+      if (digits.length >= 2 && digits[1] !== '5') digits = '0';
+      return digits.slice(0, 11);
+    }
+
+    function formatTurkishMobilePhone(raw) {
+      const digits = sanitizeTurkishMobileDigits(raw);
+      const p1 = digits.slice(0, 4);
+      const p2 = digits.slice(4, 7);
+      const p3 = digits.slice(7, 9);
+      const p4 = digits.slice(9, 11);
+      return [p1, p2, p3, p4].filter(Boolean).join(' ');
+    }
+
+    function isValidTurkishMobilePhone(raw) {
+      const digits = normalizePhoneDigits(raw);
+      return /^05\d{9}$/.test(digits);
     }
 
     async function createReturnRequest(orderId, orderNo) {
@@ -1436,10 +1641,14 @@
     }
 
     function paymentMethodLabel(order) {
-      const method = String(order && order.payment_method || '').toLowerCase();
-      if (method === 'bank_transfer') return 'Havale / EFT';
-      if (method === 'card') return 'Kredi / Banka Karti';
-      return 'Belirtilmedi';
+      const method = String(order && order.payment_method || '').trim().toLowerCase();
+      const provider = String(order && order.payment_provider || '').trim().toLowerCase();
+      const bankTransferKeys = ['bank_transfer', 'havale', 'eft', 'manual', 'transfer'];
+      const isBankTransfer =
+        bankTransferKeys.some(function (key) { return method === key || method.indexOf(key) !== -1; }) ||
+        bankTransferKeys.some(function (key) { return provider === key || provider.indexOf(key) !== -1; });
+
+      return isBankTransfer ? 'Havale' : 'Kredi Karti';
     }
 
     function providerLabel(value, fallback, paymentMethod) {
@@ -1528,8 +1737,9 @@
       try {
         await window.BlaeneAuth.cancelCustomerOrder(orderId);
         window.alert('Siparisiniz iptal edildi.');
-        const orders = await window.BlaeneAuth.getCustomerOrders();
+        const orders = await loadCustomerOrders(true);
         renderOrders(orders);
+        populateTransferOrderOptions(orders);
       } catch (error) {
         window.alert(error && error.message ? error.message : 'Siparis iptal edilemedi.');
       }
@@ -1580,10 +1790,17 @@
             const qty = Number(it&&it.quantity || 0);
             const productCode = escapeHtml(String(it&&it.product_code || '').trim() || '-');
             const productColor = escapeHtml(String(it && (it.product_color || it.color) || '').trim() || '-');
+            const itemImage = resolveOrderItemImage(it);
+            const itemImageHtml = itemImage
+              ? '<img class="detail-item-thumb" src="' + escapeHtml(itemImage) + '" alt="Ürün fotoğrafı" loading="lazy" />'
+              : '<span class="detail-item-thumb placeholder">No Img</span>';
             detailItems += '<div class="detail-item">';
+            detailItems += '<div class="detail-item-left">';
+            detailItems += itemImageHtml;
             detailItems += '<div class="detail-item-main">';
             detailItems += '<span class="detail-item-name">' + name + '</span>';
             detailItems += '<small class="detail-item-meta">Ürün Kodu: ' + productCode + ' | Renk: ' + productColor + '</small>';
+            detailItems += '</div>';
             detailItems += '</div>';
             detailItems += '<strong class="detail-item-qty">x' + qty + '</strong>';
             detailItems += '</div>';
@@ -1714,7 +1931,7 @@
         if (first.bank_name) bankNameEl.textContent = first.bank_name;
         if (first.account_name || companyName) recipientEl.textContent = first.account_name || companyName;
         if (first.iban) ibanEl.textContent = first.iban;
-        if (descHintEl) descHintEl.textContent = 'Sipariş numaranızı yazın';
+        if (descHintEl) descHintEl.textContent = 'Sipariş numaranızı seçin';
       } catch (_) {
         /* keep static fallback */
       }
@@ -1752,8 +1969,15 @@
       document.getElementById('user-logout-btn').style.display = '';
       document.getElementById('user-login-link').style.display = 'none';
 
-      const profile = await window.BlaeneAuth.getCustomerProfile().catch(function () { return null; });
-      updateProfileView(profile, currentUser);
+      currentProfile = await window.BlaeneAuth.getCustomerProfile().catch(function () { return null; });
+      updateProfileView(currentProfile, currentUser);
+
+      try {
+        const initialOrders = await loadCustomerOrders();
+        populateTransferOrderOptions(initialOrders);
+      } catch (_) {
+        populateTransferOrderOptions([]);
+      }
 
       const section = getActiveSection();
       activateSection(section);
@@ -1762,10 +1986,11 @@
       let ordersLoaded = false;
       async function ensureOrdersLoaded() {
         if (ordersLoaded) return;
-        ordersLoaded = true;
         try {
-          const orders = await window.BlaeneAuth.getCustomerOrders();
+          const orders = await loadCustomerOrders();
           renderOrders(orders);
+          populateTransferOrderOptions(orders);
+          ordersLoaded = true;
         } catch (e) {
           document.getElementById('orders-container').innerHTML = '<div class="empty">Siparişler yüklenemedi.</div>';
         }
@@ -1787,13 +2012,14 @@
       showAlert('profile-alert', '', '');
       try {
         const fullName = String(document.getElementById('full-name-input').value||'').trim();
-        const phone    = String(document.getElementById('phone-input').value||'').trim();
+        const phone    = formatTurkishMobilePhone(document.getElementById('phone-input').value||'');
         const city     = String(cityInput.value||'').trim();
         const district = String(districtInput.value||'').trim();
         const address  = String(document.getElementById('address-input').value||'').trim();
 
         if (!fullName) throw new Error('Ad soyad zorunlu.');
         if (!phone)    throw new Error('Telefon zorunlu.');
+        if (!isValidTurkishMobilePhone(phone)) throw new Error('Telefon numarasi 05xx xxx xx xx formatinda olmalidir.');
         if (!city)     throw new Error('Lütfen bir il seçin.');
         if (!district) throw new Error('Lütfen bir ilçe seçin.');
         if (!address)  throw new Error('Adres zorunlu.');
@@ -1833,8 +2059,8 @@
         await window.BlaeneAuth.updateCustomerProfile(updates);
 
         currentUser = await window.BlaeneAuth.getCurrentUser();
-        const updated = await window.BlaeneAuth.getCustomerProfile();
-        updateProfileView(updated, currentUser);
+        currentProfile = await window.BlaeneAuth.getCustomerProfile();
+        updateProfileView(currentProfile, currentUser);
         setStoredType(type);
         showAlert('profile-alert', 'Bilgileriniz güncellendi.', 'success');
       } catch (err) {
@@ -1897,13 +2123,21 @@
       showAlert('transfer-alert', '', '');
       try {
         const orderNo = String(document.getElementById('transfer-order-no').value||'').trim();
+        const selectedOrder = findOrderByOrderNo(orderNo);
         const amountRaw = String(document.getElementById('transfer-amount').value||'').trim();
         const amount  = amountRaw.replace(',', '.');
         const date    = String(document.getElementById('transfer-date').value||'').trim();
         const bank    = String(document.getElementById('transfer-bank').value||'').trim();
         const note    = String(document.getElementById('transfer-note').value||'').trim();
+        const customerName = resolveFullName(currentProfile, currentUser);
+        const customerEmail = String(currentUser && currentUser.email || '').trim().toLowerCase();
+        const customerPhone = String(currentProfile && currentProfile.phone || '').trim();
+        const customerAddress = String(currentProfile && currentProfile.default_address || '').trim();
+        const orderItemCount = selectedOrder ? sumOrderQuantity(selectedOrder) : 0;
+        const orderTotal = selectedOrder ? Number(selectedOrder.total || 0) : 0;
 
         if (!orderNo) throw new Error('Sipariş numarası zorunlu.');
+        if (!selectedOrder) throw new Error('Lütfen listeden geçerli bir sipariş seçin.');
         if (!amount)  throw new Error('Tutar zorunlu.');
         if (!/^\d+(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0) throw new Error('Geçerli bir tutar girin (örn: 1250.00).');
         if (!date)    throw new Error('Transfer tarihi zorunlu.');
@@ -1924,8 +2158,12 @@
             transfer_date: date,
             transfer_bank: bank,
             transfer_note: note,
-            name: (currentUser&&currentUser.email)||'',
-            email: (currentUser&&currentUser.email)||''
+            order_item_count: orderItemCount,
+            order_total: Number.isFinite(orderTotal) ? orderTotal.toFixed(2) : null,
+            name: customerName || customerEmail || '-',
+            email: customerEmail,
+            customer_phone: customerPhone || null,
+            customer_address: customerAddress || null
           })
         });
 
