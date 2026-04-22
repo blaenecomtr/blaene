@@ -111,7 +111,7 @@ export const DEFAULT_SLIP: SlipSettings = {
   site_url: 'www.blaene.com.tr',
   logo_height: 80,
   show_qr: true,
-  qr_size: 80,
+  qr_size: 150,
   show_order_no: true,
   show_customer_name: true,
   show_email: true,
@@ -282,7 +282,8 @@ export default function SiteSettings() {
     let qrDataUrl = ''
     if (s.show_qr) {
       const lines: string[] = []
-      if (m.customer_name) lines.push(`Musteri: ${m.customer_name}`)
+      if (m.customer_name) lines.push(`Ad Soyad: ${m.customer_name}`)
+      if (m.phone) lines.push(`Telefon: ${m.phone}`)
       const validItems = m.items.filter((it) => it.name.trim())
       if (validItems.length) {
         lines.push('Urunler:')
@@ -292,7 +293,7 @@ export default function SiteSettings() {
       qrDataUrl = await QRCode.toDataURL(lines.join('\n') || 'Manuel Fis', {
         width: s.qr_size * 2,
         margin: 1,
-        errorCorrectionLevel: 'L',
+        errorCorrectionLevel: 'M',
       }).catch(() => '')
     }
 

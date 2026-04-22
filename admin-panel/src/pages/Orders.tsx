@@ -579,12 +579,19 @@ export default function Orders() {
     const itemLines = items
       .map((it) => `- ${it.product_name || it.product_code || '?'} x${it.quantity || 1}`)
       .join('\n')
-    const qrData = `Siparis: ${order.order_no}\nMusteri: ${order.customer_name || ''}\nUrunler:\n${itemLines}\nToplam: ${order.total} TL`
+    const qrParts = [
+      `Ad Soyad: ${order.customer_name || '-'}`,
+      `Telefon: ${order.phone || '-'}`,
+      `Urunler:`,
+      itemLines || '- (urun yok)',
+      `Toplam: ${order.total} TL`,
+    ]
+    const qrData = qrParts.join('\n')
 
     const [logoDataUrl, qrDataUrl] = await Promise.all([
       slipCfg.show_logo ? fetchLogoDataUrl() : Promise.resolve(''),
       slipCfg.show_qr
-        ? QRCode.toDataURL(qrData, { width: slipCfg.qr_size * 2, margin: 1, errorCorrectionLevel: 'L' }).catch(() => '')
+        ? QRCode.toDataURL(qrData, { width: slipCfg.qr_size * 2, margin: 1, errorCorrectionLevel: 'M' }).catch(() => '')
         : Promise.resolve(''),
     ])
     win.document.open()
