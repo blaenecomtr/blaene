@@ -24,7 +24,13 @@ const { ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER } = require('../.
 const { writeAuditLog } = require('../../lib/api/audit');
 const { createShipment, isProviderConfigured, PROVIDERS } = require('../../lib/api/shipping-adapters');
 const { sendEmail } = require('../../lib/email/resend');
-const { orderShippedTemplate, couponBroadcastTemplate } = require('../../lib/email/templates');
+const {
+  orderConfirmationTemplate,
+  orderShippedTemplate,
+  orderDeliveredTemplate,
+  reviewRequestTemplate,
+  couponBroadcastTemplate,
+} = require('../../lib/email/templates');
 const marketingCronHandler = require('../../lib/handlers/public-marketing-cron');
 
 const STAFF_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER];
@@ -92,6 +98,88 @@ async function sendOrderShippedEmailIfPossible(order) {
     return true;
   } catch (error) {
     console.error('[shipping] shipped email failed:', error?.message || error);
+    return false;
+  }
+}
+
+async function sendOrderDeliveredEmailIfPossible(order) {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) return false;
+
+  const to = normalizeEmail(order?.email || order?.customer_email);
+  if (!to) return false;
+
+  const orderNo = normalizeText(order?.order_no, 120) || '-';
+  const customerName = normalizeText(order?.customer_name, 180) || '';
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Siparisiniz Teslim Edildi #${orderNo}`,
+      html: orderDeliveredTemplate({
+        orderNo,
+        customerName,
+      }),
+    });
+    return true;
+  } catch (error) {
+    console.error('[order] delivered email failed:', error?.message || error);
+    return false;
+  }
+}
+
+async function sendOrderConfirmationEmailIfPossible(order) {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) return false;
+
+  const to = normalizeEmail(order?.email || order?.customer_email);
+  if (!to) return false;
+
+  const orderNo = normalizeText(order?.order_no, 120) || '-';
+  const customerName = normalizeText(order?.customer_name, 180) || '';
+  const totalValue = Number(order?.total || 0);
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Siparisiniz Alindi #${orderNo}`,
+      html: orderConfirmationTemplate({
+        orderNo,
+        customerName,
+        total: Number.isFinite(totalValue) && totalValue > 0 ? totalValue.toFixed(2) : null,
+      }),
+    });
+    return true;
+  } catch (error) {
+    console.error('[order] confirmation email failed:', error?.message || error);
+    return false;
+  }
+}
+
+async function sendOrderReviewRequestEmailIfPossible(order) {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) return false;
+
+  const to = normalizeEmail(order?.email || order?.customer_email);
+  if (!to) return false;
+
+  const orderNo = normalizeText(order?.order_no, 120) || '-';
+  const customerName = normalizeText(order?.customer_name, 180) || '';
+  const reviewUrl = `https://www.blaene.com.tr/account.html?review=${encodeURIComponent(orderNo)}`;
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Siparis degerlendirme daveti #${orderNo}`,
+      html: reviewRequestTemplate({
+        orderNo,
+        customerName,
+        reviewUrl,
+      }),
+    });
+    return true;
+  } catch (error) {
+    console.error('[order] review request email failed:', error?.message || error);
     return false;
   }
 }
@@ -1682,6 +1770,10 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
     abandoned_cart: 'email.cart_abandoned.sent',
     product_intro: 'email.product_intro.sent',
     shipped_manual: 'email.shipped.manual.sent',
+    review_request: 'email.review_request.sent',
+    delivered_manual: 'email.delivered.manual.sent',
+    order_confirmation_manual: 'email.order_confirmation.manual.sent',
+    coupon_broadcast: 'email.coupon_broadcast.sent',
   };
 
   const since7Days = toIsoDaysAgo(7);
@@ -1690,16 +1782,28 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
       abandoned_cart: 0,
       product_intro: 0,
       shipped_manual: 0,
+      review_request: 0,
+      delivered_manual: 0,
+      order_confirmation_manual: 0,
+      coupon_broadcast: 0,
     },
     all_time: {
       abandoned_cart: 0,
       product_intro: 0,
       shipped_manual: 0,
+      review_request: 0,
+      delivered_manual: 0,
+      order_confirmation_manual: 0,
+      coupon_broadcast: 0,
     },
     latest: {
       abandoned_cart: null,
       product_intro: null,
       shipped_manual: null,
+      review_request: null,
+      delivered_manual: null,
+      order_confirmation_manual: null,
+      coupon_broadcast: null,
     },
   };
 
@@ -1720,6 +1824,32 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
 
   const pendingShipment = await buildPendingShipmentCandidates(config, options);
   return { env: envStatus, summary, pending_shipment: pendingShipment };
+}
+
+async function selectOrderForMarketingEmail(config, orderId, orderNo) {
+  const rows = await restSelect(config, 'orders', {
+    select: 'id,order_no,customer_name,email,status,payment_status,total,tracking_code,shipping_provider',
+    ...(orderId ? { id: `eq.${orderId}` } : { order_no: `eq.${orderNo}` }),
+    limit: 1,
+  });
+  if (!Array.isArray(rows) || !rows.length) return null;
+  return rows[0];
+}
+
+async function sendOrderMailByAction(action, order) {
+  if (action === 'send_shipped') {
+    return sendOrderShippedEmailIfPossible(order);
+  }
+  if (action === 'send_order_confirmation') {
+    return sendOrderConfirmationEmailIfPossible(order);
+  }
+  if (action === 'send_delivered') {
+    return sendOrderDeliveredEmailIfPossible(order);
+  }
+  if (action === 'send_review_request') {
+    return sendOrderReviewRequestEmailIfPossible(order);
+  }
+  return false;
 }
 
 async function handleMarketingEmails(req, res, ctx) {
@@ -1760,7 +1890,7 @@ async function handleMarketingEmails(req, res, ctx) {
     ? marketingCronHandler.runByMode
     : null;
 
-  if (action === 'send_abandoned' || action === 'send_product_intro' || action === 'send_all') {
+  if (action === 'send_abandoned' || action === 'send_product_intro' || action === 'send_all' || action === 'send_review_flow') {
     if (!envStatus.resend_configured) {
       return sendError(res, 400, 'RESEND_API_KEY is not configured', 'EMAIL_PROVIDER_NOT_CONFIGURED');
     }
@@ -1769,7 +1899,7 @@ async function handleMarketingEmails(req, res, ctx) {
     }
     const mode = action === 'send_abandoned'
       ? 'abandoned'
-      : (action === 'send_product_intro' ? 'product-intro' : 'all');
+      : (action === 'send_product_intro' ? 'product-intro' : (action === 'send_review_flow' ? 'review-request' : 'all'));
     const result = await runner(config, mode);
     await writeAuditLog(config, req, auth, 'marketing.email.trigger', {
       action,
@@ -1787,7 +1917,111 @@ async function handleMarketingEmails(req, res, ctx) {
     });
   }
 
-  if (action === 'send_shipped') {
+  if (action === 'send_coupon_broadcast') {
+    if (!envStatus.resend_configured) {
+      return sendError(res, 400, 'RESEND_API_KEY is not configured', 'EMAIL_PROVIDER_NOT_CONFIGURED');
+    }
+
+    const couponCode = normalizeText(body.coupon_code, 80).toUpperCase();
+    if (!couponCode) {
+      return sendError(res, 400, 'coupon_code is required', 'VALIDATION_REQUIRED_COUPON_CODE');
+    }
+
+    const couponTitle = normalizeText(body.coupon_title, 180) || 'Size ozel indirim';
+    const discountText = normalizeText(body.discount_text, 240) || null;
+    const batchLimit = normalizePositiveInt(body.batch_limit, 300, 2000);
+
+    const recipients = await safeSelect(config, 'customer_profiles', {
+      select: 'email,full_name,consent_marketing_email',
+      consent_marketing_email: 'eq.true',
+      email: 'not.is.null',
+      limit: 5000,
+    }, []);
+
+    const recentLogs = await safeSelect(config, 'audit_logs', {
+      select: 'actor_email,metadata,action,created_at',
+      action: 'eq.email.coupon_broadcast.sent',
+      created_at: `gte.${toIsoDaysAgo(7)}`,
+      limit: 5000,
+    }, []);
+
+    const recentlySent = new Set();
+    (recentLogs || []).forEach((row) => {
+      const email = normalizeEmail(row?.actor_email);
+      const logCoupon = normalizeText(row?.metadata?.coupon_code, 80).toUpperCase();
+      if (!email || !logCoupon) return;
+      recentlySent.add(`${email}|${logCoupon}`);
+    });
+
+    const queue = (recipients || [])
+      .map((row) => ({
+        email: normalizeEmail(row?.email),
+        full_name: normalizeText(row?.full_name, 180) || '',
+      }))
+      .filter((row) => row.email && !recentlySent.has(`${row.email}|${couponCode}`))
+      .slice(0, batchLimit);
+
+    let sent = 0;
+    for (const row of queue) {
+      try {
+        await sendEmail({
+          to: row.email,
+          subject: `Size ozel indirim kodu: ${couponCode}`,
+          html: couponBroadcastTemplate({
+            customerName: row.full_name,
+            couponCode,
+            couponTitle,
+            discountText,
+          }),
+        });
+        sent += 1;
+
+        await restInsert(config, 'audit_logs', {
+          actor_user_id: auth.user?.id || null,
+          actor_email: row.email,
+          actor_role: normalizeText(auth.profile?.role, 60) || 'admin',
+          action: 'email.coupon_broadcast.sent',
+          entity_type: 'marketing_email',
+          entity_id: row.email,
+          metadata: {
+            coupon_code: couponCode,
+            coupon_title: couponTitle,
+          },
+          request_path: req.url,
+          request_method: req.method,
+        }, { prefer: 'return=minimal' }).catch(() => null);
+      } catch (error) {
+        console.error('[marketing] coupon broadcast email failed:', error?.message || error);
+      }
+    }
+
+    await writeAuditLog(config, req, auth, 'marketing.email.trigger', {
+      action,
+      coupon_code: couponCode,
+      queued: queue.length,
+      sent,
+    }, { entityType: 'marketing_email' });
+
+    const status = await buildMarketingEmailStatus(config, envStatus, buildStatusOptions(body));
+    return sendSuccess(res, {
+      action,
+      executed_at: new Date().toISOString(),
+      coupon: {
+        code: couponCode,
+        title: couponTitle,
+        sent,
+        queued: queue.length,
+      },
+      status,
+    });
+  }
+
+  if (
+    action === 'send_shipped' ||
+    action === 'send_order_confirmation' ||
+    action === 'send_delivered' ||
+    action === 'send_review_request'
+  ) {
     if (!envStatus.resend_configured) {
       return sendError(res, 400, 'RESEND_API_KEY is not configured', 'EMAIL_PROVIDER_NOT_CONFIGURED');
     }
@@ -1798,34 +2032,38 @@ async function handleMarketingEmails(req, res, ctx) {
       return sendError(res, 400, 'order_id or order_no is required', 'VALIDATION_REQUIRED_ORDER_REF');
     }
 
-    const rows = await restSelect(config, 'orders', {
-      select: 'id,order_no,customer_name,email,status,tracking_code,shipping_provider',
-      ...(orderId ? { id: `eq.${orderId}` } : { order_no: `eq.${orderNo}` }),
-      limit: 1,
-    });
-    if (!Array.isArray(rows) || !rows.length) {
+    const order = await selectOrderForMarketingEmail(config, orderId, orderNo);
+    if (!order) {
       return sendError(res, 404, 'Order not found', 'ORDER_NOT_FOUND');
     }
 
-    const order = rows[0];
     const targetEmail = normalizeEmail(order?.email);
     if (!targetEmail) {
       return sendError(res, 400, 'Order has no customer email', 'ORDER_EMAIL_MISSING');
     }
 
-    const sent = await sendOrderShippedEmailIfPossible(order);
+    const sent = await sendOrderMailByAction(action, order);
     if (!sent) {
-      return sendError(res, 500, 'Shipped email could not be sent', 'SHIPPED_EMAIL_SEND_FAILED');
+      return sendError(res, 500, 'Order email could not be sent', 'ORDER_EMAIL_SEND_FAILED');
     }
+
+    const manualAuditAction = action === 'send_shipped'
+      ? 'email.shipped.manual.sent'
+      : action === 'send_order_confirmation'
+        ? 'email.order_confirmation.manual.sent'
+        : action === 'send_delivered'
+          ? 'email.delivered.manual.sent'
+          : 'email.review_request.sent';
 
     await restInsert(config, 'audit_logs', {
       actor_user_id: auth.user?.id || null,
       actor_email: normalizeText(auth.user?.email, 180) || null,
       actor_role: normalizeText(auth.profile?.role, 60) || 'admin',
-      action: 'email.shipped.manual.sent',
+      action: manualAuditAction,
       entity_type: 'order',
       entity_id: normalizeText(order?.id, 120) || null,
       metadata: {
+        trigger_action: action,
         order_no: normalizeText(order?.order_no, 120) || null,
         email: targetEmail,
       },
@@ -1844,7 +2082,7 @@ async function handleMarketingEmails(req, res, ctx) {
     return sendSuccess(res, {
       action,
       executed_at: new Date().toISOString(),
-      shipped: {
+      order_mail: {
         sent: true,
         order_id: order.id,
         order_no: order.order_no,

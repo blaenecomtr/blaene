@@ -43,22 +43,36 @@ interface MarketingEmailStatusResponse {
     cron_secret_configured?: boolean
     abandoned_cart_promo_code?: string | null
     product_intro_batch_limit?: number
+    review_request_delay_days?: number
+    review_request_batch_limit?: number
   }
   summary?: {
     last_7_days?: {
       abandoned_cart?: number
       product_intro?: number
       shipped_manual?: number
+      review_request?: number
+      delivered_manual?: number
+      order_confirmation_manual?: number
+      coupon_broadcast?: number
     }
     all_time?: {
       abandoned_cart?: number
       product_intro?: number
       shipped_manual?: number
+      review_request?: number
+      delivered_manual?: number
+      order_confirmation_manual?: number
+      coupon_broadcast?: number
     }
     latest?: {
       abandoned_cart?: string | null
       product_intro?: string | null
       shipped_manual?: string | null
+      review_request?: string | null
+      delivered_manual?: string | null
+      order_confirmation_manual?: string | null
+      coupon_broadcast?: string | null
     }
   }
   pending_shipment?: {
@@ -93,16 +107,39 @@ interface MarketingEmailActionResponse {
     product_intro?: {
       sent?: number
     } | null
+    review_request?: {
+      sent?: number
+    } | null
+  }
+  order_mail?: {
+    sent?: boolean
+    order_no?: string | null
+    email?: string | null
   }
   shipped?: {
     sent?: boolean
     order_no?: string | null
     email?: string | null
   }
+  coupon?: {
+    code?: string | null
+    title?: string | null
+    sent?: number
+    queued?: number
+  }
   status?: MarketingEmailStatusResponse
 }
 
-type MarketingActionType = 'send_abandoned' | 'send_product_intro' | 'send_all' | 'send_shipped'
+type MarketingActionType =
+  | 'send_abandoned'
+  | 'send_product_intro'
+  | 'send_all'
+  | 'send_review_flow'
+  | 'send_shipped'
+  | 'send_order_confirmation'
+  | 'send_delivered'
+  | 'send_review_request'
+  | 'send_coupon_broadcast'
 type PendingShipmentDaysOption = 'all' | '7' | '14' | '30' | '90'
 
 const pendingShipmentDayOptions: Array<{ value: PendingShipmentDaysOption; label: string }> = [
@@ -162,6 +199,7 @@ export default function Dashboard() {
   const [marketingMessage, setMarketingMessage] = useState('')
   const [marketingError, setMarketingError] = useState('')
   const [manualShippedOrderNo, setManualShippedOrderNo] = useState('')
+  const [couponBroadcastCode, setCouponBroadcastCode] = useState('')
   const [pendingShipmentDays, setPendingShipmentDays] = useState<PendingShipmentDaysOption>('30')
   const [selectedPendingOrderNo, setSelectedPendingOrderNo] = useState('')
 
@@ -228,8 +266,18 @@ export default function Dashboard() {
   const runMarketingAction = async (action: MarketingActionType, shippedOrderRef = '') => {
     if (!token) return
     const orderNo = String(shippedOrderRef || '').trim() || manualShippedOrderNo.trim() || selectedPendingOrderNo.trim()
-    if (action === 'send_shipped' && !orderNo) {
-      setMarketingError('Kargo maili icin siparis secin veya siparis numarasi girin.')
+    const orderRequiredActions: MarketingActionType[] = [
+      'send_shipped',
+      'send_order_confirmation',
+      'send_delivered',
+      'send_review_request',
+    ]
+    if (orderRequiredActions.includes(action) && !orderNo) {
+      setMarketingError('Bu mail icin siparis secin veya siparis numarasi girin.')
+      return
+    }
+    if (action === 'send_coupon_broadcast' && !couponBroadcastCode.trim()) {
+      setMarketingError('Kupon yayini icin coupon code girin.')
       return
     }
 
@@ -240,6 +288,8 @@ export default function Dashboard() {
       const payload: {
         action: MarketingActionType
         order_no?: string
+        coupon_code?: string
+        coupon_title?: string
         pending_days?: PendingShipmentDaysOption
         pending_limit?: number
       } = {
@@ -247,7 +297,11 @@ export default function Dashboard() {
         pending_days: pendingShipmentDays,
         pending_limit: 80,
       }
-      if (action === 'send_shipped') payload.order_no = orderNo
+      if (orderRequiredActions.includes(action)) payload.order_no = orderNo
+      if (action === 'send_coupon_broadcast') {
+        payload.coupon_code = couponBroadcastCode.trim().toUpperCase()
+        payload.coupon_title = 'Size ozel indirim'
+      }
 
       const response = await apiRequest<MarketingEmailActionResponse>('/api/admin/marketing-emails', {
         method: 'POST',
@@ -256,25 +310,41 @@ export default function Dashboard() {
       })
 
       if (response?.status) setMarketingStatus(response.status)
-      if (action === 'send_shipped') {
-        const shippedOrderNo = String(response?.shipped?.order_no || orderNo || '-')
-        const targetEmail = String(response?.shipped?.email || '').trim()
+      if (orderRequiredActions.includes(action)) {
+        const sentOrderNo = String(response?.order_mail?.order_no || response?.shipped?.order_no || orderNo || '-')
+        const targetEmail = String(response?.order_mail?.email || response?.shipped?.email || '').trim()
+        const actionLabel = action === 'send_shipped'
+          ? 'Kargo maili'
+          : action === 'send_order_confirmation'
+            ? 'Siparis alindi maili'
+            : action === 'send_delivered'
+              ? 'Teslim edildi maili'
+              : 'Yorum istegi maili'
         setMarketingMessage(
           targetEmail
-            ? `Kargo maili gonderildi: ${shippedOrderNo} (${targetEmail})`
-            : `Kargo maili gonderildi: ${shippedOrderNo}`
+            ? `${actionLabel} gonderildi: ${sentOrderNo} (${targetEmail})`
+            : `${actionLabel} gonderildi: ${sentOrderNo}`
         )
         setManualShippedOrderNo('')
-        setSelectedPendingOrderNo('')
+        if (action === 'send_shipped') setSelectedPendingOrderNo('')
+      } else if (action === 'send_coupon_broadcast') {
+        const sent = asNumber(response?.coupon?.sent, 0)
+        const queued = asNumber(response?.coupon?.queued, 0)
+        const code = String(response?.coupon?.code || couponBroadcastCode || '').trim().toUpperCase()
+        setMarketingMessage(`Kupon yayini calisti (${code}). Gonderilen: ${sent}, Kuyruk: ${queued}`)
+        setCouponBroadcastCode('')
       } else {
         const abandonedSent = asNumber(response?.result?.abandoned_cart?.sent, 0)
         const introSent = asNumber(response?.result?.product_intro?.sent, 0)
+        const reviewSent = asNumber(response?.result?.review_request?.sent, 0)
         if (action === 'send_abandoned') {
           setMarketingMessage(`Sepet mail akisi calisti. Gonderilen: ${abandonedSent}`)
         } else if (action === 'send_product_intro') {
           setMarketingMessage(`Urun tanitim akisi calisti. Gonderilen: ${introSent}`)
+        } else if (action === 'send_review_flow') {
+          setMarketingMessage(`Yorum istegi cron akisi calisti. Gonderilen: ${reviewSent}`)
         } else {
-          setMarketingMessage(`Tum akislari calistirdiniz. Sepet: ${abandonedSent}, Tanitim: ${introSent}`)
+          setMarketingMessage(`Tum akislari calistirdiniz. Sepet: ${abandonedSent}, Tanitim: ${introSent}, Yorum: ${reviewSent}`)
         }
       }
       await loadMarketingStatus(pendingShipmentDays)
@@ -445,6 +515,14 @@ export default function Dashboard() {
             <span style={mailStatusLabelStyle}>Kargo Manual (7 gun)</span>
             <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.shipped_manual, 0)}</strong>
           </div>
+          <div style={mailStatusCardStyle}>
+            <span style={mailStatusLabelStyle}>Yorum Istegi (7 gun)</span>
+            <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.review_request, 0)}</strong>
+          </div>
+          <div style={mailStatusCardStyle}>
+            <span style={mailStatusLabelStyle}>Kupon Yayini (7 gun)</span>
+            <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.coupon_broadcast, 0)}</strong>
+          </div>
         </div>
 
         <div style={mailActionRowStyle}>
@@ -471,6 +549,14 @@ export default function Dashboard() {
             disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
           >
             {marketingBusyAction === 'send_all' ? 'Calisiyor...' : 'Tum pazarlama maillerini calistir'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runMarketingAction('send_review_flow')}
+            style={mailSecondaryButtonStyle}
+            disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
+          >
+            {marketingBusyAction === 'send_review_flow' ? 'Calisiyor...' : 'Yorum istegi cronunu calistir'}
           </button>
         </div>
 
@@ -544,10 +630,51 @@ export default function Dashboard() {
           >
             {marketingBusyAction === 'send_shipped' ? 'Gonderiliyor...' : 'Manuel siparis no ile gonder'}
           </button>
+          <button
+            type="button"
+            onClick={() => void runMarketingAction('send_order_confirmation', manualShippedOrderNo)}
+            style={mailSecondaryButtonStyle}
+            disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
+          >
+            {marketingBusyAction === 'send_order_confirmation' ? 'Gonderiliyor...' : 'Siparis alindi maili'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runMarketingAction('send_delivered', manualShippedOrderNo)}
+            style={mailSecondaryButtonStyle}
+            disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
+          >
+            {marketingBusyAction === 'send_delivered' ? 'Gonderiliyor...' : 'Teslim edildi maili'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runMarketingAction('send_review_request', manualShippedOrderNo)}
+            style={mailSecondaryButtonStyle}
+            disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
+          >
+            {marketingBusyAction === 'send_review_request' ? 'Gonderiliyor...' : 'Yorum istegi maili'}
+          </button>
+        </div>
+
+        <div style={mailActionRowStyle}>
+          <input
+            value={couponBroadcastCode}
+            onChange={(event) => setCouponBroadcastCode(event.target.value)}
+            placeholder="Kupon code (or: HOSGELDIN10)"
+            style={mailInputStyle}
+          />
+          <button
+            type="button"
+            onClick={() => void runMarketingAction('send_coupon_broadcast')}
+            style={mailPrimaryButtonStyle}
+            disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
+          >
+            {marketingBusyAction === 'send_coupon_broadcast' ? 'Gonderiliyor...' : 'Kupon yayini gonder'}
+          </button>
         </div>
 
         <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '10px', marginBottom: 0 }}>
-          Son sepette unuttun maili: {formatDate(emailSummary?.latest?.abandoned_cart)} | Son urun tanitim maili: {formatDate(emailSummary?.latest?.product_intro)}
+          Son sepette unuttun: {formatDate(emailSummary?.latest?.abandoned_cart)} | Son urun tanitim: {formatDate(emailSummary?.latest?.product_intro)} | Son yorum istegi: {formatDate(emailSummary?.latest?.review_request)} | Son kupon yayini: {formatDate(emailSummary?.latest?.coupon_broadcast)}
         </p>
         {marketingMessage && <div style={okStyle}>{marketingMessage}</div>}
         {marketingError && <div style={errorStyle}>{marketingError}</div>}
