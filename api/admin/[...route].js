@@ -3699,7 +3699,7 @@ async function handleCouponBroadcast(req, res, ctx) {
 
   const promotions = await restSelect(config, 'promotions', {
     select: '*',
-    filters: { id: `eq.${promotionId}` },
+    id: `eq.${promotionId}`,
     limit: 1,
   });
   const promotion = Array.isArray(promotions) ? promotions[0] : null;
@@ -3711,7 +3711,7 @@ async function handleCouponBroadcast(req, res, ctx) {
   try {
     customers = await restSelect(config, 'customer_profiles', {
       select: 'id,email,full_name',
-      filters: { consent_marketing_email: 'eq.true' },
+      consent_marketing_email: 'eq.true',
       order: 'created_at.asc',
       limit: 5000,
     });
