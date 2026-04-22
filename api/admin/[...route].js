@@ -23,6 +23,9 @@ const { hasRole, canManageRole } = require('../../lib/api/auth');
 const { ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER } = require('../../lib/api/constants');
 const { writeAuditLog } = require('../../lib/api/audit');
 const { createShipment, isProviderConfigured, PROVIDERS } = require('../../lib/api/shipping-adapters');
+const { sendEmail } = require('../../lib/email/resend');
+const { orderShippedTemplate } = require('../../lib/email/templates');
+const marketingCronHandler = require('../../lib/handlers/public-marketing-cron');
 
 const STAFF_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER];
 const ADMIN_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN];
@@ -51,6 +54,47 @@ const PRODUCT_OPTIONAL_COLUMNS = [
   'seo_description',
   'seo_slug',
 ];
+
+function shippingProviderLabel(value) {
+  const key = normalizeText(value, 80).toLowerCase();
+  if (!key) return '';
+  const map = {
+    yurtici: 'Yurtici Kargo',
+    mng: 'MNG Kargo',
+    aras: 'Aras Kargo',
+  };
+  return map[key] || value;
+}
+
+async function sendOrderShippedEmailIfPossible(order) {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) return false;
+
+  const to = normalizeEmail(order?.email || order?.customer_email);
+  if (!to) return false;
+
+  const orderNo = normalizeText(order?.order_no, 120) || '-';
+  const customerName = normalizeText(order?.customer_name, 180) || '';
+  const trackingCode = normalizeText(order?.tracking_code, 120) || '';
+  const shippingProvider = shippingProviderLabel(order?.shipping_provider);
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Siparisiniz Kargoya Verildi #${orderNo}`,
+      html: orderShippedTemplate({
+        orderNo,
+        customerName,
+        trackingCode,
+        shippingProvider,
+      }),
+    });
+    return true;
+  } catch (error) {
+    console.error('[shipping] shipped email failed:', error?.message || error);
+    return false;
+  }
+}
 
 function getUrl(req) {
   return new URL(req.url, 'http://localhost');
@@ -172,6 +216,29 @@ function generateTempPassword(length = 14) {
   return out;
 }
 
+function getAdminOwnerEmails() {
+  const raw = normalizeText(process.env.ADMIN_EMAIL, 4000);
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((value) => normalizeEmail(value))
+    .filter(Boolean);
+}
+
+function isAdminOwner(auth) {
+  const actorEmail = normalizeEmail(auth?.user?.email);
+  if (!actorEmail) return false;
+  const owners = getAdminOwnerEmails();
+  if (!owners.length) return false;
+  return owners.includes(actorEmail);
+}
+
+function isProtectedOwnerEmail(email) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return false;
+  return getAdminOwnerEmails().includes(normalized);
+}
+
 function maskSecret(raw) {
   const value = normalizeText(raw, 500);
   if (!value) return null;
@@ -273,8 +340,48 @@ async function safeSelect(config, table, query, fallback = []) {
   }
 }
 
+async function getShippingProvidersFromSettings(config) {
+  const defaultProviders = PROVIDERS.map((provider) => ({
+    provider,
+    label: provider,
+    enabled: true,
+  }));
+
+  const rows = await safeSelect(config, 'site_settings', {
+    select: 'value_json',
+    key: 'eq.shipping_settings',
+    limit: 1,
+  }, []);
+
+  const valueJson = Array.isArray(rows) && rows.length ? rows[0]?.value_json : null;
+  const fromSettings = Array.isArray(valueJson?.providers) ? valueJson.providers : [];
+  const normalized = fromSettings
+    .map((item, index) => {
+      const rawProvider = normalizeText(typeof item === 'string' ? item : item?.provider, 40)
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, '')
+        .trim();
+      if (!rawProvider) return null;
+      return {
+        provider: rawProvider,
+        label: normalizeText(typeof item === 'string' ? '' : item?.label, 120) || rawProvider || `provider-${index + 1}`,
+        enabled: typeof item === 'object' && item ? item.enabled !== false : true,
+      };
+    })
+    .filter(Boolean)
+    .filter((item, index, arr) => arr.findIndex((row) => row.provider === item.provider) === index);
+
+  const active = normalized.filter((item) => item.enabled !== false);
+  return active.length ? active : defaultProviders;
+}
+
 function parseBodySafe(req) {
   return readJsonBody(req).catch(() => ({ body: null }));
+}
+
+function toIsoDaysAgo(days) {
+  const safeDays = Math.max(0, Number(days) || 0);
+  return new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000).toISOString();
 }
 
 function normalizeStorageToken(input, fallback = 'asset') {
@@ -579,7 +686,7 @@ async function supabaseAdminCreateUser(config, payload) {
     body: JSON.stringify({
       email: payload.email,
       password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: {
         full_name: payload.fullName || null,
       },
@@ -637,13 +744,37 @@ async function supabaseAdminListUsers(config, options = {}) {
   return [];
 }
 
+async function supabaseAdminDeleteUser(config, userId) {
+  const normalizedId = normalizeText(userId, 120);
+  if (!normalizedId) return;
+  const response = await fetch(`${config.url}/auth/v1/admin/users/${normalizedId}`, {
+    method: 'DELETE',
+    headers: buildServiceHeaders(config),
+    body: JSON.stringify({ should_soft_delete: false }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    const message = data?.msg || data?.message || data?.error || 'Auth user delete failed';
+    const error = new Error(message);
+    error.httpStatus = response.status || 400;
+    error.code = response.status === 404 ? 'AUTH_USER_NOT_FOUND' : 'AUTH_USER_DELETE_FAILED';
+    throw error;
+  }
+}
+
 async function handleMe(req, res, ctx) {
   if (req.method !== 'GET') return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
   const { config, auth } = ctx;
+  const ownerEmailsConfigured = getAdminOwnerEmails().length > 0;
+  const canManageAdminUsers = isAdminOwner(auth);
   await restUpdate(config, 'user_profiles', { id: `eq.${auth.user.id}` }, { last_seen_at: new Date().toISOString() }).catch(() => null);
   return sendSuccess(res, {
     user: { id: auth.user.id, email: auth.user.email || null },
     profile: auth.profile,
+    permissions: {
+      can_manage_admin_users: canManageAdminUsers,
+      owner_emails_configured: ownerEmailsConfigured,
+    },
   });
 }
 
@@ -891,7 +1022,6 @@ async function handleProductsPriceBulk(req, res, ctx) {
     nextPrice = Math.round(Math.max(0, nextPrice) * 100) / 100;
     await updateProductWithFallback(config, { id: `eq.${row.id}` }, {
       price: nextPrice,
-      price_visible: true,
     });
 
     updatedProducts.push({
@@ -1009,12 +1139,32 @@ async function handleOrderStatus(req, res, ctx) {
   }
 
   const idsQuery = buildInFilter(orderIds);
+  const previousOrdersForShippedMail = workflowStatus === 'shipped'
+    ? await safeSelect(config, 'orders', {
+      select: 'id,order_no,customer_name,email,status,tracking_code,shipping_provider',
+      id: idsQuery,
+      limit: 5000,
+    }, [])
+    : [];
+
   await restUpdate(config, 'orders', { id: idsQuery }, patch);
   await writeAuditLog(config, req, auth, 'order.status.bulk_update', {
     payment_status: paymentStatus || null,
     workflow_status: workflowStatus || null,
     count: orderIds.length,
   }, { entityType: 'order' });
+
+  if (workflowStatus === 'shipped' && previousOrdersForShippedMail.length) {
+    const needsNotification = previousOrdersForShippedMail.filter((row) => String(row?.status || '').toLowerCase() !== 'shipped');
+    if (needsNotification.length) {
+      await Promise.allSettled(
+        needsNotification.map((row) => sendOrderShippedEmailIfPossible({
+          ...row,
+          ...patch,
+        }))
+      );
+    }
+  }
   return sendSuccess(res, { updated: orderIds.length, ...patch });
 }
 
@@ -1179,6 +1329,9 @@ async function handleAnalytics(req, res, ctx) {
   const clickCounts = {};
   const countryCounts = {};
   const cityCounts = {};
+  const productClickCounts = {};
+  const abandonedBySession = {};
+  const checkoutSessions = new Set();
   const recentVisitors = [];
   const visitorSet = new Set();
   let pageViewCount = 0;
@@ -1213,12 +1366,17 @@ async function handleAnalytics(req, res, ctx) {
     return 'unknown';
   };
 
-  const productCache = {};
-
-  const getProductNameFromPath = (pagePath) => {
-    if (!pagePath) return null;
-    const match = pagePath.match(/\/(urun|product)\/([a-z0-9\-]+)/i);
-    return match ? match[2] : null;
+  const getProductCodeFromHref = (value) => {
+    const href = normalizeText(value, 1000);
+    if (!href) return '';
+    try {
+      const parsed = new URL(href, 'https://blaene.com.tr');
+      return normalizeText(parsed.searchParams.get('code'), 80).toUpperCase();
+    } catch {
+      const query = href.split('?')[1] || '';
+      const params = new URLSearchParams(query);
+      return normalizeText(params.get('code'), 80).toUpperCase();
+    }
   };
 
   scopedTraffic.forEach((row) => {
@@ -1236,6 +1394,9 @@ async function handleAnalytics(req, res, ctx) {
       pageViewCount += 1;
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       pageCounts[pagePath] = (pageCounts[pagePath] || 0) + 1;
+      if (String(pagePath || '').toLowerCase().includes('checkout')) {
+        checkoutSessions.add(visitorKey);
+      }
       const countryKey = country && country !== 'unknown' ? country : 'Bilinmeyen';
       countryCounts[countryKey] = (countryCounts[countryKey] || 0) + 1;
       const city = normalizeText(metadata.city, 80) || 'unknown';
@@ -1256,34 +1417,85 @@ async function handleAnalytics(req, res, ctx) {
 
     if (eventType === 'click') {
       clickCount += 1;
+      const trackKind = normalizeText(metadata.track_kind, 60).toLowerCase();
+      const productCode =
+        normalizeText(metadata.product_code, 80).toUpperCase() ||
+        getProductCodeFromHref(metadata.element_href) ||
+        getProductCodeFromHref(metadata.page_url);
+      const productName = normalizeText(metadata.product_name, 160);
       const clickLabel =
         normalizeText(metadata.element_text, 140) ||
         normalizeText(metadata.element_href, 220) ||
         normalizeText(metadata.element_tag, 40) ||
         'unknown';
-      const productId = getProductNameFromPath(metadata.element_href);
       clickCounts[clickLabel] = clickCounts[clickLabel] || { count: 0, product_id: null };
-      if (!clickCounts[clickLabel].product_id && productId) {
-        clickCounts[clickLabel].product_id = productId;
+      if (!clickCounts[clickLabel].product_id && productCode) {
+        clickCounts[clickLabel].product_id = productCode;
       }
       clickCounts[clickLabel].count += 1;
+
+      if (productCode) {
+        productClickCounts[productCode] = productClickCounts[productCode] || {
+          count: 0,
+          product_name: productName || null,
+        };
+        productClickCounts[productCode].count += 1;
+        if (!productClickCounts[productCode].product_name && productName) {
+          productClickCounts[productCode].product_name = productName;
+        }
+      }
+
+      const addToCartSignal = trackKind === 'add_to_cart' || clickLabel.toLowerCase().includes('sepete ekle');
+      if (addToCartSignal && productCode) {
+        const existing = abandonedBySession[visitorKey] || { last_at: null, products: {} };
+        existing.last_at = row.created_at || existing.last_at;
+        existing.products[productCode] = existing.products[productCode] || {
+          product_code: productCode,
+          product_name: productName || productCode,
+          count: 0,
+        };
+        existing.products[productCode].count += 1;
+        if (!existing.products[productCode].product_name && productName) {
+          existing.products[productCode].product_name = productName;
+        }
+        abandonedBySession[visitorKey] = existing;
+      }
     }
   });
 
   const productCounts = {};
-  recentVisitors.forEach((visitor) => {
-    const productId = getProductNameFromPath(visitor.page);
-    if (productId) {
-      productCounts[productId] = (productCounts[productId] || 0) + 1;
-    }
+  Object.entries(productClickCounts).forEach(([productCode, value]) => {
+    productCounts[productCode] = Number(value && value.count || 0);
   });
 
-  const sortObjectEntries = (obj, keyLabel, includeProductId = false) => {
+  const abandonedCustomers = Object.entries(abandonedBySession)
+    .filter(([sessionId]) => !checkoutSessions.has(sessionId))
+    .map(([sessionId, entry]) => {
+      const productsBySession = Object.values(entry.products || {});
+      productsBySession.sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
+      const topProduct = productsBySession[0] || null;
+      return {
+        session_id: sessionId,
+        customer_name: `Ziyaretci ${String(sessionId || '').slice(-6) || 'Anonim'}`,
+        customer_email: null,
+        product_code: topProduct ? String(topProduct.product_code || '') : null,
+        product_name: topProduct ? String(topProduct.product_name || topProduct.product_code || '') : null,
+        count: topProduct ? Number(topProduct.count || 0) : 0,
+        last_at: entry.last_at || null,
+      };
+    })
+    .sort((a, b) => String(b.last_at || '').localeCompare(String(a.last_at || '')))
+    .slice(0, 30);
+
+  const sortObjectEntries = (obj, keyLabel, includeProductId = false, includeProductName = false) => {
     return Object.entries(obj)
       .map(([key, value]) => {
         const result = { [keyLabel]: key, count: Number(typeof value === 'number' ? value : value?.count || 0) };
         if (includeProductId && typeof value === 'object' && value?.product_id) {
           result.product_id = value.product_id;
+        }
+        if (includeProductName && typeof value === 'object' && value?.product_name) {
+          result.product_name = value.product_name;
         }
         return result;
       })
@@ -1296,8 +1508,10 @@ async function handleAnalytics(req, res, ctx) {
     metrics: {
       paid_revenue: Math.round(paidRevenue * 100) / 100,
       daily_revenue: Math.round(dailyRevenue * 100) / 100,
+      total_orders: scopedOrders.length,
       new_orders: scopedOrders.length,
       paid_orders: paidOrders.length,
+      average_order_value: paidOrders.length ? Math.round((paidRevenue / paidOrders.length) * 100) / 100 : 0,
       pending_orders: pendingOrders,
       active_users: users.filter((item) => item.is_active !== false).length,
       scoped_new_users: scopedUsers.length,
@@ -1322,7 +1536,9 @@ async function handleAnalytics(req, res, ctx) {
       top_sources: sortObjectEntries(sourceCounts, 'source'),
       top_pages: sortObjectEntries(pageCounts, 'page'),
       top_products: sortObjectEntries(productCounts, 'product_id'),
+      top_product_clicks: sortObjectEntries(productClickCounts, 'product_id', false, true),
       top_clicks: sortObjectEntries(clickCounts, 'label', true),
+      abandoned_customers: abandonedCustomers,
       visitor_by_country: sortObjectEntries(countryCounts, 'country'),
       visitor_by_city: sortObjectEntries(cityCounts, 'city'),
       recent_visitors: recentVisitors
@@ -1332,10 +1548,207 @@ async function handleAnalytics(req, res, ctx) {
   });
 }
 
+async function buildMarketingEmailStatus(config, presetEnvStatus = null) {
+  const envStatus = presetEnvStatus || (
+    typeof marketingCronHandler.getEnvStatus === 'function'
+      ? marketingCronHandler.getEnvStatus()
+      : {
+        resend_configured: Boolean(process.env.RESEND_API_KEY),
+        cron_secret_configured: Boolean(normalizeText(process.env.MARKETING_CRON_SECRET, 300) || normalizeText(process.env.CRON_SECRET, 300)),
+      }
+  );
+
+  const logs = await safeSelect(config, 'audit_logs', {
+    select: 'action,created_at',
+    order: 'created_at.desc',
+    limit: 5000,
+  }, []);
+
+  const actionKeys = {
+    abandoned_cart: 'email.cart_abandoned.sent',
+    product_intro: 'email.product_intro.sent',
+    shipped_manual: 'email.shipped.manual.sent',
+  };
+
+  const since7Days = toIsoDaysAgo(7);
+  const summary = {
+    last_7_days: {
+      abandoned_cart: 0,
+      product_intro: 0,
+      shipped_manual: 0,
+    },
+    all_time: {
+      abandoned_cart: 0,
+      product_intro: 0,
+      shipped_manual: 0,
+    },
+    latest: {
+      abandoned_cart: null,
+      product_intro: null,
+      shipped_manual: null,
+    },
+  };
+
+  (logs || []).forEach((row) => {
+    const action = normalizeText(row?.action, 120);
+    const createdAt = normalizeText(row?.created_at, 80) || null;
+    const inLast7Days = createdAt ? isWithinRange(createdAt, since7Days, null) : false;
+
+    Object.entries(actionKeys).forEach(([key, actionValue]) => {
+      if (action !== actionValue) return;
+      summary.all_time[key] += 1;
+      if (inLast7Days) summary.last_7_days[key] += 1;
+      if (!summary.latest[key] && createdAt) {
+        summary.latest[key] = createdAt;
+      }
+    });
+  });
+
+  return { env: envStatus, summary };
+}
+
+async function handleMarketingEmails(req, res, ctx) {
+  const { config, auth } = ctx;
+  if (!hasRole(auth.profile.role, WRITER_ROLES)) {
+    return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+  }
+
+  const envStatus = typeof marketingCronHandler.getEnvStatus === 'function'
+    ? marketingCronHandler.getEnvStatus()
+    : {
+      resend_configured: Boolean(process.env.RESEND_API_KEY),
+      cron_secret_configured: Boolean(normalizeText(process.env.MARKETING_CRON_SECRET, 300) || normalizeText(process.env.CRON_SECRET, 300)),
+    };
+
+  if (req.method === 'GET') {
+    const status = await buildMarketingEmailStatus(config, envStatus);
+    return sendSuccess(res, status);
+  }
+
+  if (req.method !== 'POST') {
+    return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+  }
+
+  const parsed = await parseBodySafe(req);
+  const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+  const action = normalizeText(body.action, 60).toLowerCase();
+  if (!action) {
+    return sendError(res, 400, 'action is required', 'VALIDATION_REQUIRED_ACTION');
+  }
+
+  const runner = typeof marketingCronHandler.runByMode === 'function'
+    ? marketingCronHandler.runByMode
+    : null;
+
+  if (action === 'send_abandoned' || action === 'send_product_intro' || action === 'send_all') {
+    if (!envStatus.resend_configured) {
+      return sendError(res, 400, 'RESEND_API_KEY is not configured', 'EMAIL_PROVIDER_NOT_CONFIGURED');
+    }
+    if (!runner) {
+      return sendError(res, 500, 'Marketing runner unavailable', 'MARKETING_RUNNER_UNAVAILABLE');
+    }
+    const mode = action === 'send_abandoned'
+      ? 'abandoned'
+      : (action === 'send_product_intro' ? 'product-intro' : 'all');
+    const result = await runner(config, mode);
+    await writeAuditLog(config, req, auth, 'marketing.email.trigger', {
+      action,
+      mode,
+      result,
+    }, { entityType: 'marketing_email' });
+
+    const status = await buildMarketingEmailStatus(config, envStatus);
+    return sendSuccess(res, {
+      action,
+      mode,
+      executed_at: new Date().toISOString(),
+      result,
+      status,
+    });
+  }
+
+  if (action === 'send_shipped') {
+    if (!envStatus.resend_configured) {
+      return sendError(res, 400, 'RESEND_API_KEY is not configured', 'EMAIL_PROVIDER_NOT_CONFIGURED');
+    }
+
+    const orderId = normalizeText(body.order_id, 120);
+    const orderNo = normalizeText(body.order_no, 120);
+    if (!orderId && !orderNo) {
+      return sendError(res, 400, 'order_id or order_no is required', 'VALIDATION_REQUIRED_ORDER_REF');
+    }
+
+    const rows = await restSelect(config, 'orders', {
+      select: 'id,order_no,customer_name,email,status,tracking_code,shipping_provider',
+      ...(orderId ? { id: `eq.${orderId}` } : { order_no: `eq.${orderNo}` }),
+      limit: 1,
+    });
+    if (!Array.isArray(rows) || !rows.length) {
+      return sendError(res, 404, 'Order not found', 'ORDER_NOT_FOUND');
+    }
+
+    const order = rows[0];
+    const targetEmail = normalizeEmail(order?.email);
+    if (!targetEmail) {
+      return sendError(res, 400, 'Order has no customer email', 'ORDER_EMAIL_MISSING');
+    }
+
+    const sent = await sendOrderShippedEmailIfPossible(order);
+    if (!sent) {
+      return sendError(res, 500, 'Shipped email could not be sent', 'SHIPPED_EMAIL_SEND_FAILED');
+    }
+
+    await restInsert(config, 'audit_logs', {
+      actor_user_id: auth.user?.id || null,
+      actor_email: normalizeText(auth.user?.email, 180) || null,
+      actor_role: normalizeText(auth.profile?.role, 60) || 'admin',
+      action: 'email.shipped.manual.sent',
+      entity_type: 'order',
+      entity_id: normalizeText(order?.id, 120) || null,
+      metadata: {
+        order_no: normalizeText(order?.order_no, 120) || null,
+        email: targetEmail,
+      },
+      request_path: req.url,
+      request_method: req.method,
+    }, { prefer: 'return=minimal' }).catch(() => null);
+
+    await writeAuditLog(config, req, auth, 'marketing.email.trigger', {
+      action,
+      order_id: order.id,
+      order_no: order.order_no,
+      sent: true,
+    }, { entityType: 'order', entityId: order.id });
+
+    const status = await buildMarketingEmailStatus(config, envStatus);
+    return sendSuccess(res, {
+      action,
+      executed_at: new Date().toISOString(),
+      shipped: {
+        sent: true,
+        order_id: order.id,
+        order_no: order.order_no,
+        email: targetEmail,
+      },
+      status,
+    });
+  }
+
+  return sendError(res, 400, 'Invalid action', 'VALIDATION_INVALID_ACTION');
+}
+
 async function handleUsers(req, res, ctx) {
   const { config, auth } = ctx;
   if (!hasRole(auth.profile.role, ADMIN_ROLES)) {
     return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+  }
+  if (!isAdminOwner(auth)) {
+    return sendError(
+      res,
+      403,
+      'Only owner can access and manage admin users',
+      'AUTH_FORBIDDEN_OWNER_ONLY'
+    );
   }
   const query = getUrl(req).searchParams;
 
@@ -1358,6 +1771,10 @@ async function handleUsers(req, res, ctx) {
         String(row.full_name || '').toLowerCase().includes(search)
       );
     }
+    rows = rows.map((row) => ({
+      ...row,
+      is_protected_owner: isProtectedOwnerEmail(row.email),
+    }));
 
     const pagination = parsePagination(query, { pageSize: 25, maxPageSize: 500 });
     const paged = paginateRows(rows, pagination);
@@ -1376,15 +1793,44 @@ async function handleUsers(req, res, ctx) {
     const password = normalizeText(body.password, 120);
 
     if (!email || !email.includes('@')) return sendError(res, 400, 'Valid email is required', 'VALIDATION_EMAIL');
-    if (!canManageRole(auth.profile.role, role)) {
-      return sendError(res, 403, 'Cannot assign equal or higher role', 'AUTH_ROLE_ESCALATION_BLOCKED');
+    if (!isAdminOwner(auth) && !canManageRole(auth.profile.role, role)) {
+      return sendError(res, 403, 'Ayni veya daha yuksek gorev atanamaz', 'AUTH_ROLE_ESCALATION_BLOCKED');
     }
 
-    const created = await supabaseAdminCreateUser(config, {
-      email,
-      password: password || '',
-      fullName,
+    const existingByEmail = await restSelect(config, 'user_profiles', {
+      select: 'id,email,full_name,role,is_active',
+      email: `eq.${email}`,
+      limit: 1,
     });
+    if (existingByEmail.length) {
+      const existing = existingByEmail[0];
+      return sendError(
+        res,
+        409,
+        `Bu e-posta zaten kayitli. Mevcut rol: ${existing.role || 'viewer'}. Lutfen liste uzerinden guncelleyin veya sifre yenileyin.`,
+        'USER_EMAIL_EXISTS'
+      );
+    }
+
+    let created;
+    try {
+      created = await supabaseAdminCreateUser(config, {
+        email,
+        password: password || '',
+        fullName,
+      });
+    } catch (error) {
+      const message = String(error?.message || '').toLowerCase();
+      if (message.includes('already been registered') || message.includes('already registered')) {
+        return sendError(
+          res,
+          409,
+          'Bu e-posta zaten kayitli. Lutfen mevcut kullaniciyi guncelleyin veya sifre yenileyin.',
+          'USER_EMAIL_EXISTS'
+        );
+      }
+      throw error;
+    }
 
     const profilePayload = {
       id: created.userId,
@@ -1439,6 +1885,9 @@ async function handleUsers(req, res, ctx) {
     if (!existingRows.length) return sendError(res, 404, 'User not found', 'USER_NOT_FOUND');
 
     const existing = existingRows[0];
+    if (isProtectedOwnerEmail(existing.email)) {
+      return sendError(res, 403, 'Ana hesap degistirilemez', 'AUTH_PROTECTED_OWNER');
+    }
     const patch = {};
     if (body.full_name !== undefined) patch.full_name = normalizeText(body.full_name, 180) || null;
     if (body.role !== undefined) patch.role = normalizeRole(body.role, existing.role || ROLE_VIEWER);
@@ -1449,17 +1898,19 @@ async function handleUsers(req, res, ctx) {
     if (!Object.keys(patch).length && !body.password) {
       return sendError(res, 400, 'No fields to update', 'VALIDATION_EMPTY_PATCH');
     }
-    if (patch.role && !canManageRole(auth.profile.role, patch.role)) {
-      return sendError(res, 403, 'Cannot assign equal or higher role', 'AUTH_ROLE_ESCALATION_BLOCKED');
+    if (patch.role && !isAdminOwner(auth) && !canManageRole(auth.profile.role, patch.role)) {
+      return sendError(res, 403, 'Ayni veya daha yuksek gorev atanamaz', 'AUTH_ROLE_ESCALATION_BLOCKED');
     }
     if (id === auth.user.id && patch.is_active === false) {
       return sendError(res, 400, 'Cannot deactivate current user', 'AUTH_SELF_DEACTIVATE_BLOCKED');
     }
 
-    if (body.password || patch.email) {
+    const shouldConfirmEmail = toBool(body.force_confirm_email, false) || patch.is_active === true;
+    if (body.password || patch.email || shouldConfirmEmail) {
       const authPatch = {};
       if (patch.email) authPatch.email = patch.email;
       if (body.password) authPatch.password = normalizeText(body.password, 120);
+      if (shouldConfirmEmail) authPatch.email_confirm = true;
       await supabaseAdminUpdateUser(config, id, authPatch);
     }
 
@@ -1477,17 +1928,36 @@ async function handleUsers(req, res, ctx) {
 
   if (req.method === 'DELETE') {
     const id = normalizeText(body.id || query.get('id'), 120);
+    const hardDelete = toBool(body.hard_delete === undefined ? query.get('hard_delete') : body.hard_delete, false);
     if (!id) return sendError(res, 400, 'id is required', 'VALIDATION_REQUIRED_ID');
     if (id === auth.user.id) return sendError(res, 400, 'Cannot deactivate current user', 'AUTH_SELF_DEACTIVATE_BLOCKED');
 
     const existingRows = await restSelect(config, 'user_profiles', {
-      select: 'id,role',
+      select: 'id,email,role',
       id: `eq.${id}`,
       limit: 1,
     });
     if (!existingRows.length) return sendError(res, 404, 'User not found', 'USER_NOT_FOUND');
-    if (!canManageRole(auth.profile.role, existingRows[0].role || ROLE_VIEWER)) {
-      return sendError(res, 403, 'Cannot manage this user role', 'AUTH_ROLE_ESCALATION_BLOCKED');
+    if (isProtectedOwnerEmail(existingRows[0].email)) {
+      return sendError(res, 403, 'Ana hesap silinemez', 'AUTH_PROTECTED_OWNER');
+    }
+    if (!isAdminOwner(auth) && !canManageRole(auth.profile.role, existingRows[0].role || ROLE_VIEWER)) {
+      return sendError(res, 403, 'Bu gorev seviyesindeki kullanici yonetilemez', 'AUTH_ROLE_ESCALATION_BLOCKED');
+    }
+
+    if (hardDelete) {
+      await supabaseAdminDeleteUser(config, id).catch((error) => {
+        if (error?.code === 'AUTH_USER_NOT_FOUND') return null;
+        throw error;
+      });
+      await restDelete(config, 'user_profiles', { id: `eq.${id}` }).catch(async () => {
+        await restUpdate(config, 'user_profiles', { id: `eq.${id}` }, { is_active: false });
+      });
+      await writeAuditLog(config, req, auth, 'user.delete', { id, hard_delete: true }, {
+        entityType: 'user',
+        entityId: id,
+      });
+      return sendSuccess(res, { id, deleted: true });
     }
 
     await restUpdate(config, 'user_profiles', { id: `eq.${id}` }, { is_active: false });
@@ -1495,7 +1965,7 @@ async function handleUsers(req, res, ctx) {
       entityType: 'user',
       entityId: id,
     });
-    return sendSuccess(res, { id, is_active: false });
+    return sendSuccess(res, { id, is_active: false, deleted: false });
   }
 
   return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
@@ -2363,6 +2833,12 @@ async function handleAuditLogs(req, res, ctx) {
 async function handleShipping(req, res, ctx) {
   const { config, auth } = ctx;
   const query = getUrl(req).searchParams;
+  const availableProviders = await getShippingProvidersFromSettings(config);
+  const providerCodes = availableProviders.map((item) => item.provider);
+  const providerLabelByCode = availableProviders.reduce((acc, item) => {
+    acc[item.provider] = item.label || item.provider;
+    return acc;
+  }, {});
 
   if (req.method === 'GET') {
     let rows = await restSelect(config, 'orders', {
@@ -2381,8 +2857,9 @@ async function handleShipping(req, res, ctx) {
     const pagination = parsePagination(query, { pageSize: 25, maxPageSize: 500 });
     const paged = paginateRows(rows, pagination);
     return sendSuccess(res, {
-      providers: PROVIDERS.map((item) => ({
+      providers: providerCodes.map((item) => ({
         provider: item,
+        label: providerLabelByCode[item] || item,
         configured: isProviderConfigured(item),
       })),
       orders: paged.items,
@@ -2400,7 +2877,7 @@ async function handleShipping(req, res, ctx) {
     const orderId = normalizeText(body.order_id, 120);
     const provider = normalizeText(body.provider, 40).toLowerCase();
     if (!orderId) return sendError(res, 400, 'order_id is required', 'VALIDATION_REQUIRED_ORDER_ID');
-    if (!PROVIDERS.includes(provider)) {
+    if (!providerCodes.includes(provider)) {
       return sendError(res, 400, 'Invalid shipping provider', 'VALIDATION_SHIPPING_PROVIDER');
     }
 
@@ -2434,6 +2911,13 @@ async function handleShipping(req, res, ctx) {
       entityId: orderId,
     });
 
+    if (String(order?.status || '').toLowerCase() !== 'shipped') {
+      await sendOrderShippedEmailIfPossible({
+        ...order,
+        ...patch,
+      });
+    }
+
     return sendSuccess(res, {
       order_id: orderId,
       ...shipment.data,
@@ -2443,9 +2927,23 @@ async function handleShipping(req, res, ctx) {
   if (req.method === 'PUT') {
     const orderId = normalizeText(body.order_id || query.get('order_id'), 120);
     if (!orderId) return sendError(res, 400, 'order_id is required', 'VALIDATION_REQUIRED_ORDER_ID');
+    const orderRows = await safeSelect(config, 'orders', {
+      select: 'id,order_no,customer_name,email,status,tracking_code,shipping_provider',
+      id: `eq.${orderId}`,
+      limit: 1,
+    }, []);
+    if (!orderRows.length) return sendError(res, 404, 'Order not found', 'ORDER_NOT_FOUND');
+    const currentOrder = orderRows[0];
+
     const patch = {};
     if (body.tracking_code !== undefined) patch.tracking_code = normalizeText(body.tracking_code, 120) || null;
-    if (body.provider !== undefined) patch.shipping_provider = normalizeText(body.provider, 40).toLowerCase() || null;
+    if (body.provider !== undefined) {
+      const provider = normalizeText(body.provider, 40).toLowerCase() || null;
+      if (provider && !providerCodes.includes(provider)) {
+        return sendError(res, 400, 'Invalid shipping provider', 'VALIDATION_SHIPPING_PROVIDER');
+      }
+      patch.shipping_provider = provider;
+    }
     if (body.status !== undefined) {
       const workflowStatus = normalizeText(body.status, 40).toLowerCase();
       if (!ORDER_STATUS_ALLOWED.includes(workflowStatus)) {
@@ -2461,6 +2959,16 @@ async function handleShipping(req, res, ctx) {
       entityType: 'order',
       entityId: orderId,
     });
+
+    const statusBefore = String(currentOrder?.status || '').toLowerCase();
+    const statusAfter = String(patch?.status || currentOrder?.status || '').toLowerCase();
+    if (statusBefore !== 'shipped' && statusAfter === 'shipped') {
+      await sendOrderShippedEmailIfPossible({
+        ...currentOrder,
+        ...patch,
+      });
+    }
+
     return sendSuccess(res, { order_id: orderId, patch });
   }
 
@@ -2569,6 +3077,60 @@ async function handleCustomers(req, res, ctx) {
     const pagination = parsePagination(query, { pageSize: 25, maxPageSize: 500 });
     const paged = paginateRows(rows, pagination);
     return sendSuccess(res, paged.items, 200, paged.meta);
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasRole(auth.profile.role, ADMIN_ROLES)) {
+      return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+    }
+
+    const parsed = await parseBodySafe(req);
+    const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+    const id = normalizeText(body.id || query.get('id'), 120);
+    if (!id) return sendError(res, 400, 'id is required', 'VALIDATION_REQUIRED_ID');
+
+    let profileDeleted = false;
+    let authDeleted = false;
+
+    const existingRows = await safeSelect(config, 'customer_profiles', {
+      select: 'id,email,full_name',
+      id: `eq.${id}`,
+      limit: 1,
+    }, []);
+
+    if (Array.isArray(existingRows) && existingRows.length) {
+      await restDelete(config, 'customer_profiles', { id: `eq.${id}` });
+      profileDeleted = true;
+    }
+
+    try {
+      await supabaseAdminDeleteUser(config, id);
+      authDeleted = true;
+    } catch (error) {
+      const errorCode = normalizeText(error?.code, 80);
+      const errorMessage = normalizeText(error?.message, 300).toLowerCase();
+      const isNotFound = errorCode === 'AUTH_USER_NOT_FOUND' || errorMessage.includes('not found');
+      if (!isNotFound) throw error;
+    }
+
+    if (!profileDeleted && !authDeleted) {
+      return sendError(res, 404, 'Customer not found', 'CUSTOMER_NOT_FOUND');
+    }
+
+    await writeAuditLog(config, req, auth, 'customer.delete', {
+      id,
+      profile_deleted: profileDeleted,
+      auth_deleted: authDeleted,
+    }, {
+      entityType: 'customer',
+      entityId: id,
+    });
+
+    return sendSuccess(res, {
+      id,
+      profile_deleted: profileDeleted,
+      auth_deleted: authDeleted,
+    });
   }
 
   return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
@@ -2787,6 +3349,7 @@ const authenticatedHandler = createApiHandler(
     if (routeKey === 'site-settings') return handleSiteSettings(req, res, ctx);
     if (routeKey === 'subscriptions') return handleSubscriptions(req, res, ctx);
     if (routeKey === 'promotions') return handlePromotions(req, res, ctx);
+    if (routeKey === 'marketing-emails') return handleMarketingEmails(req, res, ctx);
     if (routeKey === 'marketplace-connections') return handleMarketplaceConnections(req, res, ctx);
     if (routeKey === 'marketplace-sync') return handleMarketplaceSync(req, res, ctx);
     if (routeKey === 'support-tickets') return handleSupportTickets(req, res, ctx);
@@ -2798,6 +3361,8 @@ const authenticatedHandler = createApiHandler(
     if (routeKey === 'shipping') return handleShipping(req, res, ctx);
     if (routeKey === 'verify-logout') return handleVerifyLogout(req, res, ctx);
     if (routeKey === 'upload-image') return handleUploadImage(req, res, ctx);
+    if (routeKey === 'returns') return require('../../lib/handlers/admin-returns')(req, res);
+    if (routeKey === 'refunds') return require('../../lib/handlers/admin-refunds')(req, res);
 
     if (routeKey === 'rbac' || routeKey === 'payments' || routeKey === 'feature-flags') {
       return notImplemented(res, routeKey);
