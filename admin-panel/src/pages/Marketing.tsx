@@ -17,7 +17,7 @@ interface Promotion {
 interface Customer {
   id: string
   email: string
-  full_name?: string
+  full_name?: string | null
 }
 
 interface BannerItem {
@@ -78,6 +78,11 @@ export default function Marketing() {
   const [selectedPromotionId, setSelectedPromotionId] = useState('')
   const [bannerUploadTargetId, setBannerUploadTargetId] = useState<string | null>(null)
   const [bannerUploadingId, setBannerUploadingId] = useState<string | null>(null)
+  const [customerModal, setCustomerModal] = useState(false)
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([])
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set())
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [loadingCustomers, setLoadingCustomers] = useState(false)
 
   const readFileAsDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -307,21 +312,68 @@ export default function Marketing() {
     }
   }
 
+  const openCustomerModal = async () => {
+    if (!token) return
+    if (!selectedPromotionId) {
+      setError('Once kupon secin')
+      return
+    }
+    setCustomerModal(true)
+    setCustomerSearch('')
+    if (allCustomers.length) return
+    setLoadingCustomers(true)
+    try {
+      const data = await apiRequest<Customer[]>('/api/admin/customers?page_size=2000', { token })
+      setAllCustomers((Array.isArray(data) ? data : []).filter((c) => c.email))
+    } catch {
+      setAllCustomers([])
+    } finally {
+      setLoadingCustomers(false)
+    }
+  }
+
+  const toggleCustomer = (id: string) => {
+    setSelectedCustomerIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAll = (filtered: Customer[]) => {
+    const allSelected = filtered.every((c) => selectedCustomerIds.has(c.id))
+    setSelectedCustomerIds((prev) => {
+      const next = new Set(prev)
+      if (allSelected) filtered.forEach((c) => next.delete(c.id))
+      else filtered.forEach((c) => next.add(c.id))
+      return next
+    })
+  }
+
   const broadcastCoupon = async () => {
     if (!token) return
     const selectedPromotion = promotions.find((item) => item.id === selectedPromotionId)
-    if (!selectedPromotion) {
-      setError('Toplu kupon gonderimi icin kupon secin')
+    if (!selectedPromotion) return
+    if (!selectedCustomerIds.size) {
+      setError('En az bir musteri secin')
       return
     }
-    if (!window.confirm(`"${selectedPromotion.code}" kuponu tum musterilere email ile gonderilecek. Emin misiniz?`)) return
+    setCustomerModal(false)
     setSaving(true)
     setError('')
     setMessage('')
     try {
       const result = await apiRequest<{ sent: number; failed: number; total: number }>(
         '/api/admin/coupon-broadcast',
-        { method: 'POST', token, body: { promotion_id: selectedPromotion.id } }
+        {
+          method: 'POST',
+          token,
+          body: {
+            promotion_id: selectedPromotion.id,
+            customer_ids: Array.from(selectedCustomerIds),
+          },
+        }
       )
       const sent = result?.sent ?? 0
       const failed = result?.failed ?? 0
@@ -337,7 +389,7 @@ export default function Marketing() {
       ].slice(0, 100)
       setBroadcastLog(nextLog)
       await saveSiteSetting(token, 'coupon_broadcast_log', nextLog, 'Toplu kupon gonderim gecmisi')
-
+      setSelectedCustomerIds(new Set())
       setMessage(`Gonderim tamamlandi: ${sent}/${total} basarili${failed ? `, ${failed} basarisiz` : ''}`)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Toplu kupon gonderimi basarisiz'
@@ -394,12 +446,15 @@ export default function Marketing() {
               </option>
             ))}
           </select>
-          <button onClick={() => void broadcastCoupon()} disabled={saving || !selectedPromotionId} style={secondaryButton}>
-            Musterilere toplu kupon gonder
+          <button onClick={() => void openCustomerModal()} disabled={saving || !selectedPromotionId} style={secondaryButton}>
+            Musteri listesini ac ve gonder
           </button>
+          {selectedCustomerIds.size > 0 && (
+            <span style={{ color: '#86efac', fontSize: '12px' }}>{selectedCustomerIds.size} musteri secildi</span>
+          )}
         </div>
         <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px' }}>
-          Resend uzerinden tum musterilere otomatik email gonderilir.
+          Musteri listesinden alici secin, Resend ile email gonderilir.
         </p>
       </div>
 
@@ -710,6 +765,70 @@ export default function Marketing() {
 
       {message && <div style={okStyle}>{message}</div>}
       {error && <div style={errorStyle}>{error}</div>}
+
+      {customerModal && (
+        <div style={modalOverlayStyle}>
+          <div style={modalBoxStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ color: '#fff', fontSize: '16px', margin: 0 }}>Alici secin</h3>
+              <button onClick={() => setCustomerModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <input
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+              placeholder="Ada veya email gore ara..."
+              style={{ ...inputStyle, width: '100%', marginBottom: '10px' }}
+            />
+            {loadingCustomers ? (
+              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>Yukleniyor...</p>
+            ) : (() => {
+              const filtered = allCustomers.filter((c) => {
+                if (!customerSearch) return true
+                const q = customerSearch.toLowerCase()
+                return (
+                  (c.email || '').toLowerCase().includes(q) ||
+                  (c.full_name || '').toLowerCase().includes(q)
+                )
+              })
+              const allSelected = filtered.length > 0 && filtered.every((c) => selectedCustomerIds.has(c.id))
+              return (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ ...checkLabelStyle, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={allSelected} onChange={() => toggleAll(filtered)} />
+                      Tumunu sec ({filtered.length})
+                    </label>
+                    <span style={{ color: '#94a3b8', fontSize: '12px' }}>{selectedCustomerIds.size} secildi</span>
+                  </div>
+                  <div style={{ maxHeight: '340px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '6px' }}>
+                    {filtered.length === 0 ? (
+                      <p style={{ color: '#94a3b8', padding: '16px', textAlign: 'center' }}>Musteri bulunamadi</p>
+                    ) : filtered.map((c) => (
+                      <label key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #1e293b', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={selectedCustomerIds.has(c.id)} onChange={() => toggleCustomer(c.id)} />
+                        <div>
+                          <div style={{ color: '#e2e8f0', fontSize: '13px' }}>{c.full_name || '—'}</div>
+                          <div style={{ color: '#94a3b8', fontSize: '11px' }}>{c.email}</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '14px', justifyContent: 'flex-end' }}>
+                    <button onClick={() => setCustomerModal(false)} style={secondaryButton}>Iptal</button>
+                    <button
+                      onClick={() => void broadcastCoupon()}
+                      disabled={selectedCustomerIds.size === 0 || saving}
+                      style={{ ...primaryButton, opacity: selectedCustomerIds.size === 0 ? 0.5 : 1 }}
+                    >
+                      {saving ? 'Gonderiliyor...' : `${selectedCustomerIds.size} kişiye gonder`}
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -817,4 +936,25 @@ const okStyle: CSSProperties = {
   color: '#86efac',
   fontSize: '12px',
   marginTop: '10px',
+}
+
+const modalOverlayStyle: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,0.7)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1000,
+}
+
+const modalBoxStyle: CSSProperties = {
+  background: '#1e293b',
+  border: '1px solid #334155',
+  borderRadius: '12px',
+  padding: '24px',
+  width: '520px',
+  maxWidth: '95vw',
+  maxHeight: '90vh',
+  overflowY: 'auto',
 }

@@ -29,9 +29,12 @@ const {
   orderShippedTemplate,
   orderDeliveredTemplate,
   reviewRequestTemplate,
+  supportTicketUpdatedTemplate,
+  invoiceReadyTemplate,
   couponBroadcastTemplate,
 } = require('../../lib/email/templates');
 const marketingCronHandler = require('../../lib/handlers/public-marketing-cron');
+const { loadEmailAutomationSettings } = require('../../lib/email/automation-settings');
 
 const STAFF_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER];
 const ADMIN_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN];
@@ -180,6 +183,35 @@ async function sendOrderReviewRequestEmailIfPossible(order) {
     return true;
   } catch (error) {
     console.error('[order] review request email failed:', error?.message || error);
+    return false;
+  }
+}
+
+async function sendSupportTicketUpdatedEmailIfPossible(ticket, messageText) {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) return false;
+  const to = normalizeEmail(ticket?.customer_email);
+  if (!to) return false;
+
+  const ticketId = normalizeText(ticket?.id, 120) || '';
+  const customerName = normalizeText(ticket?.customer_name, 180) || '';
+  const subject = normalizeText(ticket?.subject, 220) || 'Destek talebiniz';
+  const preview = normalizeText(messageText, 1000) || 'Talebiniz guncellendi.';
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Destek talebiniz guncellendi${ticketId ? ` #${ticketId.slice(0, 8)}` : ''}`,
+      html: supportTicketUpdatedTemplate({
+        customerName,
+        ticketId,
+        subject,
+        messagePreview: preview,
+      }),
+    });
+    return true;
+  } catch (error) {
+    console.error('[support] ticket update email failed:', error?.message || error);
     return false;
   }
 }
@@ -1751,7 +1783,7 @@ async function buildPendingShipmentCandidates(config, options = {}) {
 }
 
 async function buildMarketingEmailStatus(config, presetEnvStatus = null, options = {}) {
-  const envStatus = presetEnvStatus || (
+  const baseEnvStatus = presetEnvStatus || (
     typeof marketingCronHandler.getEnvStatus === 'function'
       ? marketingCronHandler.getEnvStatus()
       : {
@@ -1759,6 +1791,11 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
         cron_secret_configured: Boolean(normalizeText(process.env.MARKETING_CRON_SECRET, 300) || normalizeText(process.env.CRON_SECRET, 300)),
       }
   );
+  const automationSettings = await loadEmailAutomationSettings(config).catch(() => null);
+  const envStatus = {
+    ...baseEnvStatus,
+    automation: automationSettings || null,
+  };
 
   const logs = await safeSelect(config, 'audit_logs', {
     select: 'action,created_at',
@@ -1771,9 +1808,13 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
     product_intro: 'email.product_intro.sent',
     shipped_manual: 'email.shipped.manual.sent',
     review_request: 'email.review_request.sent',
-    delivered_manual: 'email.delivered.manual.sent',
-    order_confirmation_manual: 'email.order_confirmation.manual.sent',
+    delivered_manual: ['email.delivered.manual.sent', 'email.delivered.auto.sent'],
+    order_confirmation_manual: ['email.order_confirmation.manual.sent', 'email.order_confirmation.auto.sent'],
     coupon_broadcast: 'email.coupon_broadcast.sent',
+    stock_back_in: 'email.stock_back_in.sent',
+    price_drop: 'email.price_drop.sent',
+    invoice_ready: 'email.invoice_ready.sent',
+    support_update: 'email.support_ticket_update.sent',
   };
 
   const since7Days = toIsoDaysAgo(7);
@@ -1786,6 +1827,10 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
       delivered_manual: 0,
       order_confirmation_manual: 0,
       coupon_broadcast: 0,
+      stock_back_in: 0,
+      price_drop: 0,
+      invoice_ready: 0,
+      support_update: 0,
     },
     all_time: {
       abandoned_cart: 0,
@@ -1795,6 +1840,10 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
       delivered_manual: 0,
       order_confirmation_manual: 0,
       coupon_broadcast: 0,
+      stock_back_in: 0,
+      price_drop: 0,
+      invoice_ready: 0,
+      support_update: 0,
     },
     latest: {
       abandoned_cart: null,
@@ -1804,6 +1853,10 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
       delivered_manual: null,
       order_confirmation_manual: null,
       coupon_broadcast: null,
+      stock_back_in: null,
+      price_drop: null,
+      invoice_ready: null,
+      support_update: null,
     },
   };
 
@@ -1813,7 +1866,8 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null, options
     const inLast7Days = createdAt ? isWithinRange(createdAt, since7Days, null) : false;
 
     Object.entries(actionKeys).forEach(([key, actionValue]) => {
-      if (action !== actionValue) return;
+      const actions = Array.isArray(actionValue) ? actionValue : [actionValue];
+      if (!actions.includes(action)) return;
       summary.all_time[key] += 1;
       if (inLast7Days) summary.last_7_days[key] += 1;
       if (!summary.latest[key] && createdAt) {
@@ -2855,6 +2909,39 @@ async function handleSupportMessages(req, res, ctx) {
       entityType: 'support_message',
       entityId: row?.id || null,
     });
+
+    const senderType = normalizeText(payload.sender_type, 40).toLowerCase();
+    if (senderType === 'agent') {
+      const automation = await loadEmailAutomationSettings(config).catch(() => null);
+      const supportAutoEnabled = automation ? automation.auto_support_updates !== false : true;
+      if (supportAutoEnabled) {
+        const ticketRows = await safeSelect(config, 'support_tickets', {
+          select: 'id,subject,customer_name,customer_email',
+          id: `eq.${payload.ticket_id}`,
+          limit: 1,
+        }, []);
+        if (ticketRows.length) {
+          const ticket = ticketRows[0];
+          const sent = await sendSupportTicketUpdatedEmailIfPossible(ticket, payload.message);
+          if (sent) {
+            await restInsert(config, 'audit_logs', {
+              actor_user_id: auth.user?.id || null,
+              actor_email: normalizeText(auth.user?.email, 180) || null,
+              actor_role: normalizeText(auth.profile?.role, 60) || 'admin',
+              action: 'email.support_ticket_update.sent',
+              entity_type: 'support_ticket',
+              entity_id: normalizeText(ticket?.id, 120) || null,
+              metadata: {
+                ticket_id: normalizeText(ticket?.id, 120) || null,
+                target_email: normalizeEmail(ticket?.customer_email) || null,
+              },
+              request_path: req.url,
+              request_method: req.method,
+            }, { prefer: 'return=minimal' }).catch(() => null);
+          }
+        }
+      }
+    }
     return sendSuccess(res, row, 201);
   }
 
@@ -3707,20 +3794,22 @@ async function handleCouponBroadcast(req, res, ctx) {
     return sendError(res, 404, 'Promotion not found', 'NOT_FOUND');
   }
 
+  const selectedIds = Array.isArray(body.customer_ids) ? body.customer_ids : [];
+
   let customers = [];
   try {
     customers = await restSelect(config, 'customer_profiles', {
       select: 'id,email,full_name',
-      consent_marketing_email: 'eq.true',
       order: 'created_at.asc',
       limit: 5000,
     });
   } catch {
-    customers = await restSelect(config, 'customer_profiles', {
-      select: 'id,email,full_name',
-      order: 'created_at.asc',
-      limit: 5000,
-    });
+    customers = [];
+  }
+
+  if (selectedIds.length) {
+    const idSet = new Set(selectedIds.map(String));
+    customers = customers.filter((c) => idSet.has(String(c.id || '')));
   }
 
   const validCustomers = (Array.isArray(customers) ? customers : []).filter(
