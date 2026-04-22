@@ -259,8 +259,9 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
           .slip-wrap { ${borderCss} }
-          .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
-          .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+          .header { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
+          .logo-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+          .qr-block { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
           .meta { margin-bottom: 16px; }
           .meta p { margin: 4px 0; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
@@ -276,7 +277,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
             ${logoBlock}
             ${siteUrlHtml}
           </div>
-          ${qrHtml}
+          ${qrHtml ? `<div class="qr-block">${qrHtml}</div>` : ''}
         </div>
         <div class="meta">
           ${row(s.show_order_no, 'Siparis', order.order_no)}
