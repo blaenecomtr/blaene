@@ -78,8 +78,8 @@
     .checkout-steps {
       display: flex;
       align-items: center;
-      gap: 0.7rem;
-      margin-bottom: 0.9rem;
+      gap: 0;
+      margin-bottom: 1.2rem;
       font-size: 0.82rem;
       color: #707887;
       font-weight: 600;
@@ -88,12 +88,24 @@
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
+      cursor: pointer;
+      padding: 0.35rem 0.6rem 0.35rem 0.3rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .step-pill:hover:not(.locked) {
+      background: #f3f4f6;
+    }
+    .step-pill.locked {
+      cursor: default;
+      opacity: 0.45;
     }
     .step-pill .num {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      border: 1px solid #b8c0ca;
+      border: 1.5px solid #b8c0ca;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -101,6 +113,7 @@
       font-weight: 700;
       color: #475569;
       background: #fff;
+      flex-shrink: 0;
     }
     .step-pill.active {
       color: #111;
@@ -110,6 +123,20 @@
       border-color: #111;
       color: #fff;
       background: #111;
+    }
+    .step-pill.done .num {
+      border-color: #16a34a;
+      background: #16a34a;
+      color: #fff;
+    }
+    .step-pill.done {
+      color: #16a34a;
+    }
+    .step-sep {
+      width: 28px;
+      height: 1.5px;
+      background: #d1d5db;
+      flex-shrink: 0;
     }
     .offer-box {
       margin: 0.35rem 0 0.9rem;
@@ -181,6 +208,37 @@
       font-size: 0.75rem;
       font-weight: 700;
     }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 0;
+    }
+    .accordion-header .step-title {
+      margin-bottom: 0;
+    }
+    .accordion-chevron {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      transition: transform 0.22s ease;
+      flex-shrink: 0;
+    }
+    .accordion-body {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.28s ease, padding 0.2s ease;
+    }
+    .accordion-body.open {
+      max-height: 600px;
+    }
+    .accordion-body-inner {
+      padding-top: 0.55rem;
+    }
+    .step-section.accordion-open .accordion-chevron {
+      transform: rotate(180deg);
+    }
     .step-note {
       color: #6b7280;
       font-size: 0.79rem;
@@ -229,10 +287,102 @@
       width: auto;
       margin: 0;
     }
+    .type-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+    }
+    .type-options label {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 0.84rem;
+      color: #1f2937;
+    }
+    .corporate-fields {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fafafa;
+      padding: 0.7rem;
+    }
+    .corporate-fields[hidden] {
+      display: none !important;
+    }
     .account-hint {
       margin-top: 0.35rem;
       font-size: 0.74rem;
       color: var(--muted);
+    }
+    .option-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.4rem;
+    }
+    .option-item {
+      border: 1px solid #cfd5dd;
+      border-radius: 10px;
+      background: #fff;
+      padding: 0.52rem 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.8rem;
+      color: #1f2937;
+    }
+    .option-item input[type="radio"],
+    .option-item input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    .billing-box {
+      margin-top: 0.72rem;
+      border: 1px dashed #d3d8df;
+      border-radius: 10px;
+      background: #fbfcff;
+      padding: 0.68rem;
+    }
+    .small-note {
+      margin-top: 0.35rem;
+      color: #6b7280;
+      font-size: 0.74rem;
+    }
+    .bank-transfer-preview {
+      margin-top: 0.65rem;
+      border: 1px solid #cfd5dd;
+      border-radius: 10px;
+      background: #fff;
+      padding: 0.68rem;
+    }
+    .bank-transfer-preview .company {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 0.55rem;
+    }
+    .bank-transfer-preview .accounts {
+      display: grid;
+      gap: 0.45rem;
+    }
+    .bank-transfer-preview .account {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 0.5rem 0.55rem;
+      font-size: 0.73rem;
+      line-height: 1.55;
+      color: #334155;
+    }
+    .bank-transfer-preview .account strong {
+      color: #111827;
+    }
+    .bank-transfer-preview .hint {
+      margin-top: 0.55rem;
+      font-size: 0.72rem;
+      color: #475569;
     }
     .actions {
       margin-top: 0.95rem;
@@ -256,6 +406,14 @@
       background: #fff;
       color: var(--text);
     }
+    #pay-btn {
+      background: #ea580c;
+      border-color: #ea580c;
+      color: #fff;
+      font-size: 0.92rem;
+      padding: 0.65rem 1.3rem;
+    }
+    #pay-btn:hover:not(:disabled) { background: #c2410c; border-color: #c2410c; }
     button:disabled { opacity: 0.65; cursor: not-allowed; }
     .alert {
       margin-top: 0.7rem;
@@ -294,6 +452,65 @@
       justify-content: space-between;
       font-size: 0.75rem;
       gap: 0.5rem;
+    }
+    .item .line strong {
+      white-space: nowrap;
+    }
+    .item .variant-line {
+      font-size: 0.67rem;
+      color: #6b7280;
+      margin: 0.12rem 0 0.22rem;
+    }
+    .item .qty-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      padding: 0.15rem 0.18rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #f9fafb;
+      white-space: nowrap;
+    }
+    .item .qty-btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111827;
+      font-size: 0.86rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .item .qty-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .item .qty-value {
+      min-width: 50px;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .item .remove-line {
+      margin-top: 0.36rem;
+      border: 0;
+      background: transparent;
+      color: #b91c1c;
+      padding: 0;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .item .remove-line:hover {
+      color: #991b1b;
     }
     .totals {
       margin-top: 0.7rem;
@@ -340,30 +557,32 @@
 <body>
   <div class="wrap">
     <div class="topbar">
-      <h1>Odeme Adimlari</h1>
-      <a href="index.html">Ana sayfaya don</a>
+      <h1>Ödeme Adımları</h1>
+      <a href="index.html">Ana sayfaya dön</a>
     </div>
 
     <div class="grid">
       <section class="panel checkout-panel">
         <div class="checkout-steps">
-          <span class="step-pill active"><span class="num">1</span>Adres</span>
-          <span class="step-pill"><span class="num">2</span>Kargo</span>
-          <span class="step-pill"><span class="num">3</span>Odeme</span>
+          <span class="step-pill active" id="pill-1" data-step="1" onclick="goToStep(1)"><span class="num">1</span>Adres</span>
+          <span class="step-sep"></span>
+          <span class="step-pill locked" id="pill-2" data-step="2" onclick="goToStep(2)"><span class="num">2</span>Kargo</span>
+          <span class="step-sep"></span>
+          <span class="step-pill locked" id="pill-3" data-step="3" onclick="goToStep(3)"><span class="num">3</span>Ödeme</span>
         </div>
 
-        <div id="shipping-offer-box" style="display:none;margin:0.35rem 0 0.9rem;border:1px solid #fde68a;border-radius:10px;overflow:hidden;background:#fff;">
-          <div style="background:#fefce8;color:#713f12;text-align:center;font-size:0.78rem;font-weight:700;padding:0.44rem 0.6rem;border-bottom:1px solid #fde68a;" id="shipping-offer-timer-text"></div>
+        <div id="shipping-offer-box" style="display:none;margin:0.35rem 0 0.9rem;border:1px solid #fdba74;border-radius:10px;overflow:hidden;background:#fff;">
+          <div style="background:#ffedd5;color:#9a3412;text-align:center;font-size:0.78rem;font-weight:700;padding:0.44rem 0.6rem;border-bottom:1px solid #fdba74;" id="shipping-offer-timer-text"></div>
           <div style="padding:0.75rem 0.8rem;">
             <div style="font-size:0.82rem;font-weight:700;margin-bottom:0.2rem;">Ücretsiz Kargo Fırsatı!</div>
-            <p style="font-size:0.76rem;color:#713f12;margin:0 0 0.5rem;" id="shipping-offer-sub"></p>
+            <p style="font-size:0.76rem;color:#c2410c;margin:0 0 0.5rem;" id="shipping-offer-sub"></p>
             <div id="shipping-offer-product"></div>
           </div>
         </div>
 
         <div class="step-section">
           <h2 class="step-title"><span class="step-index">1</span>Adres</h2>
-          <p class="step-note">Teslimat bilgilerinizi girin veya uye girisi ile otomatik doldurun.</p>
+          <p class="step-note">Teslimat bilgilerinizi girin veya üye girişi ile otomatik doldurun.</p>
 
           <div id="checkout-alert"></div>
 
@@ -396,7 +615,7 @@
                 <input id="phone" placeholder="05xx xxx xx xx" required />
               </div>
               <div>
-                <label for="city">Sehir</label>
+                <label for="city">Şehir</label>
                 <input id="city" />
               </div>
               <div class="full">
@@ -404,47 +623,124 @@
                 <textarea id="address" required></textarea>
               </div>
               <div class="full">
-                <label for="note">Siparis notu</label>
+                <label for="note">Sipariş notu</label>
                 <textarea id="note" placeholder="Opsiyonel"></textarea>
+              </div>
+              <div class="full">
+                <label>Müşteri Tipi</label>
+                <div class="type-options">
+                  <label><input type="radio" name="checkout-customer-type" value="bireysel" checked /> Bireysel</label>
+                  <label><input type="radio" name="checkout-customer-type" value="kurumsal" /> Kurumsal</label>
+                </div>
+              </div>
+              <div class="full corporate-fields" id="checkout-corporate-fields" hidden>
+                <div class="form-grid" style="margin-top:0;">
+                  <div>
+                    <label for="checkout-company-name">Firma Adı *</label>
+                    <input id="checkout-company-name" type="text" maxlength="180" placeholder="Firma unvanı" />
+                  </div>
+                  <div>
+                    <label for="checkout-national-id">TC Kimlik No *</label>
+                    <input id="checkout-national-id" type="text" maxlength="20" placeholder="11 haneli TC no" />
+                  </div>
+                  <div>
+                    <label for="checkout-tax-number">Vergi No *</label>
+                    <input id="checkout-tax-number" type="text" maxlength="20" placeholder="Vergi numarası" />
+                  </div>
+                  <div>
+                    <label for="checkout-tax-office">Vergi Dairesi *</label>
+                    <input id="checkout-tax-office" type="text" maxlength="120" placeholder="Vergi dairesi" />
+                  </div>
+                </div>
+              </div>
+              <div class="full billing-box">
+                <label class="inline-check" for="billing-same-as-shipping">
+                  <input id="billing-same-as-shipping" type="checkbox" checked />
+                  <span>Fatura adresi teslimat adresi ile aynı</span>
+                </label>
+                <div id="billing-fields" style="display:none;margin-top:0.65rem;">
+                  <div class="form-grid" style="margin-top:0;">
+                    <div>
+                      <label for="billing-name">Fatura Ad Soyad / Unvan *</label>
+                      <input id="billing-name" type="text" />
+                    </div>
+                    <div>
+                      <label for="billing-city">Fatura Şehir</label>
+                      <input id="billing-city" type="text" />
+                    </div>
+                    <div class="full">
+                      <label for="billing-district">Fatura İlçe</label>
+                      <input id="billing-district" type="text" />
+                    </div>
+                    <div class="full">
+                      <label for="billing-address">Fatura Adresi *</label>
+                      <textarea id="billing-address"></textarea>
+                    </div>
+                  </div>
+                </div>
+                <p class="small-note">Kurumsal faturalar için farklı adres seçip fatura bilgilerini buradan girebilirsiniz.</p>
               </div>
               <div class="full account-box">
                 <label class="inline-check" for="create-account">
                   <input id="create-account" type="checkbox" />
-                  <span>Siparisle birlikte hesap olustur (kargo takibi icin)</span>
+                  <span>Siparişle birlikte hesap oluştur (kargo takibi için)</span>
                 </label>
                 <div id="account-password-wrap" style="display:none;margin-top:0.55rem;">
-                  <label for="account-password">Hesap sifresi *</label>
+                  <label for="account-password">Hesap şifresi *</label>
                   <input id="account-password" type="password" minlength="6" placeholder="En az 6 karakter" />
                 </div>
-                <p class="account-hint">Hesap olusturursaniz siparisinizi <a href="/account.html">Hesabim</a> sayfasindan takip edebilirsiniz.</p>
+                <p class="account-hint">Hesap oluşturursanız siparişinizi <a href="/account.html">Hesabım</a> sayfasından takip edebilirsiniz.</p>
               </div>
             </div>
 
             <div class="actions">
-              <button id="pay-btn" type="submit">PayTR ile ode</button>
+              <button id="continue-btn" type="button">Kargo Seçimine Devam Et →</button>
               <button id="clear-cart-btn" type="button" class="secondary">Sepeti temizle</button>
             </div>
           </form>
         </div>
 
-        <div class="step-section">
+        <div class="step-section" id="step-shipping-section" style="display:none;">
           <h2 class="step-title"><span class="step-index">2</span>Kargo</h2>
-          <p class="step-note">Kargo secimi siparis tutarina gore otomatik hesaplanir.</p>
+          <p class="step-note">Kargo firmasını seçin. Ücret, sepet tutarına göre otomatik hesaplanır.</p>
+          <div>
+            <label for="shipping-provider-select">Kargo firması</label>
+            <select id="shipping-provider-select"></select>
+          </div>
+          <div class="actions" style="margin-top:1rem;">
+            <button type="button" id="continue-to-payment-btn">Ödemeye Devam Et →</button>
+            <button type="button" class="secondary" onclick="goToStep(1)">← Geri</button>
+          </div>
         </div>
 
-        <div class="step-section">
-          <h2 class="step-title"><span class="step-index">3</span>Odeme</h2>
-          <p class="step-note">Kart bilgileri bu sayfada tutulmaz. Islem secilen odeme saglayicisinda guvenle tamamlanir.</p>
-          <div id="payment-shell" style="display:none;">
+        <div class="step-section" id="step-payment-section" style="display:none;">
+          <h2 class="step-title"><span class="step-index">3</span>Ödeme</h2>
+          <div class="option-list" id="payment-method-list">
+            <label class="option-item">
+              <input type="radio" name="payment-method" value="card" checked />
+              <span>Kredi Kartı ile Öde (İyzico)</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="payment-method" value="bank_transfer" />
+              <span>Havale / EFT</span>
+            </label>
+          </div>
+          <p class="step-note">Kart bilgileri bu sayfada tutulmaz. İşlem seçilen ödeme sağlayıcısında güvenle tamamlanır.</p>
+          <div id="bank-transfer-preview" class="bank-transfer-preview" style="display:none;"></div>
+          <div id="payment-shell">
             <div class="alert success" id="order-created-message"></div>
             <div class="iframe-wrap" id="iframe-wrap"></div>
+          </div>
+          <div class="actions" style="margin-top:1rem;">
+            <button id="pay-btn" type="submit" form="checkout-form">Siparişi Tamamla</button>
+            <button type="button" class="secondary" onclick="goToStep(2)">← Geri</button>
           </div>
         </div>
       </section>
 
       <aside class="panel summary-panel">
-        <h2 class="summary-title">Siparis Ozeti</h2>
-        <p class="muted" id="summary-note">Sepetinizdeki urunler</p>
+        <h2 class="summary-title">Sipariş Özeti</h2>
+        <p class="muted" id="summary-note">Sepetinizdeki ürünler</p>
         <div id="summary-list" class="summary-list"></div>
         <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border);">
           <label style="margin-bottom: 0.4rem;">İndirim Kodu</label>
@@ -468,6 +764,34 @@
   <script src="assets/js/cart.js"></script>
   <script src="assets/js/user-auth.js"></script>
   <script>
+    var currentStep = 1;
+    var maxReachedStep = 1;
+
+    function goToStep(step) {
+      if (step > maxReachedStep) return;
+      currentStep = step;
+      var shippingSection = document.getElementById('step-shipping-section');
+      var paymentSection = document.getElementById('step-payment-section');
+      if (shippingSection) shippingSection.style.display = step === 2 ? '' : 'none';
+      if (paymentSection) paymentSection.style.display = step === 3 ? '' : 'none';
+      ['pill-1', 'pill-2', 'pill-3'].forEach(function(id, i) {
+        var pill = document.getElementById(id);
+        if (!pill) return;
+        var stepNum = i + 1;
+        pill.classList.remove('active', 'done', 'locked');
+        if (stepNum === step) pill.classList.add('active');
+        else if (stepNum < step) pill.classList.add('done');
+        else pill.classList.add('locked');
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function advanceToStep(step) {
+      if (step > maxReachedStep) maxReachedStep = step;
+      goToStep(step);
+    }
+  </script>
+  <script>
     (function () {
       const cart = window.BlaeneCart;
       const form = document.getElementById('checkout-form');
@@ -482,9 +806,24 @@
       const paymentShell = document.getElementById('payment-shell');
       const iframeWrap = document.getElementById('iframe-wrap');
       const orderCreatedMessage = document.getElementById('order-created-message');
+      const bankTransferPreviewEl = document.getElementById('bank-transfer-preview');
       const createAccountEl = document.getElementById('create-account');
       const accountPasswordWrap = document.getElementById('account-password-wrap');
       const accountPasswordEl = document.getElementById('account-password');
+      const checkoutCustomerTypeInputs = Array.from(document.querySelectorAll('input[name="checkout-customer-type"]'));
+      const checkoutCorporateFieldsEl = document.getElementById('checkout-corporate-fields');
+      const checkoutCompanyNameEl = document.getElementById('checkout-company-name');
+      const checkoutNationalIdEl = document.getElementById('checkout-national-id');
+      const checkoutTaxNumberEl = document.getElementById('checkout-tax-number');
+      const checkoutTaxOfficeEl = document.getElementById('checkout-tax-office');
+      const billingSameAsShippingEl = document.getElementById('billing-same-as-shipping');
+      const billingFieldsEl = document.getElementById('billing-fields');
+      const billingNameEl = document.getElementById('billing-name');
+      const billingCityEl = document.getElementById('billing-city');
+      const billingDistrictEl = document.getElementById('billing-district');
+      const billingAddressEl = document.getElementById('billing-address');
+      const shippingProviderSelect = document.getElementById('shipping-provider-select');
+      const paymentMethodInputs = Array.from(document.querySelectorAll('input[name="payment-method"]'));
       const promoCodeInput = document.getElementById('promo-code');
       const applyPromoBtn = document.getElementById('apply-promo-btn');
       const promoMessage = document.getElementById('promo-message');
@@ -497,21 +836,59 @@
           free_shipping_threshold: 3000,
           base_shipping_fee: 300,
           tiers: [],
+          providers: [
+            { provider: 'yurtici', label: 'Yurtici Kargo', enabled: true },
+            { provider: 'mng', label: 'MNG Kargo', enabled: true },
+            { provider: 'aras', label: 'Aras Kargo', enabled: true },
+          ],
         },
         payment: {
           paytr_enabled: false,
           iyzico_enabled: true,
           provider_preference: 'iyzico',
+          bank_transfer_company_name: 'Blaene',
+          bank_transfer_accounts: [
+            {
+              bank_name: 'Ziraat Bankasi',
+              account_name: 'Blaene Metal Urunleri',
+              iban: 'TR00 0000 0000 0000 0000 0000 00',
+              branch: '',
+              account_no: '',
+              currency: 'TRY',
+              enabled: true,
+            },
+          ],
         },
       };
 
       let appliedPromo = null;
       let checkoutSettings = DEFAULT_CHECKOUT_SETTINGS;
 
+      function getSelectedCheckoutCustomerType() {
+        const selected = checkoutCustomerTypeInputs.find(function (input) { return input.checked; });
+        return selected && selected.value === 'kurumsal' ? 'kurumsal' : 'bireysel';
+      }
+
+      function applyCheckoutCorporateVisibility(type) {
+        const isCorporate = type === 'kurumsal';
+        if (checkoutCorporateFieldsEl) checkoutCorporateFieldsEl.hidden = !isCorporate;
+        if (checkoutCompanyNameEl) checkoutCompanyNameEl.required = isCorporate;
+        if (checkoutNationalIdEl) checkoutNationalIdEl.required = isCorporate;
+        if (checkoutTaxNumberEl) checkoutTaxNumberEl.required = isCorporate;
+        if (checkoutTaxOfficeEl) checkoutTaxOfficeEl.required = isCorporate;
+      }
+
       if (!cart) {
-        alertBox.innerHTML = '<div class="alert error">Sepet modulu yuklenemedi.</div>';
+        alertBox.innerHTML = '<div class="alert error">Sepet modülü yüklenemedi.</div>';
         payBtn.disabled = true;
       }
+
+      checkoutCustomerTypeInputs.forEach(function (input) {
+        input.addEventListener('change', function () {
+          applyCheckoutCorporateVisibility(getSelectedCheckoutCustomerType());
+        });
+      });
+      applyCheckoutCorporateVisibility(getSelectedCheckoutCustomerType());
 
       // Auth initialization and pre-fill
       if (window.BlaeneAuth) {
@@ -541,6 +918,17 @@
                 document.getElementById('phone').value = profile.phone || '';
                 document.getElementById('city').value = profile.default_city || '';
                 document.getElementById('address').value = profile.default_address || '';
+                const customerType = String(profile.customer_type || profile.customer_kind || '').toLowerCase() === 'kurumsal'
+                  ? 'kurumsal'
+                  : 'bireysel';
+                checkoutCustomerTypeInputs.forEach(function (input) {
+                  input.checked = input.value === customerType;
+                });
+                applyCheckoutCorporateVisibility(customerType);
+                if (checkoutCompanyNameEl) checkoutCompanyNameEl.value = String(profile.company_name || '');
+                if (checkoutNationalIdEl) checkoutNationalIdEl.value = String(profile.national_id || '');
+                if (checkoutTaxNumberEl) checkoutTaxNumberEl.value = String(profile.tax_number || '');
+                if (checkoutTaxOfficeEl) checkoutTaxOfficeEl.value = String(profile.tax_office || '');
               } else {
                 document.getElementById('name').value = user.user_metadata?.full_name || '';
                 document.getElementById('email').value = user.email || '';
@@ -610,7 +998,164 @@
             DEFAULT_CHECKOUT_SETTINGS.shipping.base_shipping_fee
           ),
           tiers: tiers,
+          providers: normalizeShippingProviders(source.providers),
         };
+      }
+
+      function normalizeShippingProviders(rawProviders) {
+        const fallback = DEFAULT_CHECKOUT_SETTINGS.shipping.providers.slice();
+        const list = Array.isArray(rawProviders) ? rawProviders : fallback;
+        const normalized = list
+          .map(function (item, index) {
+            const provider = String(typeof item === 'string' ? item : (item && item.provider) || '')
+              .toLowerCase()
+              .replace(/[^a-z0-9_-]/g, '')
+              .trim();
+            if (!provider) return null;
+            return {
+              provider: provider,
+              label: String(typeof item === 'string' ? '' : (item && item.label) || '').trim() || provider || ('provider-' + (index + 1)),
+              enabled: typeof item === 'object' && item ? item.enabled !== false : true,
+            };
+          })
+          .filter(Boolean)
+          .filter(function (item, index, arr) {
+            return arr.findIndex(function (row) { return row.provider === item.provider; }) === index;
+          })
+          .filter(function (item) { return item.enabled !== false; });
+        return normalized.length ? normalized : fallback;
+      }
+
+      function getSelectedPaymentMethod() {
+        const selected = paymentMethodInputs.find(function (item) { return item.checked; });
+        return selected && selected.value === 'bank_transfer' ? 'bank_transfer' : 'card';
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeBankTransferAccounts(rawAccounts, useFallback) {
+        const fallbackAccounts = DEFAULT_CHECKOUT_SETTINGS.payment.bank_transfer_accounts;
+        const source = Array.isArray(rawAccounts)
+          ? rawAccounts
+          : (useFallback === false ? [] : fallbackAccounts);
+        const accounts = source
+          .map(function (item, index) {
+            const sourceItem = item && typeof item === 'object' ? item : {};
+            const bankName = String(sourceItem.bank_name || '').trim();
+            const accountName = String(sourceItem.account_name || '').trim();
+            const iban = String(sourceItem.iban || '').trim().toUpperCase();
+            if (!bankName && !accountName && !iban) return null;
+            return {
+              bank_name: bankName || ('Banka ' + (index + 1)),
+              account_name: accountName || '',
+              iban: iban || '',
+              branch: String(sourceItem.branch || '').trim(),
+              account_no: String(sourceItem.account_no || '').trim(),
+              currency: String(sourceItem.currency || 'TRY').trim().toUpperCase() || 'TRY',
+              enabled: sourceItem.enabled !== false,
+            };
+          })
+          .filter(Boolean)
+          .filter(function (item) { return item.enabled !== false; });
+        if (accounts.length) return accounts;
+        return useFallback === false ? [] : fallbackAccounts.slice();
+      }
+
+      function getBankTransferPayload(rawSource, orderNo) {
+        const source = rawSource && typeof rawSource === 'object' ? rawSource : {};
+        let accounts = normalizeBankTransferAccounts(source.accounts, false);
+        const hasLegacyAccount = String(source.bank_name || source.account_name || source.iban || '').trim();
+        if (!accounts.length && hasLegacyAccount) {
+          accounts = normalizeBankTransferAccounts([
+            {
+              bank_name: source.bank_name,
+              account_name: source.account_name,
+              iban: source.iban,
+              branch: source.branch,
+              account_no: source.account_no,
+              currency: source.currency,
+              enabled: true,
+            },
+          ], false);
+        }
+        if (!accounts.length) {
+          accounts = normalizeBankTransferAccounts(
+            checkoutSettings && checkoutSettings.payment ? checkoutSettings.payment.bank_transfer_accounts : [],
+            true
+          );
+        }
+
+        const first = accounts[0] || { account_name: 'Blaene Metal Urunleri' };
+        const companyName = String(
+          source.company_name ||
+          (checkoutSettings && checkoutSettings.payment && checkoutSettings.payment.bank_transfer_company_name) ||
+          first.account_name ||
+          'Blaene'
+        ).trim();
+        const noteHint = String(
+          source.note_hint || (orderNo ? ('Açıklamaya sipariş numarası yazın: ' + orderNo) : 'Ödeme açıklamasına sipariş numaranızı yazın.')
+        ).trim();
+
+        return {
+          company_name: companyName || 'Blaene',
+          accounts: accounts,
+          note_hint: noteHint,
+        };
+      }
+
+      function renderBankTransferHtml(payload, title) {
+        const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+        const accountBlocks = accounts
+          .map(function (account) {
+            const branchLine = account.branch
+              ? '<div><strong>Şube:</strong> ' + escapeHtml(account.branch) + '</div>'
+              : '';
+            const accountNoLine = account.account_no
+              ? '<div><strong>Hesap No:</strong> ' + escapeHtml(account.account_no) + '</div>'
+              : '';
+            return (
+              '<div class="account">' +
+                '<div><strong>Banka:</strong> ' + escapeHtml(account.bank_name) + '</div>' +
+                '<div><strong>Alıcı:</strong> ' + escapeHtml(account.account_name) + '</div>' +
+                '<div><strong>IBAN:</strong> ' + escapeHtml(account.iban) + '</div>' +
+                branchLine +
+                accountNoLine +
+                '<div><strong>Para Birimi:</strong> ' + escapeHtml(account.currency || 'TRY') + '</div>' +
+              '</div>'
+            );
+          })
+          .join('');
+        return (
+          '<div>' +
+            '<div style="font-size:0.78rem;font-weight:700;color:#111827;margin:0 0 0.45rem;">' + escapeHtml(title || 'Banka Bilgileri') + '</div>' +
+            '<div class="company">' + escapeHtml(payload.company_name) + '</div>' +
+            '<div class="accounts">' + accountBlocks + '</div>' +
+            '<div class="hint"><strong>Açıklama:</strong> ' + escapeHtml(payload.note_hint) + '</div>' +
+          '</div>'
+        );
+      }
+
+      function renderBankTransferPreview() {
+        if (!bankTransferPreviewEl) return;
+        if (getSelectedPaymentMethod() !== 'bank_transfer') {
+          bankTransferPreviewEl.style.display = 'none';
+          bankTransferPreviewEl.innerHTML = '';
+          return;
+        }
+
+        const payload = getBankTransferPayload(
+          checkoutSettings && checkoutSettings.payment ? checkoutSettings.payment : {},
+          ''
+        );
+        bankTransferPreviewEl.innerHTML = renderBankTransferHtml(payload, 'Havale / EFT Firma ve Banka Bilgileri');
+        bankTransferPreviewEl.style.display = '';
       }
 
       function computeShippingFee(subtotalAfterDiscount) {
@@ -623,13 +1168,14 @@
         }
 
         const matchedTier = shipping.tiers.find(function (tier) {
-          return amount >= tier.min;
+          return tier.fee > 0 && amount >= tier.min;
         });
         if (matchedTier) return normalizeMoney(matchedTier.fee, 0);
         return normalizeMoney(shipping.base_shipping_fee, 0);
       }
 
       function preferredPaymentProvider() {
+        if (getSelectedPaymentMethod() === 'bank_transfer') return 'bank_transfer';
         const payment = checkoutSettings && checkoutSettings.payment ? checkoutSettings.payment : {};
         const paytrEnabled = payment.paytr_enabled !== false;
         const iyzicoEnabled = payment.iyzico_enabled === true;
@@ -644,15 +1190,19 @@
 
       function updatePayButtonLabel() {
         const provider = preferredPaymentProvider();
+        if (provider === 'bank_transfer') {
+          payBtn.textContent = 'Siparişi Tamamla (Havale / EFT)';
+          return;
+        }
         if (provider === 'iyzico') {
-          payBtn.textContent = 'Iyzico ile ode';
+          payBtn.textContent = 'İyzico ile Öde';
           return;
         }
         if (provider === 'paytr') {
-          payBtn.textContent = 'PayTR ile ode';
+          payBtn.textContent = 'PayTR ile Öde';
           return;
         }
-        payBtn.textContent = 'Siparisi tamamla';
+        payBtn.textContent = 'Siparişi Tamamla';
       }
 
       async function loadCheckoutSettings() {
@@ -673,14 +1223,41 @@
               provider_preference: data.payment
                 ? String(data.payment.provider_preference || '').toLowerCase()
                 : DEFAULT_CHECKOUT_SETTINGS.payment.provider_preference,
+              bank_transfer_company_name: data.payment
+                ? String(data.payment.bank_transfer_company_name || '').trim()
+                : DEFAULT_CHECKOUT_SETTINGS.payment.bank_transfer_company_name,
+              bank_transfer_accounts: normalizeBankTransferAccounts(
+                data.payment ? data.payment.bank_transfer_accounts : [],
+                true
+              ),
             },
           };
         } catch (_) {
           checkoutSettings = DEFAULT_CHECKOUT_SETTINGS;
         } finally {
+          renderShippingProviders();
           updatePayButtonLabel();
+          renderBankTransferPreview();
           renderSummary();
         }
+      }
+
+      function renderShippingProviders() {
+        if (!shippingProviderSelect) return;
+        const providers = normalizeShippingProviders(
+          checkoutSettings && checkoutSettings.shipping ? checkoutSettings.shipping.providers : []
+        );
+        const currentValue = String(shippingProviderSelect.value || '').trim().toLowerCase();
+        shippingProviderSelect.innerHTML = '';
+        providers.forEach(function (item, index) {
+          const option = document.createElement('option');
+          option.value = item.provider;
+          option.textContent = item.label || item.provider;
+          if ((currentValue && currentValue === item.provider) || (!currentValue && index === 0)) {
+            option.selected = true;
+          }
+          shippingProviderSelect.appendChild(option);
+        });
       }
 
       function showAlert(message, type) {
@@ -689,47 +1266,47 @@
 
       function mapCheckoutError(rawMessage) {
         const message = String(rawMessage || '').trim();
-        if (!message) return 'Odeme baslatilamadi. Lutfen tekrar deneyin.';
+        if (!message) return 'Ödeme başlatılamadı. Lütfen tekrar deneyin.';
 
         const normalized = message.toLowerCase();
 
         if (normalized.includes('eksik ortam degiskenleri')) {
-          return 'Odeme servisi ayarlari eksik. Teknik ekiple iletisime gecin.';
+          return 'Ödeme servisi ayarları eksik. Teknik ekiple iletişime geçin.';
         }
         if (normalized.includes('paytr modu secili')) {
-          return 'Sistem su anda PayTR modunda ancak anahtarlar eksik. Gecici olarak mock moda gecin veya PayTR bilgilerini tanimlayin.';
+          return 'Sistem şu anda PayTR modunda ancak anahtarlar eksik. Geçici olarak mock moda geçin veya PayTR bilgilerini tanımlayın.';
         }
         if (normalized.includes('paytr_ok_url') || normalized.includes('mutlak bir url')) {
-          return 'Odeme yonlendirme ayarlari hatali. Teknik ekibe bildiriniz.';
+          return 'Ödeme yönlendirme ayarları hatalı. Teknik ekibe bildiriniz.';
         }
         if (normalized.includes('musteri alanlari eksik')) {
-          return 'Lutfen ad soyad, e-posta, telefon ve adres alanlarini doldurun.';
+          return 'Lütfen ad soyad, e-posta, telefon ve adres alanlarını doldurun.';
         }
         if (normalized.includes('sepet bos')) {
-          return 'Sepetiniz bos. Urun ekleyip tekrar deneyin.';
+          return 'Sepetiniz boş. Ürün ekleyip tekrar deneyin.';
         }
         if (normalized.includes('sepet gecersiz')) {
-          return 'Sepet bilgileriniz guncel degil. Urunleri yeniden ekleyip tekrar deneyin.';
+          return 'Sepet bilgileriniz güncel değil. Ürünleri yeniden ekleyip tekrar deneyin.';
         }
         if (
           normalized.includes('urunu bulunamadi') ||
           normalized.includes('aktif degil') ||
           normalized.includes('satin alima acik degil')
         ) {
-          return 'Sepetinizdeki urunlerden biri su anda satisa uygun degil. Sepeti guncelleyip tekrar deneyin.';
+          return 'Sepetinizdeki ürünlerden biri şu anda satışa uygun değil. Sepeti güncelleyip tekrar deneyin.';
         }
         if (normalized.includes('paytr') && (normalized.includes('token') || normalized.includes('alinamadi'))) {
-          return 'Odeme saglayicisina baglanirken sorun olustu. Lutfen biraz sonra tekrar deneyin.';
+          return 'Ödeme sağlayıcısına bağlanırken sorun oluştu. Lütfen biraz sonra tekrar deneyin.';
         }
         if (normalized.includes('iyzico')) {
-          return 'Iyzico odeme servisine baglanirken sorun olustu. Lutfen biraz sonra tekrar deneyin.';
+          return 'İyzico ödeme servisine bağlanırken sorun oluştu. Lütfen biraz sonra tekrar deneyin.';
         }
         if (
           normalized.includes('failed to fetch') ||
           normalized.includes('networkerror') ||
           normalized.includes('network error')
         ) {
-          return 'Sunucuya erisilemiyor. Internet baglantinizi kontrol edip tekrar deneyin.';
+          return 'Sunucuya erişilemiyor. İnternet bağlantınızı kontrol edip tekrar deneyin.';
         }
         return message;
       }
@@ -737,6 +1314,12 @@
       function getCartState() {
         if (!cart) return { items: [], subtotal: 0, totalItems: 0 };
         return cart.getSummary();
+      }
+
+      function resolveSummaryLineId(item) {
+        const explicit = String(item && item.line_id ? item.line_id : '').trim();
+        if (explicit) return explicit;
+        return String(item && item.code ? item.code : '').trim();
       }
 
       function updatePayButtonState() {
@@ -760,7 +1343,7 @@
               'apikey': SUPABASE_ANON_KEY,
               'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
             };
-            const url = SUPABASE_URL + '/rest/v1/products?select=id,name,code,price,images,active&active=eq.true&order=price.desc&limit=100';
+            const url = SUPABASE_URL + '/rest/v1/products?select=id,name,code,price,price_visible,images,category,stock_quantity,active&active=eq.true&price=gt.0&price_visible=eq.true&order=price.desc&limit=100';
             const res = await fetch(url, { headers: headers }).catch(function () { return null; });
             if (res && res.ok) {
               nudgeCache = await res.json().catch(function () { return []; });
@@ -773,8 +1356,9 @@
 
           const eligible = nudgeCache
             .filter(function (p) {
-              const price = Number(p.price || 0);
-              return price > 0 && price <= remaining;
+              const price = Number(p && p.price);
+              const isPriceVisible = p && p.price_visible !== false;
+              return Number.isFinite(price) && price > 0 && isPriceVisible && price <= remaining;
             })
             .sort(function (a, b) {
               return Number(b.price || 0) - Number(a.price || 0);
@@ -792,15 +1376,51 @@
           const img = Array.isArray(images) && images.length ? images[0] : (typeof images === 'string' ? images : '');
           const code = pick.code || '';
 
+          const productHref = code ? ('product.html?code=' + encodeURIComponent(code)) : 'index.html';
+          const category = pick.category || '';
+          const rawStock = pick.stock_quantity;
+          const stock = (rawStock === null || rawStock === undefined || rawStock === '') ? null : Number(rawStock);
+          const canAdd = Number.isFinite(price) && price > 0 && (stock === null || stock > 0);
+
           container.innerHTML =
-            '<div style="display:flex;align-items:center;gap:0.5rem;background:#fff;border:1px solid #fde68a;border-radius:8px;padding:0.4rem 0.6rem;">' +
+            '<div style="display:flex;align-items:center;gap:0.5rem;background:#fff;border:1px solid #fdba74;border-radius:8px;padding:0.4rem 0.6rem;">' +
               (img ? '<img src="' + img + '" alt="' + name + '" style="width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;" />' : '') +
               '<div style="flex:1;min-width:0;">' +
                 '<div style="font-size:0.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</div>' +
-                '<div style="font-size:0.68rem;color:#92400e;">' + formatPrice(price) + ' — ekleyin, kargo ücretsiz olsun!</div>' +
+                '<div style="font-size:0.68rem;color:#c2410c;">' + formatPrice(price) + ' — ekleyin, kargo ücretsiz olsun!</div>' +
               '</div>' +
-              '<a href="index.html" style="font-size:0.68rem;background:#111827;color:#fff;border-radius:6px;padding:0.28rem 0.5rem;text-decoration:none;white-space:nowrap;">İncele</a>' +
+              '<div style="display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">' +
+                '<button type="button" data-action="add-offer-product" style="font-size:0.68rem;background:#f97316;color:#fff;border:1px solid #ea580c;border-radius:6px;padding:0.28rem 0.5rem;white-space:nowrap;cursor:pointer;">Sepete Ekle</button>' +
+                '<a href="' + productHref + '" style="font-size:0.68rem;background:#f97316;color:#fff;border:1px solid #ea580c;border-radius:6px;padding:0.28rem 0.5rem;text-decoration:none;white-space:nowrap;">İncele</a>' +
+              '</div>' +
             '</div>';
+
+          const addBtn = container.querySelector('[data-action="add-offer-product"]');
+          if (addBtn) {
+            addBtn.disabled = !canAdd;
+            addBtn.style.opacity = canAdd ? '1' : '0.7';
+            addBtn.addEventListener('click', function () {
+              if (!cart || !canAdd) return;
+              const added = cart.addItem({
+                code: code || String(pick.id || ''),
+                name: name,
+                price: price,
+                image: img || '',
+                category: category,
+                stock: stock,
+                color: '',
+              }, 1);
+              if (!added) return;
+              addBtn.textContent = 'Eklendi';
+              addBtn.disabled = true;
+              addBtn.style.opacity = '0.9';
+              setTimeout(function () {
+                addBtn.textContent = 'Sepete Ekle';
+                addBtn.disabled = false;
+                addBtn.style.opacity = '1';
+              }, 1200);
+            });
+          }
         } catch (_) {
           container.innerHTML = '';
           nudgeLoading = false;
@@ -863,18 +1483,21 @@
         }
 
         if (!items.length) {
-          summaryList.innerHTML = '<div class="alert">Sepetiniz bos. Urun ekleyip tekrar deneyin.</div>';
-          summaryNote.textContent = 'Sepetinizde urun bulunmuyor';
+          summaryList.innerHTML = '<div class="alert">Sepetiniz boş. Ürün ekleyip tekrar deneyin.</div>';
+          summaryNote.textContent = 'Sepetinizde ürün bulunmuyor';
           updatePayButtonState();
           return;
         }
 
-        summaryNote.textContent = state.totalItems + ' adet urun';
+        summaryNote.textContent = state.totalItems + ' adet ürün';
         summaryList.innerHTML = items
           .map(function (item) {
-            const colorLine = item.color
-              ? '<div style="font-size:0.67rem;color:#6b7280;margin:0.12rem 0 0.22rem;">Renk: ' + item.color + '</div>'
-              : '';
+            const lineId = resolveSummaryLineId(item);
+            const stock = Number(item && item.stock);
+            const hasStock = Number.isFinite(stock);
+            const canDecrease = Number(item.qty) > 1;
+            const canIncrease = !hasStock || Number(item.qty) < stock;
+            const variantLabel = String(item.color || '').trim() || 'Belirtilmedi';
             return (
               '<div class="item">' +
                 '<img src="' + (item.image || 'logo/sitelogo.png') + '" alt="' + item.code + '" />' +
@@ -882,11 +1505,16 @@
                   '<div style="font-size:0.72rem;font-weight:600;">' + item.name + '</div>' +
                   '<div style="font-size:0.7rem;font-weight:600;color:#111827;margin:0.15rem 0 0.2rem;">' + formatPrice(item.price) + '</div>' +
                   '<div style="font-size:0.67rem;color:#6b7280;margin:0 0 0.12rem;">' + item.code + '</div>' +
-                  colorLine +
+                  '<div class="variant-line">Renk: ' + variantLabel + '</div>' +
                   '<div class="line">' +
-                    '<span>' + item.qty + ' adet</span>' +
+                    '<div class="qty-controls">' +
+                      '<button type="button" class="qty-btn" data-action="decrease-line" data-line="' + lineId + '" ' + (canDecrease ? '' : 'disabled') + ' aria-label="Adet azalt">-</button>' +
+                      '<span class="qty-value">' + item.qty + ' adet</span>' +
+                      '<button type="button" class="qty-btn" data-action="increase-line" data-line="' + lineId + '" ' + (canIncrease ? '' : 'disabled') + ' aria-label="Adet artir">+</button>' +
+                    '</div>' +
                     '<strong>' + formatPrice(item.price * item.qty) + '</strong>' +
                   '</div>' +
+                  '<button type="button" class="remove-line" data-action="remove-line" data-line="' + lineId + '">Ürünü sil</button>' +
                 '</div>' +
               '</div>'
             );
@@ -909,35 +1537,37 @@
 
         const data = await response.json().catch(function () { return {}; });
         if (!response.ok || data?.ok !== true) {
-          const message = data?.error || 'Odeme baslatilamadi.';
+          const message = data?.error || 'Ödeme başlatılamadı.';
           throw new Error(message);
         }
         return data;
       }
 
       function showPaytrIframe(token, orderNo) {
+        advanceToStep(3);
         paymentShell.style.display = '';
-        orderCreatedMessage.textContent = 'Siparis olusturuldu (' + orderNo + '). Odemeyi asagidaki guvenli PayTR penceresinden tamamlayin.';
-        iframeWrap.innerHTML = '<iframe src="https://www.paytr.com/odeme/guvenli/' + token + '" title="PayTR odeme penceresi"></iframe>';
+        orderCreatedMessage.textContent = 'Sipariş oluşturuldu (' + orderNo + '). Ödemeyi aşağıdaki güvenli PayTR penceresinden tamamlayın.';
+        iframeWrap.innerHTML = '<iframe src="https://www.paytr.com/odeme/guvenli/' + token + '" title="PayTR ödeme penceresi"></iframe>';
       }
 
       function showIyzicoCheckout(paymentPageUrl, orderNo) {
+        advanceToStep(3);
         paymentShell.style.display = '';
-        orderCreatedMessage.textContent = 'Siparis olusturuldu (' + orderNo + '). Iyzico guvenli odeme sayfasina yonlendiriliyorsunuz.';
+        orderCreatedMessage.textContent = 'Sipariş oluşturuldu (' + orderNo + '). İyzico güvenli ödeme sayfasına yönlendiriliyorsunuz.';
 
         const safeUrl = String(paymentPageUrl || '').trim();
         if (!safeUrl) {
           iframeWrap.innerHTML =
             '<div class="alert error" style="margin:0;border:0;border-radius:0;min-height:120px;display:flex;align-items:center;">' +
-            'Iyzico odeme linki olusturulamadi. Lutfen tekrar deneyin veya destekle iletisime gecin.' +
+            'İyzico ödeme linki oluşturulamadı. Lütfen tekrar deneyin veya destekle iletişime geçin.' +
             '</div>';
           return;
         }
 
         iframeWrap.innerHTML =
           '<div class="alert" style="margin:0;border:0;border-radius:0;min-height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">' +
-            '<p style="margin:0;">Iyzico odeme sayfasi aciliyor. Otomatik yonlendirme olmazsa asagidaki butonu kullanin.</p>' +
-            '<a href="' + safeUrl + '" target="_self" rel="noopener" class="detail-btn" style="display:inline-flex;padding:0.72rem 1rem;text-decoration:none;">Iyzico ile odemeye git</a>' +
+            '<p style="margin:0;">İyzico ödeme sayfası açılıyor. Otomatik yönlendirme olmazsa aşağıdaki butonu kullanın.</p>' +
+            '<a href="' + safeUrl + '" target="_self" rel="noopener" class="detail-btn" style="display:inline-flex;padding:0.72rem 1rem;text-decoration:none;">İyzico ile ödemeye git</a>' +
           '</div>';
 
         setTimeout(function () {
@@ -946,23 +1576,60 @@
       }
 
       function showMockOrderInfo(orderNo, message) {
+        advanceToStep(3);
         paymentShell.style.display = '';
-        orderCreatedMessage.textContent = message || ('Siparis olusturuldu (' + orderNo + ').');
+        orderCreatedMessage.textContent = message || ('Sipariş oluşturuldu (' + orderNo + ').');
         iframeWrap.innerHTML =
           '<div class="alert" style="margin:0;border:0;border-radius:0;min-height:220px;display:flex;align-items:center;">' +
-          'Odeme entegrasyonu henuz aktif degil. Siparisiniz kaydedildi ve durum <strong style="margin-left:4px;">pending</strong> olarak gorunur.' +
+          'Ödeme entegrasyonu henüz aktif değil. Siparişiniz kaydedildi ve durum <strong style="margin-left:4px;">pending</strong> olarak görünür.' +
+          '</div>';
+      }
+
+      function showBankTransferInfo(orderNo, data) {
+        advanceToStep(3);
+        paymentShell.style.display = '';
+        orderCreatedMessage.textContent = 'Sipariş oluşturuldu (' + orderNo + '). Havale/EFT yapıp bildiriminizi Hesabım ekranından tamamlayın.';
+        const payload = getBankTransferPayload(data, orderNo);
+        iframeWrap.innerHTML =
+          '<div class="alert success" style="margin:0;border:0;border-radius:0;min-height:220px;">' +
+            '<div class="bank-transfer-preview" style="margin:0;border-color:#bbf7d0;background:#f0fdf4;">' +
+            renderBankTransferHtml(payload, 'Banka Bilgileri') +
+            '</div>' +
           '</div>';
       }
 
       function accountResultMessage(account) {
         if (!account || !account.requested) return '';
         if (account.created) {
-          return ' Hesap basariyla olusturuldu. Siparisinizi Hesabim sayfasindan takip edebilirsiniz.';
+          return ' Hesap başarıyla oluşturuldu. Siparişinizi Hesabım sayfasından takip edebilirsiniz.';
         }
         if (account.existing) {
-          return ' Bu e-posta ile mevcut hesap bulundu ve siparisiniz hesaba baglandi.';
+          return ' Bu e-posta ile mevcut hesap bulundu ve siparişiniz hesaba bağlandı.';
         }
         return '';
+      }
+
+      var continueBtn = document.getElementById('continue-btn');
+      if (continueBtn) {
+        continueBtn.addEventListener('click', function () {
+          var name = document.getElementById('name').value.trim();
+          var email = document.getElementById('email').value.trim();
+          var phone = document.getElementById('phone').value.trim();
+          var address = document.getElementById('address').value.trim();
+          if (!name || !email || !phone || !address) {
+            showAlert('Lütfen ad soyad, e-posta, telefon ve adres alanlarını doldurun.', 'error');
+            return;
+          }
+          alertBox.innerHTML = '';
+          advanceToStep(2);
+        });
+      }
+
+      var continueToPaymentBtn = document.getElementById('continue-to-payment-btn');
+      if (continueToPaymentBtn) {
+        continueToPaymentBtn.addEventListener('click', function () {
+          advanceToStep(3);
+        });
       }
 
       applyPromoBtn.addEventListener('click', async function (e) {
@@ -970,7 +1637,7 @@
         const code = promoCodeInput.value.trim().toUpperCase();
         if (!code) {
           promoMessage.style.display = '';
-          promoMessage.textContent = 'Indirim kodu giriniz.';
+          promoMessage.textContent = 'İndirim kodu giriniz.';
           promoMessage.className = 'error';
           return;
         }
@@ -987,7 +1654,7 @@
           const payload = await response.json().catch(function () { return null; });
           const result = payload && payload.success ? payload.data : null;
           if (!response.ok || !result) {
-            throw new Error('Indirim kodu kontrol edilemedi.');
+            throw new Error('İndirim kodu kontrol edilemedi.');
           }
 
           if (!result.valid || !result.promo) {
@@ -1008,7 +1675,7 @@
           }
           renderSummary();
         } catch (error) {
-          promoMessage.textContent = 'Indirim kodu kontrol edilemedi.';
+          promoMessage.textContent = 'İndirim kodu kontrol edilemedi.';
           promoMessage.className = 'error';
           appliedPromo = null;
         }
@@ -1020,7 +1687,7 @@
 
         const state = getCartState();
         if (!state.items.length) {
-          showAlert('Sepetiniz bos.', 'error');
+          showAlert('Sepetiniz boş.', 'error');
           return;
         }
 
@@ -1032,29 +1699,62 @@
             city: document.getElementById('city').value.trim(),
             address: document.getElementById('address').value.trim(),
             note: document.getElementById('note').value.trim(),
+            customer_type: getSelectedCheckoutCustomerType(),
+            company_name: checkoutCompanyNameEl ? String(checkoutCompanyNameEl.value || '').trim() : '',
+            national_id: checkoutNationalIdEl ? String(checkoutNationalIdEl.value || '').trim() : '',
+            tax_number: checkoutTaxNumberEl ? String(checkoutTaxNumberEl.value || '').trim() : '',
+            tax_office: checkoutTaxOfficeEl ? String(checkoutTaxOfficeEl.value || '').trim() : '',
           },
           cart: state.items.map(function (item) {
-            return { code: item.code, quantity: item.qty };
+            return {
+              code: item.code,
+              quantity: item.qty,
+              color: String(item.color || '').trim(),
+            };
           }),
           account: {
             create: Boolean(createAccountEl && createAccountEl.checked),
             password: accountPasswordEl ? accountPasswordEl.value : '',
           },
+          shipping: {
+            provider: shippingProviderSelect ? String(shippingProviderSelect.value || '').trim().toLowerCase() : '',
+          },
+          payment: {
+            method: getSelectedPaymentMethod(),
+          },
+          billing: {
+            same_as_shipping: Boolean(billingSameAsShippingEl && billingSameAsShippingEl.checked),
+            name: billingNameEl ? String(billingNameEl.value || '').trim() : '',
+            city: billingCityEl ? String(billingCityEl.value || '').trim() : '',
+            district: billingDistrictEl ? String(billingDistrictEl.value || '').trim() : '',
+            address: billingAddressEl ? String(billingAddressEl.value || '').trim() : '',
+          },
           promo_code: appliedPromo ? appliedPromo.code : undefined,
         };
 
         if (!payload.customer.name || !payload.customer.email || !payload.customer.phone || !payload.customer.address) {
-          showAlert('Lutfen zorunlu alanlari doldurun.', 'error');
+          showAlert('Lütfen zorunlu alanları doldurun.', 'error');
+          return;
+        }
+        if (
+          payload.customer.customer_type === 'kurumsal' &&
+          (!payload.customer.company_name || !payload.customer.national_id || !payload.customer.tax_number || !payload.customer.tax_office)
+        ) {
+          showAlert('Kurumsal seçimde firma adı, TC, vergi no ve vergi dairesi zorunludur.', 'error');
           return;
         }
 
         if (payload.account.create && (!payload.account.password || payload.account.password.length < 6)) {
-          showAlert('Hesap olusturmak icin en az 6 karakterli sifre girin.', 'error');
+          showAlert('Hesap oluşturmak için en az 6 karakterli şifre girin.', 'error');
+          return;
+        }
+        if (!payload.billing.same_as_shipping && (!payload.billing.name || !payload.billing.address)) {
+          showAlert('Farklı fatura adresi seçildiğinde ad/unvan ve fatura adresi zorunludur.', 'error');
           return;
         }
 
         payBtn.disabled = true;
-        payBtn.textContent = 'Odeme hazirlaniyor...';
+        payBtn.textContent = 'Ödeme hazırlanıyor...';
 
         try {
           const authToken = window.BlaeneAuth ? await window.BlaeneAuth.getAccessToken() : null;
@@ -1062,14 +1762,18 @@
           const accountMessage = accountResultMessage(result.account);
           if (result.mode === 'mock') {
             showMockOrderInfo(result.order_no, result.message);
-            showAlert('Siparis alindi (' + result.order_no + '). Odeme altyapisi aktif oldugunda bu adim otomatik odeme saglayicisina yonlenecek.' + accountMessage, 'success');
+            showAlert('Sipariş alındı (' + result.order_no + '). Ödeme altyapısı aktif olduğunda bu adım otomatik ödeme sağlayıcısına yönlenecek.' + accountMessage, 'success');
+            if (cart) cart.clear();
+          } else if (result.mode === 'bank_transfer') {
+            showBankTransferInfo(result.order_no, result.bank_transfer);
+            showAlert('Sipariş oluşturuldu. Havale/EFT adımlarını tamamlayın.' + accountMessage, 'success');
             if (cart) cart.clear();
           } else if (result.mode === 'iyzico') {
             showIyzicoCheckout(result.payment_page_url, result.order_no);
-            showAlert('Iyzico odeme sayfasi hazirlaniyor.' + accountMessage, 'success');
+            showAlert('İyzico ödeme sayfası hazırlanıyor.' + accountMessage, 'success');
           } else {
             showPaytrIframe(result.iframe_token, result.order_no);
-            showAlert('Odeme penceresi hazirlandi.' + accountMessage, 'success');
+            showAlert('Ödeme penceresi hazırlandı.' + accountMessage, 'success');
           }
         } catch (error) {
           showAlert(mapCheckoutError(error?.message), 'error');
@@ -1084,6 +1788,36 @@
         cart.clear();
       });
 
+      summaryList.addEventListener('click', function (event) {
+        if (!cart) return;
+        const trigger = event.target.closest('button[data-action][data-line]');
+        if (!trigger) return;
+
+        const action = String(trigger.dataset.action || '').trim();
+        const lineRef = String(trigger.dataset.line || '').trim();
+        if (!lineRef) return;
+
+        const state = getCartState();
+        const current = (state.items || []).find(function (item) {
+          return resolveSummaryLineId(item) === lineRef || String(item.code || '').trim() === lineRef;
+        });
+        if (!current) return;
+
+        if (action === 'remove-line') {
+          cart.removeItem(lineRef);
+          return;
+        }
+
+        if (action === 'decrease-line') {
+          cart.setQuantity(lineRef, Number(current.qty) - 1);
+          return;
+        }
+
+        if (action === 'increase-line') {
+          cart.setQuantity(lineRef, Number(current.qty) + 1);
+        }
+      });
+
       if (createAccountEl) {
         createAccountEl.addEventListener('change', function () {
           const enabled = Boolean(createAccountEl.checked);
@@ -1095,16 +1829,39 @@
         });
       }
 
+      if (billingSameAsShippingEl) {
+        billingSameAsShippingEl.addEventListener('change', function () {
+          const same = Boolean(billingSameAsShippingEl.checked);
+          if (billingFieldsEl) billingFieldsEl.style.display = same ? 'none' : '';
+          if (billingAddressEl) billingAddressEl.required = !same;
+          if (billingNameEl) billingNameEl.required = !same;
+          if (same) {
+            if (billingNameEl) billingNameEl.value = '';
+            if (billingCityEl) billingCityEl.value = '';
+            if (billingDistrictEl) billingDistrictEl.value = '';
+            if (billingAddressEl) billingAddressEl.value = '';
+          }
+        });
+      }
+
+      paymentMethodInputs.forEach(function (input) {
+        input.addEventListener('change', function () {
+          updatePayButtonLabel();
+          renderBankTransferPreview();
+        });
+      });
+
       const payStatus = urlParams.get('pay');
       if (payStatus === 'ok') {
-        showAlert('Odeme sonucu basarili olarak dondu. Kesin durum webhook ile siparis kaydina islenir.', 'success');
+        showAlert('Ödeme sonucu başarılı olarak döndü. Kesin durum webhook ile sipariş kaydına işlenir.', 'success');
         if (cart) cart.clear();
       } else if (payStatus === 'fail') {
-        showAlert('Odeme basarisiz veya iptal edildi. Tekrar deneyebilirsiniz.', 'error');
+        showAlert('Ödeme başarısız veya iptal edildi. Tekrar deneyebilirsiniz.', 'error');
       }
 
       window.addEventListener('blaene:cart:updated', renderSummary);
       updatePayButtonLabel();
+      renderBankTransferPreview();
       void loadCheckoutSettings();
     })();
   </script>
