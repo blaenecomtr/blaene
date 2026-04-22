@@ -194,7 +194,24 @@ function statusBadgeStyle(value: string): CSSProperties {
   }
 }
 
-function buildSlipHtml(order: Order) {
+async function fetchLogoDataUrl(): Promise<string> {
+  try {
+    const origin = window.location.origin
+    const res = await fetch(`${origin}/logo/blaene-logo.png`)
+    if (!res.ok) return ''
+    const blob = await res.blob()
+    return await new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => resolve('')
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return ''
+  }
+}
+
+function buildSlipHtml(order: Order, logoDataUrl: string) {
   const items = Array.isArray(order.items) ? order.items : []
   const itemRows = items
     .map(
@@ -210,8 +227,10 @@ function buildSlipHtml(order: Order) {
     .join('')
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.blaene.com.tr'
-  const logoUrl = `${origin}/logo/blaene-logo.png`
   const qrData = `${origin}/account.html?order=${encodeURIComponent(order.order_no || '')}`
+  const logoHtml = logoDataUrl
+    ? `<img src="${logoDataUrl}" alt="Blaene" style="height:56px;width:auto;" />`
+    : `<span style="font-size:24px;font-weight:700;letter-spacing:0.05em;font-family:Arial,sans-serif;">BLAENE</span>`
 
   return `
     <html>
@@ -222,8 +241,6 @@ function buildSlipHtml(order: Order) {
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
           .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
-          .header img { height: 48px; width: auto; }
-          .header #qr-canvas { display: block; }
           .meta { margin-bottom: 16px; }
           .meta p { margin: 4px 0; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
@@ -234,8 +251,7 @@ function buildSlipHtml(order: Order) {
       </head>
       <body>
         <div class="header">
-          <img src="${logoUrl}" alt="Blaene" onerror="this.style.display='none';document.getElementById('brand-text').style.display='block';" />
-          <span id="brand-text" style="display:none;font-size:22px;font-weight:700;letter-spacing:0.05em;">BLAENE</span>
+          ${logoHtml}
           <canvas id="qr-canvas"></canvas>
         </div>
         <div class="meta">
@@ -268,9 +284,11 @@ function buildSlipHtml(order: Order) {
             var canvas = document.getElementById('qr-canvas');
             function tryRender() {
               if (typeof QRCode !== 'undefined' && canvas) {
-                QRCode.toCanvas(canvas, '${qrData}', { width: 90, margin: 1 }, function() {});
+                QRCode.toCanvas(canvas, '${qrData}', { width: 100, margin: 1 }, function() {
+                  window._qrReady = true;
+                });
               } else {
-                setTimeout(tryRender, 100);
+                setTimeout(tryRender, 80);
               }
             }
             tryRender();
@@ -544,19 +562,26 @@ export default function Orders() {
     })
   }
 
-  const printShippingSlip = (order: Order) => {
+  const printShippingSlip = async (order: Order) => {
     const win = window.open('', '_blank', 'width=900,height=700')
     if (!win) {
       setError('Tarayıcı pop-up engelledi. Lütfen izin verin.')
       return
     }
+    const logoDataUrl = await fetchLogoDataUrl()
     win.document.open()
-    win.document.write(buildSlipHtml(order))
+    win.document.write(buildSlipHtml(order, logoDataUrl))
     win.document.close()
     win.focus()
-    setTimeout(() => {
-      win.print()
-    }, 1200)
+    // Poll until QR is rendered, then print
+    const waitAndPrint = () => {
+      if ((win as any)._qrReady) {
+        win.print()
+      } else {
+        setTimeout(waitAndPrint, 100)
+      }
+    }
+    setTimeout(waitAndPrint, 300)
   }
 
   const updateReturnStatus = async (item: ReturnRequest, status: string, successMessage: string) => {
