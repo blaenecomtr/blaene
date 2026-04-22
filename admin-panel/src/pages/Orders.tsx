@@ -29,6 +29,8 @@ interface Order {
   tracking_code?: string | null
   shipping_provider?: string | null
   shipped_at?: string | null
+  shipped_email_sent_at?: string | null
+  shipped_email_sent?: boolean
   items?: OrderItem[]
 }
 
@@ -266,8 +268,9 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
     ? `<span style="font-size:11px;font-family:Arial,sans-serif;color:#444;display:block;width:100%;text-align:center;">${s.site_url || 'www.blaene.com.tr'}</span>`
     : ''
 
+  const qrDisplaySize = Math.round(s.qr_size * 1.2)
   const qrHtml = (s.show_qr && qrDataUrl)
-    ? `<img src="${qrDataUrl}" alt="QR" style="width:${s.qr_size}px;height:${s.qr_size}px;display:block;" />`
+    ? `<img src="${qrDataUrl}" alt="QR" style="width:${qrDisplaySize}px;height:${qrDisplaySize}px;display:block;flex-shrink:0;" />`
     : ''
 
   const row = (show: boolean, label: string, value: string) =>
@@ -284,30 +287,33 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body { height: 100%; }
           body { font-family: Arial, sans-serif; color: #111; font-size: 12px; }
-          .slip-wrap { ${borderCss} }
-          .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; border-bottom: 2px solid #111; padding-bottom: 10px; }
+          .slip-wrap { display: inline-block; width: 100%; }
+          .slip-inner { ${borderCss} }
+          .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 6px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+          .site-url-row { text-align: center; font-size: 11px; color: #444; padding-bottom: 8px; }
+          .divider { border: none; border-top: 2px solid #111; margin-bottom: 10px; }
           .meta p { margin: 3px 0; font-size: 12px; line-height: 1.4; }
           table { width: 100%; border-collapse: collapse; margin-top: 10px; }
           th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; font-size: 11px; }
           th { background: #f3f4f6; }
           @media print {
-            @page { margin: 8mm; size: A6 portrait; }
+            @page { margin: 6mm; size: A6 portrait; }
             body { padding: 0; }
-            .slip-wrap { page-break-inside: avoid; }
           }
         </style>
       </head>
       <body>
         <div class="slip-wrap">
-        <div class="header">
-          <div class="logo-block">
-            ${logoBlock}
-            ${siteUrlHtml}
-          </div>
+        <div class="slip-inner">
+        <div class="logo-qr-row">
+          <div class="logo-block">${logoBlock}</div>
           ${qrHtml}
         </div>
+        ${s.show_site_url ? `<div class="site-url-row">${s.site_url || 'www.blaene.com.tr'}</div>` : ''}
+        <hr class="divider" />
         <div class="meta">
           ${row(s.show_order_no, 'Siparis', order.order_no)}
           ${row(s.show_customer_name, 'Musteri', order.customer_name || '')}
@@ -334,6 +340,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
             ${itemRows || '<tr><td colspan="4">Satir bulunamadi</td></tr>'}
           </tbody>
         </table>` : ''}
+        </div>
         </div>
       </body>
     </html>
@@ -927,12 +934,13 @@ export default function Orders() {
                       const busy = Boolean(actionLoading[order.id])
                       const paymentApproved = isPaymentApproved(order)
                       const shippedLike = isShippedLike(order)
+                      const shippedMailSent = Boolean(order.shipped_email_sent || order.shipped_email_sent_at)
                       const orderStage = resolveOrderFlowStage(order)
                       const statusLower = String(order.status || '').toLowerCase()
                       const tracking = String(trackingDrafts[order.id] || order.tracking_code || '').trim()
                       const canUseShipping = paymentApproved && statusLower !== 'cancelled'
                       const canMarkShipped = canUseShipping && Boolean(tracking) && !shippedLike
-                      const canSendShippedMail = canUseShipping && Boolean(tracking) && shippedLike
+                      const canSendShippedMail = canUseShipping && Boolean(tracking) && shippedLike && !shippedMailSent
                       return (
                         <tr key={order.id}>
                           <td style={tdStyle}>{order.order_no}</td>
@@ -964,8 +972,10 @@ export default function Orders() {
                                 <span style={checklistTextStyle}>Takip / kargo</span>
                               </div>
                               <div style={checklistRowStyle}>
-                                <span style={shippedLike ? checklistDoneDotStyle : checklistPendingDotStyle}>3</span>
-                                <span style={checklistTextStyle}>Gonderime hazir</span>
+                                <span style={shippedMailSent ? checklistDoneDotStyle : checklistPendingDotStyle}>3</span>
+                                <span style={checklistTextStyle}>
+                                  {shippedMailSent ? 'Kargo maili gonderildi' : 'Kargo maili bekliyor'}
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -1053,7 +1063,14 @@ export default function Orders() {
                               <button disabled={busy || !canUseShipping || !tracking} onClick={() => void saveTrackingCode(order)} style={buttonStyle}>
                                 {actionLoading[order.id] === 'tracking' ? 'Kaydediliyor...' : 'Takip no kaydet'}
                               </button>
-                              {canSendShippedMail ? (
+                              {shippedMailSent ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span style={statusBadgeStyle('paid')}>Kargo maili gonderildi</span>
+                                  <span style={{ color: '#94a3b8', fontSize: '11px' }}>
+                                    {order.shipped_email_sent_at ? formatDate(order.shipped_email_sent_at) : 'Gonderildi'}
+                                  </span>
+                                </div>
+                              ) : canSendShippedMail ? (
                                 <button
                                   type="button"
                                   disabled={busy}
