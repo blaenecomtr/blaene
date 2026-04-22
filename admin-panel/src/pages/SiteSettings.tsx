@@ -335,15 +335,16 @@ export default function SiteSettings() {
 
     return `<html><head><meta charset="UTF-8"/><title>Manuel Kargo Fisi</title>
     <style>
-      body{font-family:Arial,sans-serif;padding:20px;color:#111;}
+      *{box-sizing:border-box;margin:0;padding:0;}
+      body{font-family:Arial,sans-serif;color:#111;font-size:12px;}
       .slip-wrap{${borderCss}}
-      .header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:12px;}
-      .logo-block{display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
-      .meta p{margin:4px 0;font-size:13px;}
-      table{width:100%;border-collapse:collapse;margin-top:12px;}
-      th,td{border:1px solid #ddd;padding:8px;text-align:left;font-size:12px;}
+      .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;border-bottom:2px solid #111;padding-bottom:10px;}
+      .logo-block{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
+      .meta p{margin:3px 0;font-size:12px;line-height:1.4;}
+      table{width:100%;border-collapse:collapse;margin-top:10px;}
+      th,td{border:1px solid #ddd;padding:5px 7px;text-align:left;font-size:11px;}
       th{background:#f3f4f6;}
-      @media print{body{padding:0;} .slip-wrap{margin:10px;}}
+      @media print{@page{margin:8mm;size:A6 portrait;} body{padding:0;} .slip-wrap{page-break-inside:avoid;}}
     </style></head><body>
     <div class="slip-wrap">
     <div class="header">

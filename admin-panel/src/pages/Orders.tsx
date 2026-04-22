@@ -283,17 +283,20 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
         <meta charset="UTF-8" />
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; color: #111; font-size: 12px; }
           .slip-wrap { ${borderCss} }
-          .header { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
-          .logo-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-          .qr-block { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
-          .meta { margin-bottom: 16px; }
-          .meta p { margin: 4px 0; font-size: 13px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+          .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; border-bottom: 2px solid #111; padding-bottom: 10px; }
+          .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+          .meta p { margin: 3px 0; font-size: 12px; line-height: 1.4; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; font-size: 11px; }
           th { background: #f3f4f6; }
-          @media print { body { padding: 0; } .slip-wrap { margin: 10px; } }
+          @media print {
+            @page { margin: 8mm; size: A6 portrait; }
+            body { padding: 0; }
+            .slip-wrap { page-break-inside: avoid; }
+          }
         </style>
       </head>
       <body>
@@ -303,7 +306,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
             ${logoBlock}
             ${siteUrlHtml}
           </div>
-          ${qrHtml ? `<div class="qr-block">${qrHtml}</div>` : ''}
+          ${qrHtml}
         </div>
         <div class="meta">
           ${row(s.show_order_no, 'Siparis', order.order_no)}
