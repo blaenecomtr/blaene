@@ -641,36 +641,57 @@ export default function Orders() {
     })
   }
 
-  const sendShippedEmail = async (order: Order) => {
+  const sendOrderEmail = async (
+    order: Order,
+    action: 'send_shipped' | 'send_order_confirmation' | 'send_delivered' | 'send_review_request'
+  ) => {
     if (!token) return
     if (!isPaymentApproved(order)) {
-      setError(`${order.order_no}: odeme onayi olmadan kargo maili gonderilemez`)
+      setError(`${order.order_no}: odeme onayi olmadan mail gonderilemez`)
       return
     }
-    const tracking = String(trackingDrafts[order.id] || order.tracking_code || '').trim()
-    if (!tracking) {
-      setError(`${order.order_no}: once takip no girin`)
-      return
+
+    if (action === 'send_shipped') {
+      const tracking = String(trackingDrafts[order.id] || order.tracking_code || '').trim()
+      if (!tracking) {
+        setError(`${order.order_no}: once takip no girin`)
+        return
+      }
+      if (!isShippedLike(order)) {
+        setError(`${order.order_no}: once siparisi kargoya verin`)
+        return
+      }
     }
-    if (!isShippedLike(order)) {
+    if ((action === 'send_delivered' || action === 'send_review_request') && !isShippedLike(order)) {
       setError(`${order.order_no}: once siparisi kargoya verin`)
       return
     }
 
-    await runAction(order.id, 'ship_mail', async () => {
-      const response = await apiRequest<{ shipped?: { email?: string | null } }>('/api/admin/marketing-emails', {
+    await runAction(order.id, action, async () => {
+      const response = await apiRequest<{
+        order_mail?: { email?: string | null }
+        shipped?: { email?: string | null }
+      }>('/api/admin/marketing-emails', {
         method: 'POST',
         token,
         body: {
-          action: 'send_shipped',
+          action,
           order_id: order.id,
         },
       })
-      const targetEmail = String(response?.shipped?.email || '').trim()
+      const targetEmail = String(response?.order_mail?.email || response?.shipped?.email || '').trim()
+      const actionLabel =
+        action === 'send_shipped'
+          ? 'kargo maili'
+          : action === 'send_order_confirmation'
+            ? 'siparis alindi maili'
+            : action === 'send_delivered'
+              ? 'teslim edildi maili'
+              : 'yorum istegi maili'
       setMessage(
         targetEmail
-          ? `${order.order_no}: kargo maili gonderildi (${targetEmail})`
-          : `${order.order_no}: kargo maili gonderildi`
+          ? `${order.order_no}: ${actionLabel} gonderildi (${targetEmail})`
+          : `${order.order_no}: ${actionLabel} gonderildi`
       )
     })
   }
@@ -1074,10 +1095,10 @@ export default function Orders() {
                                 <button
                                   type="button"
                                   disabled={busy}
-                                  onClick={() => void sendShippedEmail(order)}
+                                  onClick={() => void sendOrderEmail(order, 'send_shipped')}
                                   style={mailFinalButtonStyle}
                                 >
-                                  {actionLoading[order.id] === 'ship_mail' ? 'Gonderiliyor...' : 'Kargoya verildi maili gonder'}
+                                  {actionLoading[order.id] === 'send_shipped' ? 'Gonderiliyor...' : 'Kargoya verildi maili gonder'}
                                 </button>
                               ) : (
                                 <span style={{ color: '#94a3b8', fontSize: '11px' }}>
@@ -1091,6 +1112,30 @@ export default function Orders() {
                                 style={printButtonStyle}
                               >
                                 Kargo fisi yazdir
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy || !paymentApproved}
+                                onClick={() => void sendOrderEmail(order, 'send_order_confirmation')}
+                                style={buttonStyle}
+                              >
+                                {actionLoading[order.id] === 'send_order_confirmation' ? 'Gonderiliyor...' : 'Siparis alindi maili'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy || !canUseShipping || !shippedLike}
+                                onClick={() => void sendOrderEmail(order, 'send_delivered')}
+                                style={buttonStyle}
+                              >
+                                {actionLoading[order.id] === 'send_delivered' ? 'Gonderiliyor...' : 'Teslim edildi maili'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy || !canUseShipping || !shippedLike}
+                                onClick={() => void sendOrderEmail(order, 'send_review_request')}
+                                style={buttonStyle}
+                              >
+                                {actionLoading[order.id] === 'send_review_request' ? 'Gonderiliyor...' : 'Yorum istegi maili'}
                               </button>
                             </div>
                           </td>
