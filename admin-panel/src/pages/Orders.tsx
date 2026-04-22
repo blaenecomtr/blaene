@@ -194,6 +194,8 @@ function statusBadgeStyle(value: string): CSSProperties {
   }
 }
 
+import QRCode from 'qrcode'
+
 async function fetchLogoDataUrl(): Promise<string> {
   try {
     const origin = window.location.origin
@@ -211,7 +213,7 @@ async function fetchLogoDataUrl(): Promise<string> {
   }
 }
 
-function buildSlipHtml(order: Order, logoDataUrl: string) {
+function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
   const items = Array.isArray(order.items) ? order.items : []
   const itemRows = items
     .map(
@@ -226,18 +228,19 @@ function buildSlipHtml(order: Order, logoDataUrl: string) {
     )
     .join('')
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.blaene.com.tr'
-  const qrData = `${origin}/account.html?order=${encodeURIComponent(order.order_no || '')}`
   const logoHtml = logoDataUrl
-    ? `<img src="${logoDataUrl}" alt="Blaene" style="height:56px;width:auto;" />`
-    : `<span style="font-size:24px;font-weight:700;letter-spacing:0.05em;font-family:Arial,sans-serif;">BLAENE</span>`
+    ? `<img src="${logoDataUrl}" alt="Blaene" style="height:80px;width:auto;" />`
+    : `<span style="font-size:28px;font-weight:700;letter-spacing:0.05em;font-family:Arial,sans-serif;">BLAENE</span>`
+
+  const qrHtml = qrDataUrl
+    ? `<img src="${qrDataUrl}" alt="QR" style="width:120px;height:120px;" />`
+    : ''
 
   return `
     <html>
       <head>
         <meta charset="UTF-8" />
         <title>Kargo Fişi - ${order.order_no}</title>
-        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
           .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
@@ -252,7 +255,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string) {
       <body>
         <div class="header">
           ${logoHtml}
-          <canvas id="qr-canvas"></canvas>
+          ${qrHtml}
         </div>
         <div class="meta">
           <p><strong>Sipariş:</strong> ${order.order_no}</p>
@@ -279,21 +282,6 @@ function buildSlipHtml(order: Order, logoDataUrl: string) {
             ${itemRows || '<tr><td colspan="4">Satır bulunamadı</td></tr>'}
           </tbody>
         </table>
-        <script>
-          (function() {
-            var canvas = document.getElementById('qr-canvas');
-            function tryRender() {
-              if (typeof QRCode !== 'undefined' && canvas) {
-                QRCode.toCanvas(canvas, '${qrData}', { width: 100, margin: 1 }, function() {
-                  window._qrReady = true;
-                });
-              } else {
-                setTimeout(tryRender, 80);
-              }
-            }
-            tryRender();
-          })();
-        <\/script>
       </body>
     </html>
   `
@@ -568,20 +556,17 @@ export default function Orders() {
       setError('Tarayıcı pop-up engelledi. Lütfen izin verin.')
       return
     }
-    const logoDataUrl = await fetchLogoDataUrl()
+    const origin = window.location.origin
+    const qrData = `${origin}/account.html?order=${encodeURIComponent(order.order_no || '')}`
+    const [logoDataUrl, qrDataUrl] = await Promise.all([
+      fetchLogoDataUrl(),
+      QRCode.toDataURL(qrData, { width: 200, margin: 1 }).catch(() => ''),
+    ])
     win.document.open()
-    win.document.write(buildSlipHtml(order, logoDataUrl))
+    win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl))
     win.document.close()
     win.focus()
-    // Poll until QR is rendered, then print
-    const waitAndPrint = () => {
-      if ((win as any)._qrReady) {
-        win.print()
-      } else {
-        setTimeout(waitAndPrint, 100)
-      }
-    }
-    setTimeout(waitAndPrint, 300)
+    setTimeout(() => { win.print() }, 400)
   }
 
   const updateReturnStatus = async (item: ReturnRequest, status: string, successMessage: string) => {
