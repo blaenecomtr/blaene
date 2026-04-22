@@ -134,6 +134,15 @@ function parseStock(input: string): number {
   return Math.max(0, Math.floor(parsed))
 }
 
+function parseStockDraftValue(input: string): number | null {
+  const cleaned = String(input || '').trim()
+  if (!cleaned) return null
+  const parsed = Number(cleaned)
+  if (!Number.isFinite(parsed)) return null
+  if (parsed < 0) return null
+  return Math.floor(parsed)
+}
+
 function normalizeDiscountPercent(input: unknown): number | null {
   const parsed = Number(String(input ?? '').trim().replace(',', '.'))
   if (!Number.isFinite(parsed)) return null
@@ -249,6 +258,7 @@ export default function Products() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [listPriceDrafts, setListPriceDrafts] = useState<Record<string, string>>({})
+  const [listStockDrafts, setListStockDrafts] = useState<Record<string, string>>({})
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<Category | ''>('')
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
@@ -336,6 +346,13 @@ export default function Products() {
         const next: Record<string, string> = {}
         normalized.forEach((item) => {
           next[item.id] = item.price === null || item.price === undefined ? '' : String(item.price)
+        })
+        return next
+      })
+      setListStockDrafts(() => {
+        const next: Record<string, string> = {}
+        normalized.forEach((item) => {
+          next[item.id] = String(Number(item.stock_quantity || 0))
         })
         return next
       })
@@ -614,25 +631,48 @@ export default function Products() {
     return product.price === null || product.price === undefined ? '' : String(product.price)
   }
 
-  const isListPriceDirty = (product: Product) => {
-    const draft = getListPriceDraft(product).trim()
-    if (!draft) return product.price !== null
-    const parsed = parsePrice(draft)
-    if (parsed === null) return false
-    return parsed !== product.price
+  const getListStockDraft = (product: Product) => {
+    if (Object.prototype.hasOwnProperty.call(listStockDrafts, product.id)) {
+      return String(listStockDrafts[product.id] || '')
+    }
+    return String(Number(product.stock_quantity || 0))
+  }
+
+  const isListRowDirty = (product: Product) => {
+    const priceDraft = getListPriceDraft(product).trim()
+    const stockDraft = getListStockDraft(product).trim()
+
+    const priceDirty = priceDraft
+      ? (() => {
+          const parsed = parsePrice(priceDraft)
+          return parsed !== null && parsed !== product.price
+        })()
+      : product.price !== null
+
+    const parsedStock = parseStockDraftValue(stockDraft)
+    const currentStock = Number(product.stock_quantity || 0)
+    const stockDirty = parsedStock !== null && parsedStock !== currentStock
+    return priceDirty || stockDirty
   }
 
   const saveListPrice = async (product: Product) => {
-    const rawDraft = getListPriceDraft(product).trim()
-    const parsed = parsePrice(rawDraft)
-    if (rawDraft && parsed === null) {
+    const rawPriceDraft = getListPriceDraft(product).trim()
+    const parsedPrice = parsePrice(rawPriceDraft)
+    if (rawPriceDraft && parsedPrice === null) {
       setError(`${product.code} icin gecersiz fiyat`)
+      return
+    }
+    const rawStockDraft = getListStockDraft(product).trim()
+    const parsedStock = parseStockDraftValue(rawStockDraft)
+    if (parsedStock === null) {
+      setError(`${product.code} icin gecersiz stok`)
       return
     }
     const patched: Product = {
       ...product,
-      price: parsed,
-      price_visible: parsed !== null,
+      price: parsedPrice,
+      price_visible: parsedPrice !== null,
+      stock_quantity: parsedStock,
     }
     await saveProduct(patched)
   }
@@ -1458,11 +1498,12 @@ export default function Products() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Kaydet</th>
+                  <th style={saveColumnHeaderStyle}>Kaydet</th>
                   <th style={thStyle}>Foto</th>
                   <th style={thStyle}>Kod</th>
                   <th style={thStyle}>Ad</th>
                   <th style={thStyle}>Fiyat</th>
+                  <th style={thStyle}>Stok</th>
                   <th style={thStyle}>Durum</th>
                   <th style={thStyle}>Islem</th>
                 </tr>
@@ -1473,19 +1514,21 @@ export default function Products() {
                   const listDraft = getListPriceDraft(product)
                   const listDraftNumber = parsePrice(listDraft)
                   const draftInvalid = listDraft.trim().length > 0 && listDraftNumber === null
-                  const draftDirty = isListPriceDirty(product)
+                  const stockDraft = getListStockDraft(product)
+                  const stockDraftNumber = parseStockDraftValue(stockDraft)
+                  const stockInvalid = stockDraftNumber === null
+                  const draftDirty = isListRowDirty(product)
                   return (
                     <tr key={product.id}>
-                      <td style={tdStyle}>
+                      <td style={saveColumnCellStyle}>
                         <button
                           type="button"
                           onClick={() => void saveListPrice(product)}
-                          disabled={savingId === product.id || !draftDirty || draftInvalid}
+                          disabled={savingId === product.id || !draftDirty || draftInvalid || stockInvalid}
                           style={{
-                            ...secondaryButton,
+                            ...saveListButtonStyle,
                             background: draftDirty ? '#0f766e' : '#334155',
                             color: draftDirty ? '#d1fae5' : '#e2e8f0',
-                            width: '100%',
                           }}
                         >
                           {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
@@ -1511,6 +1554,23 @@ export default function Products() {
                           {listDraftNumber === null && listDraft.trim().length > 0
                             ? 'Gecersiz fiyat'
                             : formatPrice(listDraftNumber)}
+                        </div>
+                      </td>
+                      <td style={tdStyle}>
+                        <input
+                          value={stockDraft}
+                          onChange={(evt) => setListStockDrafts((prev) => ({ ...prev, [product.id]: evt.target.value }))}
+                          placeholder="Stok"
+                          type="number"
+                          min={0}
+                          style={{
+                            ...inputStyle,
+                            width: '120px',
+                            borderColor: stockInvalid ? '#ef4444' : '#334155',
+                          }}
+                        />
+                        <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                          {stockInvalid ? 'Gecersiz stok' : `${stockDraftNumber} adet`}
                         </div>
                       </td>
                       <td style={tdStyle}>{product.active ? 'Aktif' : 'Pasif'}</td>
@@ -1870,6 +1930,13 @@ const secondaryButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+const saveListButtonStyle: CSSProperties = {
+  ...secondaryButton,
+  minWidth: '110px',
+  textAlign: 'left',
+  paddingLeft: '14px',
+}
+
 const miniButtonStyle: CSSProperties = {
   background: '#1d4ed8',
   color: '#dbeafe',
@@ -1933,12 +2000,30 @@ const thStyle: CSSProperties = {
   padding: '10px 8px',
 }
 
+const saveColumnHeaderStyle: CSSProperties = {
+  ...thStyle,
+  position: 'sticky',
+  left: 0,
+  zIndex: 2,
+  background: '#1e293b',
+  minWidth: '132px',
+}
+
 const tdStyle: CSSProperties = {
   color: '#e2e8f0',
   fontSize: '12px',
   borderBottom: '1px solid #1f2937',
   padding: '10px 8px',
   verticalAlign: 'top',
+}
+
+const saveColumnCellStyle: CSSProperties = {
+  ...tdStyle,
+  position: 'sticky',
+  left: 0,
+  zIndex: 1,
+  background: '#1e293b',
+  minWidth: '132px',
 }
 
 const okAlertStyle: CSSProperties = {
