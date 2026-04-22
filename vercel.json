@@ -11,6 +11,39 @@
   ],
   "redirects": [
     {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "blaene.com"
+        }
+      ],
+      "destination": "https://www.blaene.com.tr/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.blaene.com"
+        }
+      ],
+      "destination": "https://www.blaene.com.tr/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "blaene.com.tr"
+        }
+      ],
+      "destination": "https://www.blaene.com.tr/$1",
+      "permanent": true
+    },
+    {
       "source": "/yonetim-giris-n7k4p2",
       "destination": "/yonetim-giris-n7k4p2.html",
       "permanent": false
@@ -69,6 +102,12 @@
       "source": "/reset-password/",
       "destination": "/reset-password.html",
       "permanent": false
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/public/marketing-cron",
+      "schedule": "0 9 * * *"
     }
   ]
 }
