@@ -1102,6 +1102,41 @@ async function handleOrders(req, res, ctx) {
     }
   }
 
+  if (rows.length) {
+    const orderIds = rows.map((row) => normalizeText(row?.id, 120)).filter(Boolean);
+    const inFilter = buildInFilter(orderIds);
+    if (inFilter) {
+      const shippedMailLogs = await safeSelect(config, 'audit_logs', {
+        select: 'entity_id,action,created_at',
+        entity_id: inFilter,
+        order: 'created_at.desc',
+        limit: 5000,
+      }, []);
+
+      const latestMailSentByOrderId = new Map();
+      (shippedMailLogs || []).forEach((row) => {
+        const action = normalizeText(row?.action, 120).toLowerCase();
+        if (action !== 'email.shipped.manual.sent') return;
+        const entityId = normalizeText(row?.entity_id, 120);
+        const createdAt = normalizeText(row?.created_at, 80) || null;
+        if (!entityId || !createdAt) return;
+        if (!latestMailSentByOrderId.has(entityId)) {
+          latestMailSentByOrderId.set(entityId, createdAt);
+        }
+      });
+
+      rows = rows.map((row) => {
+        const orderId = normalizeText(row?.id, 120);
+        const sentAt = orderId ? latestMailSentByOrderId.get(orderId) || null : null;
+        return {
+          ...row,
+          shipped_email_sent_at: sentAt,
+          shipped_email_sent: Boolean(sentAt),
+        };
+      });
+    }
+  }
+
   const pagination = parsePagination(query, { pageSize: 25, maxPageSize: 1000 });
   const paged = paginateRows(rows, pagination);
   return sendSuccess(res, paged.items, 200, paged.meta);
