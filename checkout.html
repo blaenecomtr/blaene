@@ -727,7 +727,7 @@
           </div>
           <p class="step-note">Kart bilgileri bu sayfada tutulmaz. İşlem seçilen ödeme sağlayıcısında güvenle tamamlanır.</p>
           <div id="bank-transfer-preview" class="bank-transfer-preview" style="display:none;"></div>
-          <div id="payment-shell">
+          <div id="payment-shell" style="display:none;">
             <div class="alert success" id="order-created-message"></div>
             <div class="iframe-wrap" id="iframe-wrap"></div>
           </div>
@@ -1629,6 +1629,8 @@
       if (continueToPaymentBtn) {
         continueToPaymentBtn.addEventListener('click', function () {
           advanceToStep(3);
+          renderBankTransferPreview();
+          updatePayButtonLabel();
         });
       }
 
