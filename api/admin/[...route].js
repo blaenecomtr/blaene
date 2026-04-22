@@ -96,6 +96,10 @@ async function sendOrderShippedEmailIfPossible(order) {
   }
 }
 
+function isOrderPaymentApproved(order) {
+  return normalizeText(order?.payment_status, 40).toLowerCase() === 'paid';
+}
+
 function getUrl(req) {
   return new URL(req.url, 'http://localhost');
 }
@@ -1139,13 +1143,25 @@ async function handleOrderStatus(req, res, ctx) {
   }
 
   const idsQuery = buildInFilter(orderIds);
-  const previousOrdersForShippedMail = workflowStatus === 'shipped'
-    ? await safeSelect(config, 'orders', {
-      select: 'id,order_no,customer_name,email,status,tracking_code,shipping_provider',
+  if (workflowStatus === 'shipped') {
+    const paymentRows = await safeSelect(config, 'orders', {
+      select: 'id,order_no,payment_status',
       id: idsQuery,
       limit: 5000,
-    }, [])
-    : [];
+    }, []);
+    const notPaidRows = paymentRows.filter((row) => !isOrderPaymentApproved(row));
+    if (notPaidRows.length) {
+      const sampleOrderNo = normalizeText(notPaidRows[0]?.order_no, 120) || null;
+      return sendError(
+        res,
+        400,
+        sampleOrderNo
+          ? `Payment approval required before shipping (${sampleOrderNo})`
+          : 'Payment approval required before shipping',
+        'ORDER_PAYMENT_REQUIRED_FOR_SHIPPING'
+      );
+    }
+  }
 
   await restUpdate(config, 'orders', { id: idsQuery }, patch);
   await writeAuditLog(config, req, auth, 'order.status.bulk_update', {
@@ -1153,18 +1169,6 @@ async function handleOrderStatus(req, res, ctx) {
     workflow_status: workflowStatus || null,
     count: orderIds.length,
   }, { entityType: 'order' });
-
-  if (workflowStatus === 'shipped' && previousOrdersForShippedMail.length) {
-    const needsNotification = previousOrdersForShippedMail.filter((row) => String(row?.status || '').toLowerCase() !== 'shipped');
-    if (needsNotification.length) {
-      await Promise.allSettled(
-        needsNotification.map((row) => sendOrderShippedEmailIfPossible({
-          ...row,
-          ...patch,
-        }))
-      );
-    }
-  }
   return sendSuccess(res, { updated: orderIds.length, ...patch });
 }
 
@@ -2970,6 +2974,14 @@ async function handleShipping(req, res, ctx) {
     if (!rows.length) return sendError(res, 404, 'Order not found', 'ORDER_NOT_FOUND');
 
     const order = rows[0];
+    if (!isOrderPaymentApproved(order)) {
+      return sendError(
+        res,
+        400,
+        'Payment approval required before shipping actions',
+        'ORDER_PAYMENT_REQUIRED_FOR_SHIPPING'
+      );
+    }
     const shipment = await createShipment({ provider, order });
     if (!shipment.success) {
       return sendError(res, 400, shipment.error || 'Shipment create failed', shipment.code || 'SHIPPING_CREATE_FAILED');
@@ -2992,13 +3004,6 @@ async function handleShipping(req, res, ctx) {
       entityId: orderId,
     });
 
-    if (String(order?.status || '').toLowerCase() !== 'shipped') {
-      await sendOrderShippedEmailIfPossible({
-        ...order,
-        ...patch,
-      });
-    }
-
     return sendSuccess(res, {
       order_id: orderId,
       ...shipment.data,
@@ -3009,12 +3014,20 @@ async function handleShipping(req, res, ctx) {
     const orderId = normalizeText(body.order_id || query.get('order_id'), 120);
     if (!orderId) return sendError(res, 400, 'order_id is required', 'VALIDATION_REQUIRED_ORDER_ID');
     const orderRows = await safeSelect(config, 'orders', {
-      select: 'id,order_no,customer_name,email,status,tracking_code,shipping_provider',
+      select: 'id,order_no,customer_name,email,payment_status,status,tracking_code,shipping_provider',
       id: `eq.${orderId}`,
       limit: 1,
     }, []);
     if (!orderRows.length) return sendError(res, 404, 'Order not found', 'ORDER_NOT_FOUND');
     const currentOrder = orderRows[0];
+    if (!isOrderPaymentApproved(currentOrder)) {
+      return sendError(
+        res,
+        400,
+        'Payment approval required before shipping actions',
+        'ORDER_PAYMENT_REQUIRED_FOR_SHIPPING'
+      );
+    }
 
     const patch = {};
     if (body.tracking_code !== undefined) patch.tracking_code = normalizeText(body.tracking_code, 120) || null;
@@ -3040,15 +3053,6 @@ async function handleShipping(req, res, ctx) {
       entityType: 'order',
       entityId: orderId,
     });
-
-    const statusBefore = String(currentOrder?.status || '').toLowerCase();
-    const statusAfter = String(patch?.status || currentOrder?.status || '').toLowerCase();
-    if (statusBefore !== 'shipped' && statusAfter === 'shipped') {
-      await sendOrderShippedEmailIfPossible({
-        ...currentOrder,
-        ...patch,
-      });
-    }
 
     return sendSuccess(res, { order_id: orderId, patch });
   }

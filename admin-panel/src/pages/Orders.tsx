@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useState } from 'react'
+import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../lib/api'
 import { getSiteSetting } from '../lib/siteSettings'
 import { type SlipSettings, DEFAULT_SLIP } from './SiteSettings'
@@ -28,6 +28,7 @@ interface Order {
   created_at: string
   tracking_code?: string | null
   shipping_provider?: string | null
+  shipped_at?: string | null
   items?: OrderItem[]
 }
 
@@ -76,6 +77,8 @@ interface TransferTicket {
 }
 
 type OrdersTab = 'all' | 'returns' | 'transfers'
+type OrderFlowStage = 'payment' | 'shipping' | 'shipped'
+type StageFilter = 'all' | OrderFlowStage
 
 const FALLBACK_SHIPPING_PROVIDERS: ShippingProviderInfo[] = [
   { provider: 'yurtici', configured: true },
@@ -155,6 +158,27 @@ function shippingProviderLabel(value: string) {
   return normalized
 }
 
+function isPaymentApproved(order: Order) {
+  return String(order.payment_status || '').toLowerCase() === 'paid'
+}
+
+function isShippedLike(order: Order) {
+  const status = String(order.status || '').toLowerCase()
+  return status === 'shipped' || status === 'delivered'
+}
+
+function resolveOrderFlowStage(order: Order): OrderFlowStage {
+  if (isShippedLike(order)) return 'shipped'
+  if (isPaymentApproved(order)) return 'shipping'
+  return 'payment'
+}
+
+function stageLabel(stage: OrderFlowStage) {
+  if (stage === 'payment') return 'Odeme Asamasi'
+  if (stage === 'shipping') return 'Kargo Asamasi'
+  return 'Gonderilenler'
+}
+
 function providerPillStyle(configured: boolean): CSSProperties {
   return {
     display: 'inline-flex',
@@ -176,6 +200,8 @@ function statusBadgeStyle(value: string): CSSProperties {
     paid: { bg: 'rgba(34,197,94,0.15)', border: '#22c55e', color: '#86efac' },
     failed: { bg: 'rgba(239,68,68,0.15)', border: '#ef4444', color: '#fca5a5' },
     pending: { bg: 'rgba(148,163,184,0.15)', border: '#64748b', color: '#cbd5e1' },
+    payment: { bg: 'rgba(148,163,184,0.15)', border: '#64748b', color: '#cbd5e1' },
+    shipping: { bg: 'rgba(59,130,246,0.18)', border: '#3b82f6', color: '#93c5fd' },
     processing: { bg: 'rgba(59,130,246,0.18)', border: '#3b82f6', color: '#93c5fd' },
     shipped: { bg: 'rgba(168,85,247,0.18)', border: '#a855f7', color: '#d8b4fe' },
     delivered: { bg: 'rgba(16,185,129,0.18)', border: '#10b981', color: '#6ee7b7' },
@@ -325,10 +351,29 @@ export default function Orders() {
   const [search, setSearch] = useState('')
   const [paymentStatus, setPaymentStatus] = useState('all')
   const [workflowStatus, setWorkflowStatus] = useState('all')
+  const [stageFilter, setStageFilter] = useState<StageFilter>('all')
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({})
   const [trackingDrafts, setTrackingDrafts] = useState<Record<string, string>>({})
   const [providerDrafts, setProviderDrafts] = useState<Record<string, string>>({})
   const [shippingProviders, setShippingProviders] = useState<ShippingProviderInfo[]>(FALLBACK_SHIPPING_PROVIDERS)
+
+  const stageCounts = useMemo(() => {
+    const next = {
+      payment: 0,
+      shipping: 0,
+      shipped: 0,
+    };
+    orders.forEach((order) => {
+      const stage = resolveOrderFlowStage(order);
+      next[stage] += 1;
+    });
+    return next;
+  }, [orders]);
+
+  const visibleOrders = useMemo(() => {
+    if (stageFilter === 'all') return orders;
+    return orders.filter((order) => resolveOrderFlowStage(order) === stageFilter);
+  }, [orders, stageFilter]);
 
   const getSelectedProvider = (orderId: string) => {
     return String(providerDrafts[orderId] || '').toLowerCase().trim()
@@ -496,6 +541,10 @@ export default function Orders() {
 
   const saveTrackingCode = async (order: Order) => {
     if (!token) return
+    if (!isPaymentApproved(order)) {
+      setError(`${order.order_no}: odeme onayi olmadan takip no kaydedilemez`)
+      return
+    }
     const provider = getSelectedProvider(order.id)
     await runAction(order.id, 'tracking', async () => {
       await apiRequest('/api/admin/shipping', {
@@ -515,6 +564,10 @@ export default function Orders() {
 
   const markAsShipped = async (order: Order) => {
     if (!token) return
+    if (!isPaymentApproved(order)) {
+      setError(`${order.order_no}: odeme onayi olmadan kargo asamasina gecilemez`)
+      return
+    }
     const provider = getSelectedProvider(order.id)
     const tracking = String(trackingDrafts[order.id] || '').trim()
     if (!tracking) {
@@ -541,6 +594,10 @@ export default function Orders() {
 
   const createShipment = async (order: Order) => {
     if (!token) return
+    if (!isPaymentApproved(order)) {
+      setError(`${order.order_no}: odeme onayi olmadan otomatik kargo olusturulamaz`)
+      return
+    }
     const provider = String(providerDrafts[order.id] || '').toLowerCase().trim()
     if (!provider) {
       setError(`${order.order_no}: once kargo firmasi secin`)
@@ -570,6 +627,40 @@ export default function Orders() {
       setMessage(
         `${order.order_no}: ${shippingProviderLabel(provider)} ile kargo olusturuldu` +
           (trackingCode ? ` (${trackingCode})` : '')
+      )
+    })
+  }
+
+  const sendShippedEmail = async (order: Order) => {
+    if (!token) return
+    if (!isPaymentApproved(order)) {
+      setError(`${order.order_no}: odeme onayi olmadan kargo maili gonderilemez`)
+      return
+    }
+    const tracking = String(trackingDrafts[order.id] || order.tracking_code || '').trim()
+    if (!tracking) {
+      setError(`${order.order_no}: once takip no girin`)
+      return
+    }
+    if (!isShippedLike(order)) {
+      setError(`${order.order_no}: once siparisi kargoya verin`)
+      return
+    }
+
+    await runAction(order.id, 'ship_mail', async () => {
+      const response = await apiRequest<{ shipped?: { email?: string | null } }>('/api/admin/marketing-emails', {
+        method: 'POST',
+        token,
+        body: {
+          action: 'send_shipped',
+          order_id: order.id,
+        },
+      })
+      const targetEmail = String(response?.shipped?.email || '').trim()
+      setMessage(
+        targetEmail
+          ? `${order.order_no}: kargo maili gonderildi (${targetEmail})`
+          : `${order.order_no}: kargo maili gonderildi`
       )
     })
   }
@@ -768,6 +859,39 @@ export default function Orders() {
               </button>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setStageFilter('all')}
+                style={stageFilter === 'all' ? activeStageButtonStyle : stageButtonStyle}
+              >
+                Tum Asamalar ({orders.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStageFilter('payment')}
+                style={stageFilter === 'payment' ? activeStageButtonStyle : stageButtonStyle}
+              >
+                Odeme Asamasi ({stageCounts.payment})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStageFilter('shipping')}
+                style={stageFilter === 'shipping' ? activeStageButtonStyle : stageButtonStyle}
+              >
+                Kargo Asamasi ({stageCounts.shipping})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStageFilter('shipped')}
+                style={stageFilter === 'shipped' ? activeStageButtonStyle : stageButtonStyle}
+              >
+                Gonderilenler ({stageCounts.shipped})
+              </button>
+            </div>
+            <div style={{ marginBottom: '12px', color: '#94a3b8', fontSize: '12px' }}>
+              Checklist akisi: 1) Odeme Onayi 2) Takip/Kargo 3) Kargo Maili
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
               {shippingProviders.map((item) => (
                 <span key={`provider-pill-${item.provider}`} style={providerPillStyle(item.configured)}>
                   {shippingProviderLabel(item.provider)}: {item.configured ? 'hazir' : 'pasif'}
@@ -777,8 +901,8 @@ export default function Orders() {
 
             {loading ? (
               <p style={{ color: '#94a3b8' }}>Siparisler yukleniyor...</p>
-            ) : !orders.length ? (
-              <p style={{ color: '#94a3b8' }}>Siparis bulunamadi.</p>
+            ) : !visibleOrders.length ? (
+              <p style={{ color: '#94a3b8' }}>Bu asamada siparis bulunamadi.</p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -789,14 +913,23 @@ export default function Orders() {
                       <th style={thStyle}>Toplam</th>
                       <th style={thStyle}>Odeme</th>
                       <th style={thStyle}>Durum</th>
+                      <th style={thStyle}>Checklist</th>
                       <th style={thStyle}>Kargo</th>
                       <th style={thStyle}>Tarih</th>
                       <th style={thStyle}>Islem</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order) => {
+                    {visibleOrders.map((order) => {
                       const busy = Boolean(actionLoading[order.id])
+                      const paymentApproved = isPaymentApproved(order)
+                      const shippedLike = isShippedLike(order)
+                      const orderStage = resolveOrderFlowStage(order)
+                      const statusLower = String(order.status || '').toLowerCase()
+                      const tracking = String(trackingDrafts[order.id] || order.tracking_code || '').trim()
+                      const canUseShipping = paymentApproved && statusLower !== 'cancelled'
+                      const canMarkShipped = canUseShipping && Boolean(tracking) && !shippedLike
+                      const canSendShippedMail = canUseShipping && Boolean(tracking) && shippedLike
                       return (
                         <tr key={order.id}>
                           <td style={tdStyle}>{order.order_no}</td>
@@ -812,13 +945,33 @@ export default function Orders() {
                             </div>
                           </td>
                           <td style={tdStyle}>
-                            <span style={statusBadgeStyle(order.status)}>{workflowLabel(order.status)}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={statusBadgeStyle(order.status)}>{workflowLabel(order.status)}</span>
+                              <span style={statusBadgeStyle(orderStage)}>{stageLabel(orderStage)}</span>
+                            </div>
+                          </td>
+                          <td style={tdStyle}>
+                            <div style={checklistWrapStyle}>
+                              <div style={checklistRowStyle}>
+                                <span style={paymentApproved ? checklistDoneDotStyle : checklistPendingDotStyle}>1</span>
+                                <span style={checklistTextStyle}>Odeme onayi</span>
+                              </div>
+                              <div style={checklistRowStyle}>
+                                <span style={tracking ? checklistDoneDotStyle : checklistPendingDotStyle}>2</span>
+                                <span style={checklistTextStyle}>Takip / kargo</span>
+                              </div>
+                              <div style={checklistRowStyle}>
+                                <span style={shippedLike ? checklistDoneDotStyle : checklistPendingDotStyle}>3</span>
+                                <span style={checklistTextStyle}>Gonderime hazir</span>
+                              </div>
+                            </div>
                           </td>
                           <td style={tdStyle}>
                             <select
                               value={providerDrafts[order.id] || ''}
                               onChange={(evt) => setProviderDrafts((prev) => ({ ...prev, [order.id]: evt.target.value }))}
                               style={{ ...inputStyle, width: '160px', marginBottom: '6px' }}
+                              disabled={!canUseShipping || busy}
                             >
                               {shippingProviders.map((item) => (
                                 <option
@@ -836,10 +989,16 @@ export default function Orders() {
                               onChange={(evt) => setTrackingDrafts((prev) => ({ ...prev, [order.id]: evt.target.value }))}
                               placeholder="Takip no"
                               style={{ ...inputStyle, width: '160px' }}
+                              disabled={!canUseShipping || busy}
                             />
                             <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '11px' }}>
                               {shippingProviderLabel(order.shipping_provider || providerDrafts[order.id] || 'manual')}
                             </div>
+                            {!canUseShipping && (
+                              <div style={{ marginTop: '6px', color: '#fca5a5', fontSize: '11px' }}>
+                                Odeme onayi bekleniyor
+                              </div>
+                            )}
                           </td>
                           <td style={tdStyle}>{formatDate(order.created_at)}</td>
                           <td style={tdStyle}>
@@ -857,9 +1016,15 @@ export default function Orders() {
                                       : 'Havale Onayla'}
                                 </button>
                               ) : normalizePaymentMethod(order) === 'card' ? (
-                                <span style={statusBadgeStyle('paid')}>
-                                  Kredi Karti ile Odendi
-                                </span>
+                                paymentApproved ? (
+                                  <span style={statusBadgeStyle('paid')}>
+                                    Kredi Karti ile Odendi
+                                  </span>
+                                ) : (
+                                  <span style={statusBadgeStyle('pending')}>
+                                    Kredi Karti Odeme Bekliyor
+                                  </span>
+                                )
                               ) : (
                                 <button
                                   disabled={busy}
@@ -876,16 +1041,35 @@ export default function Orders() {
                               >
                                 {actionLoading[order.id] === 'cancelled' ? 'Isleniyor...' : 'Reddet'}
                               </button>
-                              <button disabled={busy} onClick={() => void createShipment(order)} style={shipButtonStyle}>
+                              <button disabled={busy || !canUseShipping} onClick={() => void createShipment(order)} style={shipButtonStyle}>
                                 {actionLoading[order.id] === 'shipment' ? 'Olusturuluyor...' : 'Otomatik takip olustur'}
                               </button>
-                              <button disabled={busy} onClick={() => void markAsShipped(order)} style={shipButtonStyle}>
+                              <button disabled={busy || !canMarkShipped} onClick={() => void markAsShipped(order)} style={shipButtonStyle}>
                                 {actionLoading[order.id] === 'shipped' ? 'Isleniyor...' : 'Manuel kargoya ver'}
                               </button>
-                              <button disabled={busy} onClick={() => void saveTrackingCode(order)} style={buttonStyle}>
+                              <button disabled={busy || !canUseShipping || !tracking} onClick={() => void saveTrackingCode(order)} style={buttonStyle}>
                                 {actionLoading[order.id] === 'tracking' ? 'Kaydediliyor...' : 'Takip no kaydet'}
                               </button>
-                              <button type="button" onClick={() => printShippingSlip(order)} style={printButtonStyle}>
+                              {canSendShippedMail ? (
+                                <button
+                                  type="button"
+                                  disabled={busy}
+                                  onClick={() => void sendShippedEmail(order)}
+                                  style={mailFinalButtonStyle}
+                                >
+                                  {actionLoading[order.id] === 'ship_mail' ? 'Gonderiliyor...' : 'Kargoya verildi maili gonder'}
+                                </button>
+                              ) : (
+                                <span style={{ color: '#94a3b8', fontSize: '11px' }}>
+                                  Mail adimi son asamada acilir
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                disabled={busy || !canUseShipping}
+                                onClick={() => printShippingSlip(order)}
+                                style={printButtonStyle}
+                              >
                                 Kargo fisi yazdir
                               </button>
                             </div>
@@ -1137,6 +1321,12 @@ const printButtonStyle: CSSProperties = {
   color: '#ccfbf1',
 }
 
+const mailFinalButtonStyle: CSSProperties = {
+  ...buttonStyle,
+  background: '#0b6bcb',
+  color: '#dbeafe',
+}
+
 const tabButton: CSSProperties = {
   ...buttonStyle,
   padding: '8px 14px',
@@ -1146,6 +1336,62 @@ const activeTabButton: CSSProperties = {
   ...tabButton,
   background: '#2563eb',
   color: '#fff',
+}
+
+const stageButtonStyle: CSSProperties = {
+  ...buttonStyle,
+  padding: '7px 12px',
+  border: '1px solid #334155',
+}
+
+const activeStageButtonStyle: CSSProperties = {
+  ...stageButtonStyle,
+  background: '#1d4ed8',
+  color: '#dbeafe',
+  border: '1px solid #3b82f6',
+}
+
+const checklistWrapStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  minWidth: '140px',
+}
+
+const checklistRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+}
+
+const checklistDotBaseStyle: CSSProperties = {
+  width: '18px',
+  height: '18px',
+  borderRadius: '999px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '10px',
+  fontWeight: 700,
+}
+
+const checklistDoneDotStyle: CSSProperties = {
+  ...checklistDotBaseStyle,
+  border: '1px solid #22c55e',
+  color: '#86efac',
+  background: 'rgba(34,197,94,0.15)',
+}
+
+const checklistPendingDotStyle: CSSProperties = {
+  ...checklistDotBaseStyle,
+  border: '1px solid #64748b',
+  color: '#cbd5e1',
+  background: 'rgba(148,163,184,0.15)',
+}
+
+const checklistTextStyle: CSSProperties = {
+  fontSize: '11px',
+  color: '#cbd5e1',
 }
 
 const thStyle: CSSProperties = {
