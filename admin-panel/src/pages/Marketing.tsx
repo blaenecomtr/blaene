@@ -314,47 +314,31 @@ export default function Marketing() {
       setError('Toplu kupon gonderimi icin kupon secin')
       return
     }
+    if (!window.confirm(`"${selectedPromotion.code}" kuponu tum musterilere email ile gonderilecek. Emin misiniz?`)) return
     setSaving(true)
     setError('')
     setMessage('')
     try {
-      const customers = await apiRequest<Customer[]>('/api/admin/customers?page_size=2000', { token })
-      const emails = (Array.isArray(customers) ? customers : [])
-        .map((item) => String(item.email || '').trim())
-        .filter(Boolean)
-      if (!emails.length) {
-        setError('Gonderim icin musteri e-postasi bulunamadi')
-        return
-      }
-
-      const mailSubject = `Blaene Indirim Kodu: ${selectedPromotion.code}`
-      const bodyLines = [
-        `Merhaba,`,
-        '',
-        `${selectedPromotion.title}`,
-        `Indirim kodunuz: ${selectedPromotion.code}`,
-        '',
-        `Iyi alisverisler.`,
-      ]
-      const primary = emails[0]
-      const bccList = emails.slice(1, 80).join(',')
-      window.location.href = `mailto:${encodeURIComponent(primary)}?bcc=${encodeURIComponent(bccList)}&subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(bodyLines.join('\n'))}`
+      const result = await apiRequest<{ sent: number; failed: number; total: number }>(
+        '/api/admin/coupon-broadcast',
+        { method: 'POST', token, body: { promotion_id: selectedPromotion.id } }
+      )
+      const sent = result?.sent ?? 0
+      const failed = result?.failed ?? 0
+      const total = result?.total ?? 0
 
       const nextLog = [
         {
           at: new Date().toISOString(),
           promotion_code: selectedPromotion.code,
-          recipients: emails.length,
+          recipients: sent,
         },
         ...broadcastLog,
       ].slice(0, 100)
       setBroadcastLog(nextLog)
       await saveSiteSetting(token, 'coupon_broadcast_log', nextLog, 'Toplu kupon gonderim gecmisi')
 
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(emails.join(';'))
-      }
-      setMessage(`Kupon mail taslagi hazirlandi. Hedef musteri: ${emails.length}`)
+      setMessage(`Gonderim tamamlandi: ${sent}/${total} basarili${failed ? `, ${failed} basarisiz` : ''}`)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Toplu kupon gonderimi basarisiz'
       setError(msg)
@@ -415,7 +399,7 @@ export default function Marketing() {
           </button>
         </div>
         <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px' }}>
-          Gonderim icin mail taslagi acilir, alici listesi panoya kopyalanir.
+          Resend uzerinden tum musterilere otomatik email gonderilir.
         </p>
       </div>
 

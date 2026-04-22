@@ -24,7 +24,7 @@ const { ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER } = require('../.
 const { writeAuditLog } = require('../../lib/api/audit');
 const { createShipment, isProviderConfigured, PROVIDERS } = require('../../lib/api/shipping-adapters');
 const { sendEmail } = require('../../lib/email/resend');
-const { orderShippedTemplate } = require('../../lib/email/templates');
+const { orderShippedTemplate, couponBroadcastTemplate } = require('../../lib/email/templates');
 const marketingCronHandler = require('../../lib/handlers/public-marketing-cron');
 
 const STAFF_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EDITOR, ROLE_VIEWER];
@@ -3438,6 +3438,107 @@ async function handleVerifyLogout(req, res, ctx) {
   }
 }
 
+async function handleCouponBroadcast(req, res, ctx) {
+  const { config, auth } = ctx;
+  if (!hasRole(auth.profile.role, ADMIN_ROLES)) {
+    return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+  }
+  if (req.method !== 'POST') {
+    return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+  }
+
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) {
+    return sendError(res, 503, 'Email service not configured', 'EMAIL_NOT_CONFIGURED');
+  }
+
+  const parsed = await parseBodySafe(req);
+  const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+  const promotionId = normalizeText(body.promotion_id, 120);
+  if (!promotionId) {
+    return sendError(res, 400, 'promotion_id is required', 'VALIDATION_REQUIRED_FIELDS');
+  }
+
+  const promotions = await restSelect(config, 'promotions', {
+    select: '*',
+    filters: { id: `eq.${promotionId}` },
+    limit: 1,
+  });
+  const promotion = Array.isArray(promotions) ? promotions[0] : null;
+  if (!promotion) {
+    return sendError(res, 404, 'Promotion not found', 'NOT_FOUND');
+  }
+
+  let customers = [];
+  try {
+    customers = await restSelect(config, 'customer_profiles', {
+      select: 'id,email,full_name',
+      filters: { consent_marketing_email: 'eq.true' },
+      order: 'created_at.asc',
+      limit: 5000,
+    });
+  } catch {
+    customers = await restSelect(config, 'customer_profiles', {
+      select: 'id,email,full_name',
+      order: 'created_at.asc',
+      limit: 5000,
+    });
+  }
+
+  const validCustomers = (Array.isArray(customers) ? customers : []).filter(
+    (item) => normalizeEmail(item?.email)
+  );
+
+  if (!validCustomers.length) {
+    return sendError(res, 404, 'No customers with email found', 'NO_CUSTOMERS');
+  }
+
+  const discountText =
+    promotion.discount_type === 'percent'
+      ? `%${promotion.discount_value} indirim`
+      : `${promotion.discount_value} TL indirim`;
+
+  let sent = 0;
+  let failed = 0;
+  const BATCH = 10;
+
+  for (let i = 0; i < validCustomers.length; i += BATCH) {
+    const batch = validCustomers.slice(i, i + BATCH);
+    await Promise.allSettled(
+      batch.map(async (customer) => {
+        const to = normalizeEmail(customer.email);
+        const customerName = normalizeText(customer.full_name, 180) || '';
+        try {
+          await sendEmail({
+            to,
+            subject: `Özel İndirim Kodunuz: ${promotion.code}`,
+            html: couponBroadcastTemplate({
+              customerName,
+              couponCode: promotion.code,
+              couponTitle: promotion.title,
+              discountText,
+            }),
+          });
+          sent++;
+        } catch (err) {
+          console.error('[coupon-broadcast] email failed:', to, err?.message || err);
+          failed++;
+        }
+      })
+    );
+  }
+
+  await writeAuditLog(config, req, auth, 'coupon.broadcast', {
+    promotion_id: promotionId,
+    code: promotion.code,
+    sent,
+    failed,
+    total: validCustomers.length,
+  }, { entityType: 'promotion', entityId: promotionId });
+
+  return sendSuccess(res, { sent, failed, total: validCustomers.length }, 200);
+}
+
 const migrationHandler = createApiHandler(
   {
     methods: ['POST'],
@@ -3483,6 +3584,7 @@ const authenticatedHandler = createApiHandler(
     if (routeKey === 'upload-image') return handleUploadImage(req, res, ctx);
     if (routeKey === 'returns') return require('../../lib/handlers/admin-returns')(req, res);
     if (routeKey === 'refunds') return require('../../lib/handlers/admin-refunds')(req, res);
+    if (routeKey === 'coupon-broadcast') return handleCouponBroadcast(req, res, ctx);
 
     if (routeKey === 'rbac' || routeKey === 'payments' || routeKey === 'feature-flags') {
       return notImplemented(res, routeKey);
