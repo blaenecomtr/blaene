@@ -542,7 +542,7 @@
     const detailName = escapeHtml(product.name || '-');
     const detailCode = escapeHtml(product.code || '-');
     const passBadgeHtml = categoryMeta.key === 'bath'
-      ? '<img class="gallery-pass-badge" src="logo/PAS.png" alt="PAS" loading="lazy" decoding="async" style="position:absolute;top:10px;right:10px;width:62px;height:auto;z-index:4;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));">'
+      ? '<img class="gallery-pass-badge" src="logo/PAS.png" alt="PAS" loading="lazy" decoding="async" style="position:absolute;top:10px;right:10px;width:88px;height:auto;z-index:4;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));">'
       : '';
 
     const teklifMsg = `Merhaba, ${product.code} urunu icin fiyat teklifi almak istiyorum.`;
