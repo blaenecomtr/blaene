@@ -3,6 +3,8 @@
   const FAB_RIGHT_GAP = 18;
   const FAB_BOTTOM_GAP = 18;
   const FAB_STACK_GAP = 12;
+  let addToastTimer = null;
+  let addToastHideTimer = null;
 
   function normalizeColor(value) {
     return String(value || '').trim();
@@ -140,6 +142,7 @@
 
     if (!changed && existing) return false;
     writeCart(items);
+    showAddToast('Sepete eklendi');
     return true;
   }
 
@@ -377,8 +380,76 @@
         text-align: center;
         padding: 1rem 0.4rem;
       }
+      .blaene-cart-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translate(-50%, 12px) scale(0.98);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1700;
+        background: #111827;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 999px;
+        padding: 0.66rem 1rem;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.25);
+        transition: opacity 0.22s ease, transform 0.22s ease;
+      }
+      .blaene-cart-toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+      .blaene-cart-toast.hide {
+        opacity: 0;
+        transform: translate(-50%, 10px) scale(0.98);
+      }
+      @media (max-width: 640px) {
+        .blaene-cart-toast {
+          bottom: 20px;
+          max-width: calc(100vw - 20px);
+          text-align: center;
+          white-space: normal;
+        }
+      }
     `;
     document.head.appendChild(style);
+  }
+
+  function ensureAddToast() {
+    let toast = document.getElementById('blaene-cart-toast');
+    if (toast) return toast;
+    toast = document.createElement('div');
+    toast.id = 'blaene-cart-toast';
+    toast.className = 'blaene-cart-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+    return toast;
+  }
+
+  function showAddToast(message) {
+    injectStyles();
+    const toast = ensureAddToast();
+    toast.textContent = String(message || 'Sepete eklendi');
+    toast.classList.remove('hide');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+
+    if (addToastTimer) window.clearTimeout(addToastTimer);
+    if (addToastHideTimer) window.clearTimeout(addToastHideTimer);
+
+    addToastTimer = window.setTimeout(function () {
+      toast.classList.remove('show');
+      toast.classList.add('hide');
+      addToastHideTimer = window.setTimeout(function () {
+        toast.classList.remove('hide');
+      }, 240);
+    }, 1500);
   }
 
   function ensureDrawer() {
@@ -480,14 +551,75 @@
     fab.style.bottom = `${Math.max(stackedBottom, FAB_BOTTOM_GAP)}px`;
   }
 
+  function ensureHeaderCartButton() {
+    let btn = document.getElementById('header-cart-btn');
+    let countEl = document.getElementById('header-cart-count');
+    if (btn && countEl) return { btn, countEl };
+
+    const headerHost =
+      document.querySelector('.site-header .header-actions') ||
+      document.querySelector('.site-header .header-right') ||
+      document.querySelector('.site-header .header-meta');
+    if (!headerHost) return { btn: null, countEl: null };
+
+    if (!btn) {
+      btn = document.createElement('a');
+      btn.id = 'header-cart-btn';
+      btn.href = 'checkout.html';
+      btn.setAttribute('aria-label', 'Sepetim');
+      btn.style.cssText = 'display:none;position:relative;background:none;border:none;cursor:pointer;padding:0.3rem;color:inherit;text-decoration:none;line-height:0;';
+      btn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M6 6h15l-1.5 9h-12z"></path>
+          <circle cx="9" cy="20" r="1.2"></circle>
+          <circle cx="18" cy="20" r="1.2"></circle>
+        </svg>
+        <span id="header-cart-count" style="position:absolute;top:-4px;right:-6px;min-width:17px;height:17px;border-radius:999px;background:#111827;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;"></span>
+      `;
+
+      const hamburger = headerHost.querySelector('#hamburger, .hamburger');
+      if (hamburger && hamburger.parentElement === headerHost) {
+        headerHost.insertBefore(btn, hamburger);
+      } else {
+        headerHost.appendChild(btn);
+      }
+    }
+
+    countEl = document.getElementById('header-cart-count');
+    if (!countEl && btn) {
+      countEl = document.createElement('span');
+      countEl.id = 'header-cart-count';
+      countEl.style.cssText = 'position:absolute;top:-4px;right:-6px;min-width:17px;height:17px;border-radius:999px;background:#111827;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;';
+      btn.appendChild(countEl);
+    }
+
+    return { btn, countEl };
+  }
+
+  function syncHeaderCart(summary) {
+    const { btn, countEl } = ensureHeaderCartButton();
+    if (!btn || !countEl) return;
+
+    const total = Number(summary?.totalItems || 0);
+    if (total > 0) {
+      countEl.textContent = total > 99 ? '99+' : String(total);
+      btn.style.display = '';
+      return;
+    }
+
+    countEl.textContent = '';
+    btn.style.display = 'none';
+  }
+
   function renderDrawer() {
+    const summary = getSummary();
+    syncHeaderCart(summary);
+
     const fab = document.getElementById('blaene-cart-fab');
     const list = document.getElementById('blaene-cart-list');
     const subtotalEl = document.getElementById('blaene-cart-subtotal');
     if (!fab || !list || !subtotalEl) return;
     syncFabPosition();
-
-    const summary = getSummary();
     fab.querySelector('.count').textContent = String(summary.totalItems);
 
     if (!summary.items.length) {

@@ -97,10 +97,22 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        transform: translateZ(0);
       }
       .blaene-add-cart:hover:not([disabled]) {
         border-color: #C05810;
         background: #C05810;
+      }
+      .blaene-add-cart:active:not([disabled]) {
+        transform: scale(0.985);
+      }
+      .blaene-add-cart.bump {
+        animation: blaene-cart-bump 240ms cubic-bezier(0.2, 0.9, 0.2, 1);
+      }
+      @keyframes blaene-cart-bump {
+        0% { transform: scale(1); }
+        45% { transform: scale(1.06); }
+        100% { transform: scale(1); }
       }
       .blaene-add-cart[disabled] {
         cursor: not-allowed;
@@ -207,11 +219,11 @@
       dims: row.dims || '-',
       description: row.description || '',
       price: row.price === null || row.price === undefined ? null : Number(row.price),
-      price_visible: Boolean(row.price_visible),
+      price_visible: toBoolean(row.price_visible, false),
       images,
       variants,
       colorGroups,
-      active: row.active !== false,
+      active: toBoolean(row.active, true),
       stock_quantity: Number.isFinite(Number(row.stock_quantity)) ? Math.max(0, Number(row.stock_quantity)) : 0,
       display_order: Number.isFinite(Number(row.display_order)) ? Number(row.display_order) : 0,
       discount_percent: Number.isFinite(Number(row.discount_percent)) ? Number(row.discount_percent) : null,
@@ -228,12 +240,35 @@
     }
   }
 
+  function toBoolean(value, fallback = false) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (!normalized) return fallback;
+      if (normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on') return true;
+      if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === 'off') return false;
+    }
+    if (value === null || value === undefined) return fallback;
+    return Boolean(value);
+  }
+
   function formatPrice(value) {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
       currency: 'TRY',
       maximumFractionDigits: 2,
     }).format(Number(value || 0));
+  }
+
+  function animateAddCartButton(button) {
+    if (!button) return;
+    button.classList.remove('bump');
+    void button.offsetWidth;
+    button.classList.add('bump');
+    window.setTimeout(function () {
+      button.classList.remove('bump');
+    }, 260);
   }
 
   function normalizeDiscountPercent(value) {
@@ -369,11 +404,16 @@
         addBtn.className = 'blaene-add-cart';
         addBtn.textContent = canSell ? 'Sepete Ekle' : 'Yakında gelecek';
         addBtn.disabled = !canSell;
+        addBtn.dataset.track = 'add_to_cart';
+        addBtn.dataset.trackProductCode = String(product.code || '').trim().toUpperCase();
+        addBtn.dataset.trackProductName = String(product.name || '').trim();
+        addBtn.dataset.trackLabel = `Sepete ekle: ${String(product.code || '').trim().toUpperCase()}`;
         addBtn.dataset.productCode = product.code;
         addBtn.addEventListener('click', function (event) {
           event.preventDefault();
           event.stopPropagation();
           if (!cart || !canSell || !sale) return;
+          animateAddCartButton(addBtn);
           cart.addItem({
             code: product.code,
             name: product.name,
@@ -501,6 +541,9 @@
     const images = Array.isArray(product.images) && product.images.length ? product.images : ['logo/sitelogo.png'];
     const detailName = escapeHtml(product.name || '-');
     const detailCode = escapeHtml(product.code || '-');
+    const passBadgeHtml = categoryMeta.key === 'bath'
+      ? '<img class="gallery-pass-badge" src="logo/PAS.png" alt="PAS" loading="lazy" decoding="async" style="position:absolute;top:10px;right:10px;width:62px;height:auto;z-index:4;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));">'
+      : '';
 
     const teklifMsg = `Merhaba, ${product.code} urunu icin fiyat teklifi almak istiyorum.`;
     const bilgiMsg = `Merhaba, ${product.code} urunu hakkinda bilgi almak istiyorum.`;
@@ -556,6 +599,7 @@
       <div class="product-layout">
         <div class="img-col">
           <div class="gallery-main" id="gallery-main-area">
+            ${passBadgeHtml}
             <img class="gallery-main-img" id="gallery-img" src="${escapeHtml(images[0])}" alt="${detailCode} - ${detailName}" loading="eager">
             <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="Önceki gorsel">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
@@ -859,8 +903,13 @@
       addBtn.className = 'blaene-add-cart secondary';
       addBtn.textContent = canSell ? 'Sepete Ekle' : 'Yakında gelecek';
       addBtn.disabled = !canSell;
+      addBtn.dataset.track = 'add_to_cart';
+      addBtn.dataset.trackProductCode = String(product.code || '').trim().toUpperCase();
+      addBtn.dataset.trackProductName = String(product.name || '').trim();
+      addBtn.dataset.trackLabel = `Sepete ekle: ${String(product.code || '').trim().toUpperCase()}`;
       addBtn.addEventListener('click', function () {
         if (!cart || !canSell || !sale) return;
+        animateAddCartButton(addBtn);
         const activeColor = String(document.querySelector('.variant-btn.active[data-color]')?.dataset?.color || '').trim();
         const selectedImages = activeColor && Array.isArray(product.colorGroups?.[activeColor])
           ? product.colorGroups[activeColor]

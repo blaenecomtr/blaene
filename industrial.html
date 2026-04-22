@@ -554,6 +554,10 @@ function renderProducts(list) {
         const a = document.createElement('a');
         a.className = 'product-card';
         a.href = `product.html?code=${encodeURIComponent(product.code)}`;
+        a.dataset.track = 'product_open';
+        a.dataset.trackProductCode = String(product.code || '').trim().toUpperCase();
+        a.dataset.trackProductName = String(name || '').trim();
+        a.dataset.trackLabel = `Urun incele: ${String(product.code || '').trim().toUpperCase()}`;
         a.setAttribute('role', 'listitem');
         a.setAttribute('aria-label', `${product.code} — ${name}, ${product.thickness}`);
         a.innerHTML = `

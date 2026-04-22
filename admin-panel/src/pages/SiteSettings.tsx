@@ -772,109 +772,195 @@ export default function SiteSettings() {
       <div style={panelStyle}>
         <h3 style={panelTitleStyle}>Kargo Fisi Ayarlari</h3>
 
-        {/* Tasarım */}
-        <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Tasarim</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
-          <div>
-            <div style={labelStyle}>Logo yüksekliği (px)</div>
-            <input type="number" value={slip.logo_height} onChange={(e) => setSlip((p) => ({ ...p, logo_height: Number(e.target.value) || 80 }))} style={inputStyle} min={20} max={200} />
-          </div>
-          <div>
-            <div style={labelStyle}>QR boyutu (px)</div>
-            <input type="number" value={slip.qr_size} onChange={(e) => setSlip((p) => ({ ...p, qr_size: Number(e.target.value) || 150 }))} style={inputStyle} min={40} max={300} />
-          </div>
-          <div>
-            <div style={labelStyle}>Site adresi metni</div>
-            <input value={slip.site_url} onChange={(e) => setSlip((p) => ({ ...p, site_url: e.target.value }))} style={inputStyle} placeholder="www.blaene.com.tr" />
-          </div>
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
 
-        {/* Çerçeve */}
-        <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Cerceve (Border)</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr 1fr 1fr', gap: '10px', alignItems: 'end', marginBottom: '16px' }}>
-          <label style={checkLabelStyle}>
-            <input type="checkbox" checked={slip.border_enabled} onChange={(e) => setSlip((p) => ({ ...p, border_enabled: e.target.checked }))} />
-            Aktif
-          </label>
+          {/* SOL: Ayarlar */}
           <div>
-            <div style={labelStyle}>Kalinlik (px)</div>
-            <input type="number" value={slip.border_width} onChange={(e) => setSlip((p) => ({ ...p, border_width: Number(e.target.value) || 1 }))} style={inputStyle} min={1} max={20} disabled={!slip.border_enabled} />
+            {/* Tasarım */}
+            <div style={sectionLabelStyle}>Tasarim</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+              <div>
+                <div style={labelStyle}>Logo yüksekliği (px)</div>
+                <input type="number" value={slip.logo_height} onChange={(e) => setSlip((p) => ({ ...p, logo_height: Number(e.target.value) || 80 }))} style={inputStyle} min={20} max={200} />
+              </div>
+              <div>
+                <div style={labelStyle}>QR boyutu (px)</div>
+                <input type="number" value={slip.qr_size} onChange={(e) => setSlip((p) => ({ ...p, qr_size: Number(e.target.value) || 150 }))} style={inputStyle} min={40} max={300} />
+              </div>
+              <div>
+                <div style={labelStyle}>Site adresi metni</div>
+                <input value={slip.site_url} onChange={(e) => setSlip((p) => ({ ...p, site_url: e.target.value }))} style={inputStyle} placeholder="www.blaene.com.tr" />
+              </div>
+            </div>
+
+            {/* Çerçeve */}
+            <div style={sectionLabelStyle}>Cerceve</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr', gap: '10px', alignItems: 'end', marginBottom: '8px' }}>
+              <label style={checkLabelStyle}>
+                <input type="checkbox" checked={slip.border_enabled} onChange={(e) => setSlip((p) => ({ ...p, border_enabled: e.target.checked }))} />
+                Aktif
+              </label>
+              <div>
+                <div style={labelStyle}>Kalinlik (px)</div>
+                <input type="number" value={slip.border_width} onChange={(e) => setSlip((p) => ({ ...p, border_width: Number(e.target.value) || 1 }))} style={inputStyle} min={1} max={20} disabled={!slip.border_enabled} />
+              </div>
+              <div>
+                <div style={labelStyle}>Stil</div>
+                <select value={slip.border_style} onChange={(e) => setSlip((p) => ({ ...p, border_style: e.target.value }))} style={inputStyle} disabled={!slip.border_enabled}>
+                  <option value="solid">Solid (düz)</option>
+                  <option value="dashed">Dashed (kesik)</option>
+                  <option value="dotted">Dotted (noktalı)</option>
+                  <option value="double">Double (çift)</option>
+                </select>
+              </div>
+              <div>
+                <div style={labelStyle}>Renk</div>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <input type="color" value={slip.border_color} onChange={(e) => setSlip((p) => ({ ...p, border_color: e.target.value }))} style={{ ...inputStyle, padding: '2px', width: '40px', height: '34px', cursor: 'pointer', flexShrink: 0 }} disabled={!slip.border_enabled} />
+                  <input value={slip.border_color} onChange={(e) => setSlip((p) => ({ ...p, border_color: e.target.value }))} style={{ ...inputStyle, minWidth: 0, flex: 1 }} placeholder="#111111" disabled={!slip.border_enabled} />
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+              <div>
+                <div style={labelStyle}>Köşe yuvarlatma (px)</div>
+                <input type="number" value={slip.border_radius} onChange={(e) => setSlip((p) => ({ ...p, border_radius: Number(e.target.value) || 0 }))} style={inputStyle} min={0} max={40} disabled={!slip.border_enabled} />
+              </div>
+              <div>
+                <div style={labelStyle}>İç boşluk (px)</div>
+                <input type="number" value={slip.border_padding} onChange={(e) => setSlip((p) => ({ ...p, border_padding: Number(e.target.value) || 0 }))} style={inputStyle} min={0} max={60} disabled={!slip.border_enabled} />
+              </div>
+            </div>
+
+            {/* Alanlar */}
+            <div style={sectionLabelStyle}>Yazdırılacak alanlar</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+              {([
+                ['show_logo', 'Logo'],
+                ['show_site_url', 'Site adresi'],
+                ['show_qr', 'QR kodu'],
+                ['show_order_no', 'Sipariş no'],
+                ['show_customer_name', 'Müşteri adı'],
+                ['show_email', 'E-posta'],
+                ['show_phone', 'Telefon'],
+                ['show_address', 'Adres'],
+                ['show_city', 'Şehir'],
+                ['show_shipping_provider', 'Kargo firması'],
+                ['show_tracking_code', 'Takip kodu'],
+                ['show_total', 'Toplam tutar'],
+                ['show_date', 'Tarih'],
+                ['show_items_table', 'Ürün tablosu'],
+              ] as [keyof SlipSettings, string][]).map(([key, label]) => (
+                <label key={key} style={checkLabelStyle}>
+                  <input
+                    type="checkbox"
+                    checked={slip[key] as boolean}
+                    onChange={(e) => setSlip((p) => ({ ...p, [key]: e.target.checked }))}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+
+            <button
+              onClick={() => void (async () => {
+                setSaving(true)
+                setError('')
+                setMessage('')
+                try {
+                  await saveSiteSetting(token, 'slip_settings', slip, 'Kargo fisi tasarim ve alan ayarlari')
+                  setMessage('Kargo fisi ayarlari kaydedildi')
+                } catch (err: unknown) {
+                  setError(err instanceof Error ? err.message : 'Kaydedilemedi')
+                } finally {
+                  setSaving(false)
+                }
+              })()}
+              disabled={saving}
+              style={primaryButton}
+            >
+              {saving ? 'Kaydediliyor...' : 'Kargo fisi ayarlarini kaydet'}
+            </button>
           </div>
-          <div>
-            <div style={labelStyle}>Renk</div>
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-              <input type="color" value={slip.border_color} onChange={(e) => setSlip((p) => ({ ...p, border_color: e.target.value }))} style={{ ...inputStyle, padding: '2px', width: '42px', height: '34px', cursor: 'pointer' }} disabled={!slip.border_enabled} />
-              <input value={slip.border_color} onChange={(e) => setSlip((p) => ({ ...p, border_color: e.target.value }))} style={{ ...inputStyle, flex: 1 }} placeholder="#111111" disabled={!slip.border_enabled} />
+
+          {/* SAĞ: Canlı önizleme */}
+          <div style={{ position: 'sticky', top: '16px' }}>
+            <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Önizleme</div>
+            <div style={{
+              background: '#fff',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+            }}>
+              {/* Fiş önizleme — saf CSS, logo/QR placeholder */}
+              <div style={{
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '11px',
+                color: '#111',
+                padding: slip.border_enabled ? `${slip.border_padding}px` : '16px',
+                border: slip.border_enabled
+                  ? `${slip.border_width}px ${slip.border_style} ${slip.border_color}`
+                  : 'none',
+                borderRadius: slip.border_enabled ? `${slip.border_radius}px` : '0',
+                margin: slip.border_enabled ? '8px' : '0',
+              }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', borderBottom: '2px solid #111', paddingBottom: '8px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    {slip.show_logo && (
+                      <div style={{ background: '#e2e8f0', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${Math.round(slip.logo_height * 2.2)}px`, height: `${slip.logo_height * 0.5}px`, fontSize: '9px', color: '#64748b', fontWeight: 700, letterSpacing: '0.05em' }}>
+                        BLAENE LOGO
+                      </div>
+                    )}
+                    {slip.show_site_url && (
+                      <span style={{ fontSize: '9px', color: '#666', textAlign: 'center' }}>{slip.site_url || 'www.blaene.com.tr'}</span>
+                    )}
+                  </div>
+                  {slip.show_qr && (
+                    <div style={{ background: '#e2e8f0', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${slip.qr_size * 0.4}px`, height: `${slip.qr_size * 0.4}px`, fontSize: '8px', color: '#64748b', flexShrink: 0 }}>
+                      QR
+                    </div>
+                  )}
+                </div>
+                {/* Meta satırları */}
+                <div style={{ marginBottom: '8px', lineHeight: 1.8 }}>
+                  {slip.show_order_no && <div><strong>Sipariş:</strong> #BLN-2401</div>}
+                  {slip.show_customer_name && <div><strong>Müşteri:</strong> Ahmet Yılmaz</div>}
+                  {slip.show_email && <div><strong>E-posta:</strong> ahmet@ornek.com</div>}
+                  {slip.show_phone && <div><strong>Telefon:</strong> 0555 000 00 00</div>}
+                  {slip.show_address && <div><strong>Adres:</strong> Örnek Mah. No:1</div>}
+                  {slip.show_city && <div><strong>Şehir:</strong> İstanbul</div>}
+                  {slip.show_shipping_provider && <div><strong>Kargo:</strong> Yurtiçi</div>}
+                  {slip.show_tracking_code && <div><strong>Takip:</strong> YK123456</div>}
+                  {slip.show_total && <div><strong>Toplam:</strong> 1.250,00 TL</div>}
+                  {slip.show_date && <div><strong>Tarih:</strong> {new Date().toLocaleDateString('tr-TR')}</div>}
+                </div>
+                {/* Ürün tablosu */}
+                {slip.show_items_table && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                    <thead>
+                      <tr style={{ background: '#f3f4f6' }}>
+                        <th style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'left' }}>Kod</th>
+                        <th style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'left' }}>Ürün</th>
+                        <th style={{ border: '1px solid #ddd', padding: '4px 6px' }}>Adet</th>
+                        <th style={{ border: '1px solid #ddd', padding: '4px 6px' }}>Tutar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style={{ border: '1px solid #ddd', padding: '4px 6px' }}>BLN-001</td>
+                        <td style={{ border: '1px solid #ddd', padding: '4px 6px' }}>Örnek Ürün</td>
+                        <td style={{ border: '1px solid #ddd', padding: '4px 6px', textAlign: 'center' }}>2</td>
+                        <td style={{ border: '1px solid #ddd', padding: '4px 6px' }}>1.250 TL</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           </div>
-          <div>
-            <div style={labelStyle}>Stil</div>
-            <select value={slip.border_style} onChange={(e) => setSlip((p) => ({ ...p, border_style: e.target.value }))} style={inputStyle} disabled={!slip.border_enabled}>
-              <option value="solid">Solid (düz)</option>
-              <option value="dashed">Dashed (kesik)</option>
-              <option value="dotted">Dotted (noktalı)</option>
-              <option value="double">Double (çift)</option>
-            </select>
-          </div>
-          <div>
-            <div style={labelStyle}>Yuvarlatma (px)</div>
-            <input type="number" value={slip.border_radius} onChange={(e) => setSlip((p) => ({ ...p, border_radius: Number(e.target.value) || 0 }))} style={inputStyle} min={0} max={40} disabled={!slip.border_enabled} />
-          </div>
-          <div>
-            <div style={labelStyle}>İç boşluk (px)</div>
-            <input type="number" value={slip.border_padding} onChange={(e) => setSlip((p) => ({ ...p, border_padding: Number(e.target.value) || 0 }))} style={inputStyle} min={0} max={60} disabled={!slip.border_enabled} />
-          </div>
-        </div>
 
-        {/* Alanlar */}
-        <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Yazdırılacak alanlar</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
-          {([
-            ['show_logo', 'Logo'],
-            ['show_site_url', 'Site adresi'],
-            ['show_qr', 'QR kodu'],
-            ['show_order_no', 'Sipariş no'],
-            ['show_customer_name', 'Müşteri adı'],
-            ['show_email', 'E-posta'],
-            ['show_phone', 'Telefon'],
-            ['show_address', 'Adres'],
-            ['show_city', 'Şehir'],
-            ['show_shipping_provider', 'Kargo firması'],
-            ['show_tracking_code', 'Takip kodu'],
-            ['show_total', 'Toplam tutar'],
-            ['show_date', 'Tarih'],
-            ['show_items_table', 'Ürün tablosu'],
-          ] as [keyof SlipSettings, string][]).map(([key, label]) => (
-            <label key={key} style={checkLabelStyle}>
-              <input
-                type="checkbox"
-                checked={slip[key] as boolean}
-                onChange={(e) => setSlip((p) => ({ ...p, [key]: e.target.checked }))}
-              />
-              {label}
-            </label>
-          ))}
         </div>
-
-        <button
-          onClick={() => void (async () => {
-            setSaving(true)
-            setError('')
-            setMessage('')
-            try {
-              await saveSiteSetting(token, 'slip_settings', slip, 'Kargo fisi tasarim ve alan ayarlari')
-              setMessage('Kargo fisi ayarlari kaydedildi')
-            } catch (err: unknown) {
-              setError(err instanceof Error ? err.message : 'Kaydedilemedi')
-            } finally {
-              setSaving(false)
-            }
-          })()}
-          disabled={saving}
-          style={primaryButton}
-        >
-          {saving ? 'Kaydediliyor...' : 'Kargo fisi ayarlarini kaydet'}
-        </button>
       </div>
 
       {/* ─── MANUEL FİŞ ─── */}
@@ -1023,6 +1109,16 @@ const labelStyle: CSSProperties = {
   color: '#94a3b8',
   marginBottom: '4px',
   fontWeight: 600,
+}
+
+const sectionLabelStyle: CSSProperties = {
+  fontSize: '11px',
+  color: '#64748b',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  marginBottom: '8px',
+  marginTop: '4px',
 }
 
 const errorStyle: CSSProperties = {

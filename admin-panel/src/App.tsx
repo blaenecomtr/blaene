@@ -6,8 +6,12 @@ import DashboardLayout from './components/DashboardLayout'
 
 export default function App() {
   const { isAuthenticated, checkAuth } = useAuthStore()
-  const { initializeData } = useAdminStore()
+  const { initializeData, theme } = useAdminStore()
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    document.body.setAttribute('data-admin-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const init = async () => {

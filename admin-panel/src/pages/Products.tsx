@@ -111,6 +111,23 @@ function parsePrice(input: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function parsePriceValue(input: unknown): number | null {
+  if (input === null || input === undefined || input === '') return null
+  const parsed = Number(String(input).trim().replace(',', '.'))
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function parseBooleanValue(input: unknown, fallback = false): boolean {
+  if (typeof input === 'boolean') return input
+  if (typeof input === 'number') return input !== 0
+  if (typeof input === 'string') {
+    const normalized = input.trim().toLowerCase()
+    if (normalized === 'true' || normalized === '1') return true
+    if (normalized === 'false' || normalized === '0') return false
+  }
+  return fallback
+}
+
 function parseStock(input: string): number {
   const parsed = Number(String(input || '').trim())
   if (!Number.isFinite(parsed)) return 0
@@ -231,6 +248,7 @@ export default function Products() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
+  const [listPriceDrafts, setListPriceDrafts] = useState<Record<string, string>>({})
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<Category | ''>('')
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
@@ -299,17 +317,28 @@ export default function Products() {
       }
 
       const normalized = (Array.isArray(data) ? data : []).map((item) => {
+        const normalizedPrice = parsePriceValue(item.price)
         const codeKey = String(item.code || '').trim().toUpperCase()
         const discountEntry = discountMap[codeKey]
         return {
-        ...item,
-        images: normalizeImages(item.images),
-        variants: normalizeVariants(item.variants),
-        discount_percent: discountEntry?.percent ?? null,
-        discount_promo_id: discountEntry?.id || null,
-      }
+          ...item,
+          price: normalizedPrice,
+          price_visible: normalizedPrice !== null && parseBooleanValue(item.price_visible, false),
+          active: parseBooleanValue(item.active, true),
+          images: normalizeImages(item.images),
+          variants: normalizeVariants(item.variants),
+          discount_percent: discountEntry?.percent ?? null,
+          discount_promo_id: discountEntry?.id || null,
+        }
       })
       setProducts(normalized)
+      setListPriceDrafts(() => {
+        const next: Record<string, string> = {}
+        normalized.forEach((item) => {
+          next[item.id] = item.price === null || item.price === undefined ? '' : String(item.price)
+        })
+        return next
+      })
 
       setImageDrafts((prev) => {
         const next: Record<string, string> = {}
@@ -576,6 +605,36 @@ export default function Products() {
 
   const updateLocalProduct = (id: string, patch: Partial<Product>) => {
     setProducts((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+  }
+
+  const getListPriceDraft = (product: Product) => {
+    if (Object.prototype.hasOwnProperty.call(listPriceDrafts, product.id)) {
+      return String(listPriceDrafts[product.id] || '')
+    }
+    return product.price === null || product.price === undefined ? '' : String(product.price)
+  }
+
+  const isListPriceDirty = (product: Product) => {
+    const draft = getListPriceDraft(product).trim()
+    if (!draft) return product.price !== null
+    const parsed = parsePrice(draft)
+    if (parsed === null) return false
+    return parsed !== product.price
+  }
+
+  const saveListPrice = async (product: Product) => {
+    const rawDraft = getListPriceDraft(product).trim()
+    const parsed = parsePrice(rawDraft)
+    if (rawDraft && parsed === null) {
+      setError(`${product.code} icin gecersiz fiyat`)
+      return
+    }
+    const patched: Product = {
+      ...product,
+      price: parsed,
+      price_visible: parsed !== null,
+    }
+    await saveProduct(patched)
   }
 
   const persistProductImages = async (product: Product, images: string[]) => {
@@ -1399,6 +1458,7 @@ export default function Products() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
+                  <th style={thStyle}>Kaydet</th>
                   <th style={thStyle}>Foto</th>
                   <th style={thStyle}>Kod</th>
                   <th style={thStyle}>Ad</th>
@@ -1410,16 +1470,49 @@ export default function Products() {
               <tbody>
                 {products.map((product) => {
                   const photos = normalizeImages(product.images)
-                  const discountPercent = normalizeDiscountPercent(product.discount_percent)
-                  const discountedPrice = calculateDiscountedPrice(product.price, discountPercent)
+                  const listDraft = getListPriceDraft(product)
+                  const listDraftNumber = parsePrice(listDraft)
+                  const draftInvalid = listDraft.trim().length > 0 && listDraftNumber === null
+                  const draftDirty = isListPriceDirty(product)
                   return (
                     <tr key={product.id}>
+                      <td style={tdStyle}>
+                        <button
+                          type="button"
+                          onClick={() => void saveListPrice(product)}
+                          disabled={savingId === product.id || !draftDirty || draftInvalid}
+                          style={{
+                            ...secondaryButton,
+                            background: draftDirty ? '#0f766e' : '#334155',
+                            color: draftDirty ? '#d1fae5' : '#e2e8f0',
+                            width: '100%',
+                          }}
+                        >
+                          {savingId === product.id ? 'Kaydediliyor...' : 'Kaydet'}
+                        </button>
+                      </td>
                       <td style={tdStyle}>
                         {photos.length > 0 && <img src={photos[0]} alt={product.name} style={thumbStyle} />}
                       </td>
                       <td style={tdStyle}>{product.code}</td>
                       <td style={tdStyle}>{product.name}</td>
-                      <td style={tdStyle}>{formatPrice(product.price)}</td>
+                      <td style={tdStyle}>
+                        <input
+                          value={listDraft}
+                          onChange={(evt) => setListPriceDrafts((prev) => ({ ...prev, [product.id]: evt.target.value }))}
+                          placeholder="Fiyat"
+                          style={{
+                            ...inputStyle,
+                            width: '120px',
+                            borderColor: draftInvalid ? '#ef4444' : '#334155',
+                          }}
+                        />
+                        <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                          {listDraftNumber === null && listDraft.trim().length > 0
+                            ? 'Gecersiz fiyat'
+                            : formatPrice(listDraftNumber)}
+                        </div>
+                      </td>
                       <td style={tdStyle}>{product.active ? 'Aktif' : 'Pasif'}</td>
                       <td style={tdStyle}>
                         <button type="button" onClick={() => openProductDetail(product)} style={primaryButton}>
@@ -1919,4 +2012,3 @@ const mutedMiniText: CSSProperties = {
   color: '#94a3b8',
   fontSize: '11px',
 }
-

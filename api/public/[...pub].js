@@ -20,6 +20,7 @@ const handlers = {
   'auth-webhook': require('../../lib/handlers/public-auth-webhook'),
   'site-content': require('../../lib/handlers/public-site-content'),
   traffic: require('../../lib/handlers/public-traffic'),
+  'marketing-cron': require('../../lib/handlers/public-marketing-cron'),
 };
 
 module.exports = async function pubRouteHandler(req, res) {

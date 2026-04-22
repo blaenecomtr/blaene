@@ -46,6 +46,7 @@ export default function Integrations() {
   const token = localStorage.getItem('admin_token')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deletingConnectionId, setDeletingConnectionId] = useState<string | null>(null)
   const [connections, setConnections] = useState<MarketplaceConnection[]>([])
   const [provider, setProvider] = useState('trendyol')
   const [displayName, setDisplayName] = useState('Trendyol')
@@ -162,6 +163,35 @@ export default function Integrations() {
       setError(msg)
     } finally {
       setSyncingAction('')
+    }
+  }
+
+  const deleteConnection = async (row: MarketplaceConnection) => {
+    if (!token) return
+    const id = String(row.id || '').trim()
+    if (!id) return
+
+    const label = row.display_name || row.provider || id
+    const confirmed = window.confirm(`"${label}" baglantisini silmek istiyor musunuz?\n\nBu islem geri alinmaz.`)
+    if (!confirmed) return
+
+    setDeletingConnectionId(id)
+    setError('')
+    setMessage('')
+    try {
+      await apiRequest('/api/admin/marketplace-connections', {
+        method: 'DELETE',
+        token,
+        body: { id },
+      })
+      setMessage(`${label} baglantisi silindi`)
+      setSyncResults((prev) => prev.filter((item) => item.connection_id !== id))
+      await loadConnections()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Baglanti silinemedi'
+      setError(msg)
+    } finally {
+      setDeletingConnectionId(null)
     }
   }
 
@@ -285,6 +315,7 @@ export default function Integrations() {
                   <th style={thStyle}>Durum</th>
                   <th style={thStyle}>Son senkron</th>
                   <th style={thStyle}>Hata</th>
+                  <th style={thStyle}>Islem</th>
                 </tr>
               </thead>
               <tbody>
@@ -300,6 +331,16 @@ export default function Integrations() {
                     <td style={tdStyle}>{row.is_active ? 'Aktif' : 'Pasif'}</td>
                     <td style={tdStyle}>{formatDate(row.last_sync_at)}</td>
                     <td style={tdStyle}>{row.last_error || '-'}</td>
+                    <td style={tdStyle}>
+                      <button
+                        type="button"
+                        onClick={() => void deleteConnection(row)}
+                        disabled={deletingConnectionId === row.id}
+                        style={dangerButton}
+                      >
+                        {deletingConnectionId === row.id ? 'Siliniyor...' : 'Sil'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -359,6 +400,16 @@ const secondaryButton: CSSProperties = {
   border: 'none',
   borderRadius: '6px',
   padding: '8px 12px',
+  fontSize: '12px',
+  cursor: 'pointer',
+}
+
+const dangerButton: CSSProperties = {
+  background: '#7f1d1d',
+  color: '#fecaca',
+  border: 'none',
+  borderRadius: '6px',
+  padding: '6px 10px',
   fontSize: '12px',
   cursor: 'pointer',
 }

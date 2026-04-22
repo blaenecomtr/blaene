@@ -1,3 +1,6 @@
+import { useMemo } from 'react'
+import { useAuthStore } from '../store/auth'
+
 interface SidebarProps {
   currentPage: string
   onNavigate: (page: string) => void
@@ -7,89 +10,71 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'products', label: 'Urunler' },
-  { id: 'orders', label: 'Siparisler' },
-  { id: 'users', label: 'Musteriler' },
-  { id: 'seo-content', label: 'SEO ve Icerik' },
-  { id: 'site-settings', label: 'Site Ayarlari' },
-  { id: 'marketing', label: 'Pazarlama' },
-  { id: 'integrations', label: 'Entegrasyonlar' },
+  { id: 'dashboard', label: 'Dashboard', hint: 'Genel ozet' },
+  { id: 'products', label: 'Urunler', hint: 'Stok ve fiyat' },
+  { id: 'orders', label: 'Siparisler', hint: 'Odeme ve kargo' },
+  { id: 'users', label: 'Kullanicilar', hint: 'Musteri ve ekip' },
+  { id: 'seo-content', label: 'SEO ve Icerik', hint: 'Sayfa ve blog' },
+  { id: 'site-settings', label: 'Site Ayarlari', hint: 'Odeme ve iletisim' },
+  { id: 'marketing', label: 'Pazarlama', hint: 'Kupon ve banner' },
+  { id: 'integrations', label: 'Entegrasyonlar', hint: 'API baglantilari' },
 ]
 
 export default function Sidebar({ currentPage, onNavigate, isMobile = false, isOpen = false, onClose }: SidebarProps) {
+  const { userEmail, userName } = useAuthStore()
+  const onlineLabel = useMemo(() => {
+    const normalizedName = String(userName || '').trim()
+    const normalizedEmail = String(userEmail || '').trim()
+    if (normalizedName && normalizedEmail) return `${normalizedName} (${normalizedEmail})`
+    return normalizedName || normalizedEmail || 'Bilinmeyen kullanici'
+  }, [userEmail, userName])
+
   return (
-    <aside
-      style={{
-        width: isMobile ? '280px' : '260px',
-        background: '#1e293b',
-        borderRight: '1px solid #334155',
-        padding: '20px',
-        overflowY: 'auto',
-        position: 'fixed',
-        height: '100vh',
-        left: 0,
-        top: 0,
-        zIndex: 100,
-        transform: isMobile ? (isOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
-        transition: 'transform 0.25s ease',
-        boxShadow: isMobile ? '0 0 30px rgba(2, 6, 23, 0.55)' : 'none',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '30px' }}>
-        <div
-          style={{
-            fontSize: '18px',
-            fontWeight: 'bold',
-            color: '#fff',
-          }}
-        >
-          Blaene Admin
+    <aside className={`admin-sidebar${isMobile ? ' is-mobile' : ''}${isOpen ? ' is-open' : ''}`}>
+      <div className="admin-sidebar-head">
+        <div className="admin-sidebar-brand-wrap">
+          <img
+            src="/logo/blaene-logo-white.png"
+            alt="Blaene"
+            className="admin-sidebar-logo"
+          />
+          <p className="admin-sidebar-subtitle">Yonetim Paneli</p>
         </div>
 
         {isMobile && (
           <button
             onClick={onClose}
             aria-label="Menuyu Kapat"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '6px',
-              border: '1px solid #475569',
-              color: '#cbd5e1',
-              background: '#0f172a',
-              fontSize: '20px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="admin-icon-btn"
           >
-            X
+            Kapat
           </button>
         )}
       </div>
 
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+      <nav className="admin-sidebar-nav">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            style={{
-              padding: '10px 12px',
-              color: currentPage === item.id ? '#fff' : '#cbd5e1',
-              background: currentPage === item.id ? '#3b82f6' : 'transparent',
-              border: 'none',
-              borderRadius: '6px',
-              textAlign: 'left',
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
+            className={`admin-nav-item${currentPage === item.id ? ' is-active' : ''}`}
+            aria-current={currentPage === item.id ? 'page' : undefined}
           >
-            {item.label}
+            <span className="admin-nav-item-label">{item.label}</span>
+            <span className="admin-nav-item-hint">{item.hint}</span>
           </button>
         ))}
       </nav>
+
+      <div className="admin-sidebar-online" title={onlineLabel}>
+        <span className="admin-sidebar-online-label">Online kullanici</span>
+        <strong className="admin-sidebar-online-value">{onlineLabel}</strong>
+      </div>
+
+      <div className="admin-sidebar-foot">
+        <span className="admin-sidebar-foot-dot" />
+        Panel canli
+      </div>
     </aside>
   )
 }

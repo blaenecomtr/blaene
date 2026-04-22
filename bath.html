@@ -293,6 +293,23 @@
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.2s;
         }
+        .card-pass-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 52px;
+            height: auto;
+            z-index: 3;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+        }
+        @media (max-width: 600px) {
+            .card-pass-badge {
+                width: 44px;
+                top: 6px;
+                right: 6px;
+            }
+        }
         .product-card:hover .card-img-overlay { opacity: 1; }
         .card-overlay-btn {
             padding: 0.6rem 1.6rem;
@@ -645,10 +662,15 @@ function renderProducts(list) {
         const a = document.createElement('a');
         a.className = 'product-card';
         a.href = `product.html?code=${encodeURIComponent(product.code)}`;
+        a.dataset.track = 'product_open';
+        a.dataset.trackProductCode = String(product.code || '').trim().toUpperCase();
+        a.dataset.trackProductName = String(name || '').trim();
+        a.dataset.trackLabel = `Urun incele: ${String(product.code || '').trim().toUpperCase()}`;
         a.setAttribute('role', 'listitem');
         a.setAttribute('aria-label', `${product.code} — ${name}, ${product.thickness}`);
         a.innerHTML = `
             <div class="card-img-wrap">
+                <img class="card-pass-badge" src="logo/PAS.png" alt="PAS" loading="lazy" decoding="async">
                 <img class="card-img" src="${product.images[0]}" alt="${product.code} — ${name}" loading="lazy" decoding="async">
                 <div class="card-img-overlay" aria-hidden="true"><span class="card-overlay-btn">${tr('İncele', 'Inspect')}</span></div>
             </div>

@@ -16,7 +16,7 @@ const PAGE_TITLE: Record<string, string> = {
   dashboard: 'Dashboard',
   products: 'Urunler',
   orders: 'Siparisler',
-  users: 'Musteriler',
+  users: 'Kullanicilar',
   'seo-content': 'SEO ve Icerik',
   'site-settings': 'Site Ayarlari',
   marketing: 'Pazarlama / Kampanya',
@@ -100,18 +100,12 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a' }}>
+    <div className="admin-shell">
       {isMobile && isMobileSidebarOpen && (
         <button
           onClick={() => setIsMobileSidebarOpen(false)}
           aria-label="Menuyu Kapat"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(2, 6, 23, 0.6)',
-            border: 'none',
-            zIndex: 90,
-          }}
+          className="admin-sidebar-overlay"
         />
       )}
 
@@ -123,7 +117,7 @@ export default function DashboardLayout() {
         onClose={() => setIsMobileSidebarOpen(false)}
       />
 
-      <div style={{ marginLeft: isMobile ? '0' : '260px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className={`admin-main-area${isMobile ? ' is-mobile' : ''}`}>
         <Header
           pageTitle={pageTitle}
           onLogoutClick={() => setShowLogoutModal(true)}
@@ -131,7 +125,9 @@ export default function DashboardLayout() {
           onMenuClick={() => setIsMobileSidebarOpen(true)}
           isMobile={isMobile}
         />
-        <main style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px' }}>{renderPage()}</main>
+        <main className={`admin-content${isMobile ? ' is-mobile' : ''}`}>
+          <div className="admin-content-inner">{renderPage()}</div>
+        </main>
       </div>
       <LogoutModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
     </div>
