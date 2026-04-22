@@ -187,6 +187,33 @@ async function sendOrderReviewRequestEmailIfPossible(order) {
   }
 }
 
+async function sendInvoiceReadyEmailIfPossible(order) {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  if (!hasResend) return false;
+
+  const to = normalizeEmail(order?.email || order?.customer_email);
+  if (!to) return false;
+
+  const orderNo = normalizeText(order?.order_no, 120) || '-';
+  const customerName = normalizeText(order?.customer_name, 180) || '';
+
+  try {
+    await sendEmail({
+      to,
+      subject: `Faturaniz hazir #${orderNo}`,
+      html: invoiceReadyTemplate({
+        customerName,
+        orderNo,
+        invoiceUrl: 'https://www.blaene.com.tr/account.html',
+      }),
+    });
+    return true;
+  } catch (error) {
+    console.error('[order] invoice ready email failed:', error?.message || error);
+    return false;
+  }
+}
+
 async function sendSupportTicketUpdatedEmailIfPossible(ticket, messageText) {
   const hasResend = Boolean(process.env.RESEND_API_KEY);
   if (!hasResend) return false;
@@ -1319,6 +1346,129 @@ async function handleOrderStatus(req, res, ctx) {
   }
 
   await restUpdate(config, 'orders', { id: idsQuery }, patch);
+
+  const automation = await loadEmailAutomationSettings(config).catch(() => null);
+  const autoOrderConfirmation = automation ? automation.auto_order_confirmation !== false : true;
+  const autoDelivered = automation ? automation.auto_delivered !== false : true;
+  const autoInvoiceReady = automation ? automation.auto_invoice_ready !== false : true;
+
+  const shouldCheckOrderConfirmation = paymentStatus === 'paid' && autoOrderConfirmation;
+  const shouldCheckInvoiceReady = paymentStatus === 'paid' && autoInvoiceReady;
+  const shouldCheckDelivered = workflowStatus === 'delivered' && autoDelivered;
+
+  if (shouldCheckOrderConfirmation || shouldCheckInvoiceReady || shouldCheckDelivered) {
+    const updatedRows = await safeSelect(config, 'orders', {
+      select: 'id,order_no,customer_name,email,payment_status,status,total',
+      id: idsQuery,
+      limit: 5000,
+    }, []);
+
+    const updatedOrderIds = updatedRows
+      .map((row) => normalizeText(row?.id, 120))
+      .filter(Boolean);
+
+    if (updatedOrderIds.length) {
+      const sentLogs = await safeSelect(config, 'audit_logs', {
+        select: 'entity_id,action',
+        entity_id: buildInFilter(updatedOrderIds),
+        action: 'in.("email.order_confirmation.manual.sent","email.order_confirmation.auto.sent","email.delivered.manual.sent","email.delivered.auto.sent","email.invoice_ready.sent")',
+        created_at: `gte.${toIsoDaysAgo(365)}`,
+        limit: 5000,
+      }, []);
+
+      const sentByOrderId = new Map();
+      (sentLogs || []).forEach((row) => {
+        const orderId = normalizeText(row?.entity_id, 120);
+        const action = normalizeText(row?.action, 120);
+        if (!orderId || !action) return;
+        if (!sentByOrderId.has(orderId)) sentByOrderId.set(orderId, new Set());
+        sentByOrderId.get(orderId).add(action);
+      });
+
+      for (const order of updatedRows) {
+        const orderId = normalizeText(order?.id, 120);
+        const orderEmail = normalizeEmail(order?.email);
+        if (!orderId || !orderEmail) continue;
+        const sentActions = sentByOrderId.get(orderId) || new Set();
+
+        if (
+          shouldCheckOrderConfirmation &&
+          !sentActions.has('email.order_confirmation.manual.sent') &&
+          !sentActions.has('email.order_confirmation.auto.sent')
+        ) {
+          const sent = await sendOrderConfirmationEmailIfPossible(order);
+          if (sent) {
+            await restInsert(config, 'audit_logs', {
+              actor_user_id: auth.user?.id || null,
+              actor_email: normalizeText(auth.user?.email, 180) || null,
+              actor_role: 'system',
+              action: 'email.order_confirmation.auto.sent',
+              entity_type: 'order',
+              entity_id: orderId,
+              metadata: {
+                order_no: normalizeText(order?.order_no, 120) || null,
+                email: orderEmail,
+              },
+              request_path: req.url,
+              request_method: req.method,
+            }, { prefer: 'return=minimal' }).catch(() => null);
+            sentActions.add('email.order_confirmation.auto.sent');
+          }
+        }
+
+        if (
+          shouldCheckInvoiceReady &&
+          !sentActions.has('email.invoice_ready.sent')
+        ) {
+          const sent = await sendInvoiceReadyEmailIfPossible(order);
+          if (sent) {
+            await restInsert(config, 'audit_logs', {
+              actor_user_id: auth.user?.id || null,
+              actor_email: normalizeText(auth.user?.email, 180) || null,
+              actor_role: 'system',
+              action: 'email.invoice_ready.sent',
+              entity_type: 'order',
+              entity_id: orderId,
+              metadata: {
+                order_no: normalizeText(order?.order_no, 120) || null,
+                email: orderEmail,
+                trigger: 'order.status.bulk_update',
+              },
+              request_path: req.url,
+              request_method: req.method,
+            }, { prefer: 'return=minimal' }).catch(() => null);
+            sentActions.add('email.invoice_ready.sent');
+          }
+        }
+
+        if (
+          shouldCheckDelivered &&
+          !sentActions.has('email.delivered.manual.sent') &&
+          !sentActions.has('email.delivered.auto.sent')
+        ) {
+          const sent = await sendOrderDeliveredEmailIfPossible(order);
+          if (sent) {
+            await restInsert(config, 'audit_logs', {
+              actor_user_id: auth.user?.id || null,
+              actor_email: normalizeText(auth.user?.email, 180) || null,
+              actor_role: 'system',
+              action: 'email.delivered.auto.sent',
+              entity_type: 'order',
+              entity_id: orderId,
+              metadata: {
+                order_no: normalizeText(order?.order_no, 120) || null,
+                email: orderEmail,
+              },
+              request_path: req.url,
+              request_method: req.method,
+            }, { prefer: 'return=minimal' }).catch(() => null);
+            sentActions.add('email.delivered.auto.sent');
+          }
+        }
+      }
+    }
+  }
+
   await writeAuditLog(config, req, auth, 'order.status.bulk_update', {
     payment_status: paymentStatus || null,
     workflow_status: workflowStatus || null,

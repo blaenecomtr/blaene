@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../lib/api'
+import { getSiteSetting, saveSiteSetting } from '../lib/siteSettings'
 
 interface AnalyticsResponse {
   metrics?: {
@@ -45,6 +46,7 @@ interface MarketingEmailStatusResponse {
     product_intro_batch_limit?: number
     review_request_delay_days?: number
     review_request_batch_limit?: number
+    automation?: EmailAutomationSettings | null
   }
   summary?: {
     last_7_days?: {
@@ -55,6 +57,10 @@ interface MarketingEmailStatusResponse {
       delivered_manual?: number
       order_confirmation_manual?: number
       coupon_broadcast?: number
+      stock_back_in?: number
+      price_drop?: number
+      invoice_ready?: number
+      support_update?: number
     }
     all_time?: {
       abandoned_cart?: number
@@ -64,6 +70,10 @@ interface MarketingEmailStatusResponse {
       delivered_manual?: number
       order_confirmation_manual?: number
       coupon_broadcast?: number
+      stock_back_in?: number
+      price_drop?: number
+      invoice_ready?: number
+      support_update?: number
     }
     latest?: {
       abandoned_cart?: string | null
@@ -73,6 +83,10 @@ interface MarketingEmailStatusResponse {
       delivered_manual?: string | null
       order_confirmation_manual?: string | null
       coupon_broadcast?: string | null
+      stock_back_in?: string | null
+      price_drop?: string | null
+      invoice_ready?: string | null
+      support_update?: string | null
     }
   }
   pending_shipment?: {
@@ -96,6 +110,49 @@ interface MarketingEmailStatusResponse {
   }
 }
 
+interface EmailAutomationSettings {
+  auto_abandoned_cart: boolean
+  auto_product_intro: boolean
+  auto_stock_back_in: boolean
+  auto_price_drop: boolean
+  auto_support_updates: boolean
+  auto_invoice_ready: boolean
+  auto_order_confirmation: boolean
+  auto_delivered: boolean
+  auto_review_request: boolean
+  review_request_delay_days: number
+  review_request_batch_limit: number
+}
+
+const DEFAULT_EMAIL_AUTOMATION_SETTINGS: EmailAutomationSettings = {
+  auto_abandoned_cart: true,
+  auto_product_intro: true,
+  auto_stock_back_in: true,
+  auto_price_drop: true,
+  auto_support_updates: true,
+  auto_invoice_ready: true,
+  auto_order_confirmation: true,
+  auto_delivered: true,
+  auto_review_request: true,
+  review_request_delay_days: 5,
+  review_request_batch_limit: 200,
+}
+
+const EMAIL_AUTOMATION_SETTINGS_KEY = 'email_automation_settings'
+const EMAIL_AUTOMATION_SETTINGS_DESC = 'Mail otomasyon ac/kapa ayarlari'
+
+const automationToggleItems: Array<{ key: keyof Omit<EmailAutomationSettings, 'review_request_delay_days' | 'review_request_batch_limit'>; label: string }> = [
+  { key: 'auto_abandoned_cart', label: 'Sepeti unuttun maili otomatik' },
+  { key: 'auto_product_intro', label: 'Urun inceledin/almazsan tanitim maili otomatik' },
+  { key: 'auto_stock_back_in', label: 'Stoga geri geldi maili otomatik' },
+  { key: 'auto_price_drop', label: 'Fiyat dustu maili otomatik' },
+  { key: 'auto_support_updates', label: 'Destek talebi guncellendi maili otomatik' },
+  { key: 'auto_invoice_ready', label: 'Fatura hazir maili otomatik' },
+  { key: 'auto_order_confirmation', label: 'Siparis alindi maili otomatik' },
+  { key: 'auto_delivered', label: 'Teslim edildi maili otomatik' },
+  { key: 'auto_review_request', label: 'Yorum istegi maili otomatik' },
+]
+
 interface MarketingEmailActionResponse {
   action?: string
   mode?: string
@@ -108,6 +165,21 @@ interface MarketingEmailActionResponse {
       sent?: number
     } | null
     review_request?: {
+      sent?: number
+    } | null
+    stock_back_in?: {
+      sent?: number
+    } | null
+    price_drop?: {
+      sent?: number
+    } | null
+    order_confirmation?: {
+      sent?: number
+    } | null
+    delivered?: {
+      sent?: number
+    } | null
+    invoice_ready?: {
       sent?: number
     } | null
   }
@@ -178,6 +250,32 @@ function normalizePendingShipmentDaysOption(value: unknown): PendingShipmentDays
   return '30'
 }
 
+function normalizeAutomationSettings(input?: Partial<EmailAutomationSettings> | null): EmailAutomationSettings {
+  const source = input && typeof input === 'object' ? input : {}
+  const fallback = DEFAULT_EMAIL_AUTOMATION_SETTINGS
+  const toBool = (value: unknown, defaultValue: boolean) => (typeof value === 'boolean' ? value : defaultValue)
+  const toInt = (value: unknown, defaultValue: number, min: number, max: number) => {
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed)) return defaultValue
+    const rounded = Math.floor(parsed)
+    return Math.min(max, Math.max(min, rounded))
+  }
+
+  return {
+    auto_abandoned_cart: toBool(source.auto_abandoned_cart, fallback.auto_abandoned_cart),
+    auto_product_intro: toBool(source.auto_product_intro, fallback.auto_product_intro),
+    auto_stock_back_in: toBool(source.auto_stock_back_in, fallback.auto_stock_back_in),
+    auto_price_drop: toBool(source.auto_price_drop, fallback.auto_price_drop),
+    auto_support_updates: toBool(source.auto_support_updates, fallback.auto_support_updates),
+    auto_invoice_ready: toBool(source.auto_invoice_ready, fallback.auto_invoice_ready),
+    auto_order_confirmation: toBool(source.auto_order_confirmation, fallback.auto_order_confirmation),
+    auto_delivered: toBool(source.auto_delivered, fallback.auto_delivered),
+    auto_review_request: toBool(source.auto_review_request, fallback.auto_review_request),
+    review_request_delay_days: toInt(source.review_request_delay_days, fallback.review_request_delay_days, 0, 90),
+    review_request_batch_limit: toInt(source.review_request_batch_limit, fallback.review_request_batch_limit, 1, 2000),
+  }
+}
+
 function workflowStatusLabel(value?: string | null): string {
   const normalized = String(value || '').toLowerCase()
   if (normalized === 'pending') return 'Yeni'
@@ -200,6 +298,8 @@ export default function Dashboard() {
   const [marketingError, setMarketingError] = useState('')
   const [manualShippedOrderNo, setManualShippedOrderNo] = useState('')
   const [couponBroadcastCode, setCouponBroadcastCode] = useState('')
+  const [automationSettings, setAutomationSettings] = useState<EmailAutomationSettings>(DEFAULT_EMAIL_AUTOMATION_SETTINGS)
+  const [automationSavingKey, setAutomationSavingKey] = useState<string>('')
   const [pendingShipmentDays, setPendingShipmentDays] = useState<PendingShipmentDaysOption>('30')
   const [selectedPendingOrderNo, setSelectedPendingOrderNo] = useState('')
 
@@ -211,6 +311,9 @@ export default function Dashboard() {
     const safeDays = normalizePendingShipmentDaysOption(daysValue)
     const status = await apiRequest<MarketingEmailStatusResponse>(buildMarketingStatusPath(safeDays), { token })
     setMarketingStatus(status || null)
+    if (status?.env?.automation) {
+      setAutomationSettings(normalizeAutomationSettings(status.env.automation))
+    }
     return status
   }
 
@@ -225,7 +328,13 @@ export default function Dashboard() {
         apiRequest<MarketingEmailStatusResponse>(buildMarketingStatusPath(safeDays), { token }).catch(() => null),
       ])
       setData(response || {})
-      if (mailStatus) setMarketingStatus(mailStatus)
+      if (mailStatus) {
+        setMarketingStatus(mailStatus)
+        setAutomationSettings(normalizeAutomationSettings(mailStatus?.env?.automation))
+      } else {
+        const savedAutomation = await getSiteSetting<Partial<EmailAutomationSettings>>(token, EMAIL_AUTOMATION_SETTINGS_KEY, DEFAULT_EMAIL_AUTOMATION_SETTINGS)
+        setAutomationSettings(normalizeAutomationSettings(savedAutomation))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Dashboard verisi yuklenemedi'
       setError(msg)
@@ -337,6 +446,11 @@ export default function Dashboard() {
         const abandonedSent = asNumber(response?.result?.abandoned_cart?.sent, 0)
         const introSent = asNumber(response?.result?.product_intro?.sent, 0)
         const reviewSent = asNumber(response?.result?.review_request?.sent, 0)
+        const stockBackSent = asNumber(response?.result?.stock_back_in?.sent, 0)
+        const priceDropSent = asNumber(response?.result?.price_drop?.sent, 0)
+        const orderConfirmationSent = asNumber(response?.result?.order_confirmation?.sent, 0)
+        const deliveredSent = asNumber(response?.result?.delivered?.sent, 0)
+        const invoiceReadySent = asNumber(response?.result?.invoice_ready?.sent, 0)
         if (action === 'send_abandoned') {
           setMarketingMessage(`Sepet mail akisi calisti. Gonderilen: ${abandonedSent}`)
         } else if (action === 'send_product_intro') {
@@ -344,7 +458,9 @@ export default function Dashboard() {
         } else if (action === 'send_review_flow') {
           setMarketingMessage(`Yorum istegi cron akisi calisti. Gonderilen: ${reviewSent}`)
         } else {
-          setMarketingMessage(`Tum akislari calistirdiniz. Sepet: ${abandonedSent}, Tanitim: ${introSent}, Yorum: ${reviewSent}`)
+          setMarketingMessage(
+            `Tum akislari calistirdiniz. Sepet: ${abandonedSent}, Tanitim: ${introSent}, Yorum: ${reviewSent}, Stok: ${stockBackSent}, Fiyat: ${priceDropSent}, Siparis: ${orderConfirmationSent}, Teslim: ${deliveredSent}, Fatura: ${invoiceReadySent}`
+          )
         }
       }
       await loadMarketingStatus(pendingShipmentDays)
@@ -360,6 +476,37 @@ export default function Dashboard() {
   const totalOrders = asNumber(metrics.total_orders ?? metrics.new_orders, 0)
   const conversionRate = asNumber(metrics.conversion_rate, 0)
   const averageBasket = asNumber(metrics.average_order_value, 0)
+
+  const saveAutomationSettings = async (next: EmailAutomationSettings, savingKey: string) => {
+    if (!token) return
+    setAutomationSavingKey(savingKey)
+    setMarketingError('')
+    try {
+      const normalized = normalizeAutomationSettings(next)
+      await saveSiteSetting(token, EMAIL_AUTOMATION_SETTINGS_KEY, normalized, EMAIL_AUTOMATION_SETTINGS_DESC)
+      setAutomationSettings(normalized)
+      setMarketingMessage('Mail otomasyon ayarlari kaydedildi.')
+      await loadMarketingStatus(pendingShipmentDays)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Mail otomasyon ayarlari kaydedilemedi'
+      setMarketingError(msg)
+    } finally {
+      setAutomationSavingKey('')
+    }
+  }
+
+  const toggleAutomationSetting = (key: keyof Omit<EmailAutomationSettings, 'review_request_delay_days' | 'review_request_batch_limit'>) => {
+    const next = {
+      ...automationSettings,
+      [key]: !automationSettings[key],
+    }
+    void saveAutomationSettings(next, key)
+  }
+
+  const saveReviewAutomationNumbers = () => {
+    const next = normalizeAutomationSettings(automationSettings)
+    void saveAutomationSettings(next, 'review_numbers')
+  }
 
   const kanbanStages = useMemo(
     () => [
@@ -523,6 +670,95 @@ export default function Dashboard() {
             <span style={mailStatusLabelStyle}>Kupon Yayini (7 gun)</span>
             <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.coupon_broadcast, 0)}</strong>
           </div>
+          <div style={mailStatusCardStyle}>
+            <span style={mailStatusLabelStyle}>Stoga Geri Geldi (7 gun)</span>
+            <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.stock_back_in, 0)}</strong>
+          </div>
+          <div style={mailStatusCardStyle}>
+            <span style={mailStatusLabelStyle}>Fiyat Dustu (7 gun)</span>
+            <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.price_drop, 0)}</strong>
+          </div>
+          <div style={mailStatusCardStyle}>
+            <span style={mailStatusLabelStyle}>Fatura Hazir (7 gun)</span>
+            <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.invoice_ready, 0)}</strong>
+          </div>
+          <div style={mailStatusCardStyle}>
+            <span style={mailStatusLabelStyle}>Destek Guncelleme (7 gun)</span>
+            <strong style={mailStatusValueStyle}>{asNumber(emailSummary?.last_7_days?.support_update, 0)}</strong>
+          </div>
+        </div>
+
+        <div style={automationPanelStyle}>
+          <h4 style={automationTitleStyle}>Otomatik Mail Akislari (Secilebilir)</h4>
+          <div style={automationGridStyle}>
+            {automationToggleItems.map((item) => {
+              const isActive = automationSettings[item.key]
+              const isSaving = automationSavingKey === item.key
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => toggleAutomationSetting(item.key)}
+                  disabled={Boolean(automationSavingKey)}
+                  style={{
+                    ...automationToggleButtonStyle,
+                    borderColor: isActive ? '#22c55e' : '#475569',
+                    opacity: isSaving ? 0.75 : 1,
+                  }}
+                >
+                  <span>{item.label}</span>
+                  <span style={{ color: isActive ? '#22c55e' : '#94a3b8', fontWeight: 700 }}>
+                    {isSaving ? 'Kaydediliyor...' : (isActive ? 'Aktif' : 'Pasif')}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div style={automationNumbersRowStyle}>
+            <label style={automationNumberLabelStyle}>
+              Yorum maili gecikmesi (gun)
+              <input
+                type="number"
+                min={0}
+                max={90}
+                value={automationSettings.review_request_delay_days}
+                onChange={(event) => {
+                  const value = Number(event.target.value)
+                  setAutomationSettings((current) => ({
+                    ...current,
+                    review_request_delay_days: Number.isFinite(value) ? value : 0,
+                  }))
+                }}
+                style={mailInputStyle}
+              />
+            </label>
+            <label style={automationNumberLabelStyle}>
+              Yorum batch limiti
+              <input
+                type="number"
+                min={1}
+                max={2000}
+                value={automationSettings.review_request_batch_limit}
+                onChange={(event) => {
+                  const value = Number(event.target.value)
+                  setAutomationSettings((current) => ({
+                    ...current,
+                    review_request_batch_limit: Number.isFinite(value) ? value : 1,
+                  }))
+                }}
+                style={mailInputStyle}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={saveReviewAutomationNumbers}
+              style={mailSecondaryButtonStyle}
+              disabled={Boolean(automationSavingKey)}
+            >
+              {automationSavingKey === 'review_numbers' ? 'Kaydediliyor...' : 'Yorum ayarlarini kaydet'}
+            </button>
+          </div>
         </div>
 
         <div style={mailActionRowStyle}>
@@ -674,7 +910,7 @@ export default function Dashboard() {
         </div>
 
         <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '10px', marginBottom: 0 }}>
-          Son sepette unuttun: {formatDate(emailSummary?.latest?.abandoned_cart)} | Son urun tanitim: {formatDate(emailSummary?.latest?.product_intro)} | Son yorum istegi: {formatDate(emailSummary?.latest?.review_request)} | Son kupon yayini: {formatDate(emailSummary?.latest?.coupon_broadcast)}
+          Son sepette unuttun: {formatDate(emailSummary?.latest?.abandoned_cart)} | Son urun tanitim: {formatDate(emailSummary?.latest?.product_intro)} | Son yorum istegi: {formatDate(emailSummary?.latest?.review_request)} | Son stok geri geldi: {formatDate(emailSummary?.latest?.stock_back_in)} | Son fiyat dustu: {formatDate(emailSummary?.latest?.price_drop)} | Son fatura hazir: {formatDate(emailSummary?.latest?.invoice_ready)} | Son destek guncelleme: {formatDate(emailSummary?.latest?.support_update)} | Son kupon yayini: {formatDate(emailSummary?.latest?.coupon_broadcast)}
         </p>
         {marketingMessage && <div style={okStyle}>{marketingMessage}</div>}
         {marketingError && <div style={errorStyle}>{marketingError}</div>}
@@ -1043,6 +1279,57 @@ const mailStatusLabelStyle: CSSProperties = {
 const mailStatusValueStyle: CSSProperties = {
   color: '#f8fafc',
   fontSize: '16px',
+}
+
+const automationPanelStyle: CSSProperties = {
+  marginBottom: '10px',
+  padding: '10px',
+  border: '1px solid #334155',
+  borderRadius: '8px',
+  background: '#0b1322',
+}
+
+const automationTitleStyle: CSSProperties = {
+  margin: '0 0 8px 0',
+  color: '#e2e8f0',
+  fontSize: '13px',
+}
+
+const automationGridStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+  gap: '8px',
+}
+
+const automationToggleButtonStyle: CSSProperties = {
+  background: '#0f172a',
+  border: '1px solid #475569',
+  borderRadius: '8px',
+  color: '#e2e8f0',
+  fontSize: '12px',
+  padding: '9px 10px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: '10px',
+  cursor: 'pointer',
+  textAlign: 'left',
+}
+
+const automationNumbersRowStyle: CSSProperties = {
+  display: 'flex',
+  gap: '8px',
+  flexWrap: 'wrap',
+  marginTop: '8px',
+}
+
+const automationNumberLabelStyle: CSSProperties = {
+  display: 'grid',
+  gap: '6px',
+  color: '#94a3b8',
+  fontSize: '11px',
+  minWidth: '220px',
+  flex: '1 1 220px',
 }
 
 const mailActionRowStyle: CSSProperties = {
