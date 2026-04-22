@@ -1,5 +1,7 @@
 import { type CSSProperties, useEffect, useState } from 'react'
 import { apiRequest } from '../lib/api'
+import { getSiteSetting } from '../lib/siteSettings'
+import { type SlipSettings, DEFAULT_SLIP } from './SiteSettings'
 
 interface OrderItem {
   id: string
@@ -213,7 +215,7 @@ async function fetchLogoDataUrl(): Promise<string> {
   }
 }
 
-function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
+function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: SlipSettings) {
   const items = Array.isArray(order.items) ? order.items : []
   const itemRows = items
     .map(
@@ -228,13 +230,22 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
     )
     .join('')
 
-  const logoBlock = logoDataUrl
-    ? `<img src="${logoDataUrl}" alt="Blaene" style="height:80px;width:auto;display:block;" />`
-    : `<span style="font-size:28px;font-weight:700;letter-spacing:0.05em;font-family:Arial,sans-serif;display:block;">BLAENE</span>`
-
-  const qrHtml = qrDataUrl
-    ? `<img src="${qrDataUrl}" alt="QR" style="width:80px;height:80px;display:block;" />`
+  const logoBlock = s.show_logo
+    ? (logoDataUrl
+        ? `<img src="${logoDataUrl}" alt="Blaene" style="height:${s.logo_height}px;width:auto;display:block;" />`
+        : `<span style="font-size:24px;font-weight:700;font-family:Arial,sans-serif;display:block;">BLAENE</span>`)
     : ''
+
+  const siteUrlHtml = s.show_site_url
+    ? `<span style="font-size:11px;font-family:Arial,sans-serif;color:#444;display:block;width:100%;text-align:center;">${s.site_url || 'www.blaene.com.tr'}</span>`
+    : ''
+
+  const qrHtml = (s.show_qr && qrDataUrl)
+    ? `<img src="${qrDataUrl}" alt="QR" style="width:${s.qr_size}px;height:${s.qr_size}px;display:block;" />`
+    : ''
+
+  const row = (show: boolean, label: string, value: string) =>
+    show ? `<p><strong>${label}:</strong> ${value || '-'}</p>` : ''
 
   return `
     <html>
@@ -245,7 +256,6 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
           .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-          .logo-site { font-size: 11px; font-family: Arial, sans-serif; color: #444; letter-spacing: 0.02em; display: block; width: 100%; text-align: center; }
           .meta { margin-bottom: 16px; }
           .meta p { margin: 4px 0; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
@@ -258,35 +268,36 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
         <div class="header">
           <div class="logo-block">
             ${logoBlock}
-            <span class="logo-site">www.blaene.com.tr</span>
+            ${siteUrlHtml}
           </div>
           ${qrHtml}
         </div>
         <div class="meta">
-          <p><strong>Sipariş:</strong> ${order.order_no}</p>
-          <p><strong>Müşteri:</strong> ${order.customer_name || '-'}</p>
-          <p><strong>E-posta:</strong> ${order.email || '-'}</p>
-          <p><strong>Telefon:</strong> ${order.phone || '-'}</p>
-          <p><strong>Adres:</strong> ${order.address || '-'}</p>
-          <p><strong>Şehir:</strong> ${order.city || '-'}</p>
-          <p><strong>Kargo:</strong> ${order.shipping_provider || 'manuel'}</p>
-          <p><strong>Takip:</strong> ${order.tracking_code || '-'}</p>
-          <p><strong>Toplam:</strong> ${formatPrice(order.total || 0)}</p>
-          <p><strong>Tarih:</strong> ${formatDate(order.created_at)}</p>
+          ${row(s.show_order_no, 'Siparis', order.order_no)}
+          ${row(s.show_customer_name, 'Musteri', order.customer_name || '')}
+          ${row(s.show_email, 'E-posta', order.email || '')}
+          ${row(s.show_phone, 'Telefon', order.phone || '')}
+          ${row(s.show_address, 'Adres', order.address || '')}
+          ${row(s.show_city, 'Sehir', order.city || '')}
+          ${row(s.show_shipping_provider, 'Kargo', order.shipping_provider || 'manuel')}
+          ${row(s.show_tracking_code, 'Takip', order.tracking_code || '')}
+          ${row(s.show_total, 'Toplam', formatPrice(order.total || 0))}
+          ${row(s.show_date, 'Tarih', formatDate(order.created_at))}
         </div>
+        ${s.show_items_table ? `
         <table>
           <thead>
             <tr>
               <th>Kod</th>
-              <th>Ürün</th>
+              <th>Urun</th>
               <th>Adet</th>
               <th>Tutar</th>
             </tr>
           </thead>
           <tbody>
-            ${itemRows || '<tr><td colspan="4">Satır bulunamadı</td></tr>'}
+            ${itemRows || '<tr><td colspan="4">Satir bulunamadi</td></tr>'}
           </tbody>
-        </table>
+        </table>` : ''}
       </body>
     </html>
   `
@@ -558,20 +569,26 @@ export default function Orders() {
   const printShippingSlip = async (order: Order) => {
     const win = window.open('', '_blank', 'width=900,height=700')
     if (!win) {
-      setError('Tarayıcı pop-up engelledi. Lütfen izin verin.')
+      setError('Tarayici pop-up engelledi. Lutfen izin verin.')
       return
     }
+    const s = await getSiteSetting<SlipSettings>(token, 'slip_settings', DEFAULT_SLIP)
+    const slipCfg: SlipSettings = { ...DEFAULT_SLIP, ...s }
+
     const items = Array.isArray(order.items) ? order.items : []
     const itemLines = items
       .map((it) => `- ${it.product_name || it.product_code || '?'} x${it.quantity || 1}`)
       .join('\n')
     const qrData = `Siparis: ${order.order_no}\nMusteri: ${order.customer_name || ''}\nUrunler:\n${itemLines}\nToplam: ${order.total} TL`
+
     const [logoDataUrl, qrDataUrl] = await Promise.all([
-      fetchLogoDataUrl(),
-      QRCode.toDataURL(qrData, { width: 160, margin: 1, errorCorrectionLevel: 'L' }).catch(() => ''),
+      slipCfg.show_logo ? fetchLogoDataUrl() : Promise.resolve(''),
+      slipCfg.show_qr
+        ? QRCode.toDataURL(qrData, { width: slipCfg.qr_size * 2, margin: 1, errorCorrectionLevel: 'L' }).catch(() => '')
+        : Promise.resolve(''),
     ])
     win.document.open()
-    win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl))
+    win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl, slipCfg))
     win.document.close()
     win.focus()
     setTimeout(() => { win.print() }, 400)
