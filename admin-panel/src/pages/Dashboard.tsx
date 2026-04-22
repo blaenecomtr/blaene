@@ -61,6 +61,25 @@ interface MarketingEmailStatusResponse {
       shipped_manual?: string | null
     }
   }
+  pending_shipment?: {
+    days_filter?: string
+    available_day_filters?: string[]
+    total?: number
+    limit?: number
+    items?: Array<{
+      order_id?: string | null
+      order_no?: string | null
+      customer_name?: string | null
+      email?: string | null
+      status?: string | null
+      payment_status?: string | null
+      total?: number
+      currency?: string | null
+      paid_at?: string | null
+      created_at?: string | null
+      age_days?: number | null
+    }>
+  }
 }
 
 interface MarketingEmailActionResponse {
@@ -84,6 +103,15 @@ interface MarketingEmailActionResponse {
 }
 
 type MarketingActionType = 'send_abandoned' | 'send_product_intro' | 'send_all' | 'send_shipped'
+type PendingShipmentDaysOption = 'all' | '7' | '14' | '30' | '90'
+
+const pendingShipmentDayOptions: Array<{ value: PendingShipmentDaysOption; label: string }> = [
+  { value: 'all', label: 'Tum tarih' },
+  { value: '7', label: 'Son 7 gun' },
+  { value: '14', label: 'Son 14 gun' },
+  { value: '30', label: 'Son 30 gun' },
+  { value: '90', label: 'Son 90 gun' },
+]
 
 function asNumber(value: unknown, fallback = 0): number {
   const parsed = Number(value)
@@ -105,6 +133,24 @@ function formatDate(value?: string | null): string {
   return date.toLocaleString('tr-TR')
 }
 
+function normalizePendingShipmentDaysOption(value: unknown): PendingShipmentDaysOption {
+  const raw = String(value || '').toLowerCase()
+  if (raw === 'all' || raw === '7' || raw === '14' || raw === '30' || raw === '90') {
+    return raw
+  }
+  return '30'
+}
+
+function workflowStatusLabel(value?: string | null): string {
+  const normalized = String(value || '').toLowerCase()
+  if (normalized === 'pending') return 'Yeni'
+  if (normalized === 'processing') return 'Uretimde'
+  if (normalized === 'shipped') return 'Kargoda'
+  if (normalized === 'delivered') return 'Teslim'
+  if (normalized === 'cancelled') return 'Iptal'
+  return normalized || '-'
+}
+
 export default function Dashboard() {
   const token = localStorage.getItem('admin_token')
   const [loading, setLoading] = useState(true)
@@ -116,15 +162,29 @@ export default function Dashboard() {
   const [marketingMessage, setMarketingMessage] = useState('')
   const [marketingError, setMarketingError] = useState('')
   const [manualShippedOrderNo, setManualShippedOrderNo] = useState('')
+  const [pendingShipmentDays, setPendingShipmentDays] = useState<PendingShipmentDaysOption>('30')
+  const [selectedPendingOrderNo, setSelectedPendingOrderNo] = useState('')
+
+  const buildMarketingStatusPath = (daysValue: PendingShipmentDaysOption) =>
+    `/api/admin/marketing-emails?pending_days=${encodeURIComponent(daysValue)}&pending_limit=80`
+
+  const loadMarketingStatus = async (daysValue: PendingShipmentDaysOption = pendingShipmentDays) => {
+    if (!token) return null
+    const safeDays = normalizePendingShipmentDaysOption(daysValue)
+    const status = await apiRequest<MarketingEmailStatusResponse>(buildMarketingStatusPath(safeDays), { token })
+    setMarketingStatus(status || null)
+    return status
+  }
 
   const loadDashboard = async () => {
     if (!token) return
     setLoading(true)
     setError('')
     try {
+      const safeDays = normalizePendingShipmentDaysOption(pendingShipmentDays)
       const [response, mailStatus] = await Promise.all([
         apiRequest<AnalyticsResponse>('/api/admin/analytics?range=month', { token }),
-        apiRequest<MarketingEmailStatusResponse>('/api/admin/marketing-emails', { token }).catch(() => null),
+        apiRequest<MarketingEmailStatusResponse>(buildMarketingStatusPath(safeDays), { token }).catch(() => null),
       ])
       setData(response || {})
       if (mailStatus) setMarketingStatus(mailStatus)
@@ -146,12 +206,30 @@ export default function Dashboard() {
   const abandonedRows = Array.isArray(data.traffic?.abandoned_customers) ? data.traffic?.abandoned_customers : []
   const emailSummary = marketingStatus?.summary
   const emailEnv = marketingStatus?.env
+  const pendingShipment = marketingStatus?.pending_shipment
+  const pendingShipmentRows = useMemo(
+    () => (Array.isArray(pendingShipment?.items) ? pendingShipment?.items : []),
+    [pendingShipment?.items]
+  )
+  const pendingShipmentTotal = asNumber(pendingShipment?.total, 0)
 
-  const runMarketingAction = async (action: MarketingActionType) => {
+  useEffect(() => {
+    if (!pendingShipmentRows.length) {
+      setSelectedPendingOrderNo('')
+      return
+    }
+    setSelectedPendingOrderNo((current) => {
+      const exists = pendingShipmentRows.some((row) => String(row?.order_no || '').trim() === current)
+      if (exists) return current
+      return String(pendingShipmentRows[0]?.order_no || '').trim()
+    })
+  }, [pendingShipmentRows])
+
+  const runMarketingAction = async (action: MarketingActionType, shippedOrderRef = '') => {
     if (!token) return
-    const orderNo = manualShippedOrderNo.trim()
+    const orderNo = String(shippedOrderRef || '').trim() || manualShippedOrderNo.trim() || selectedPendingOrderNo.trim()
     if (action === 'send_shipped' && !orderNo) {
-      setMarketingError('Kargo maili icin siparis numarasi girin.')
+      setMarketingError('Kargo maili icin siparis secin veya siparis numarasi girin.')
       return
     }
 
@@ -159,7 +237,16 @@ export default function Dashboard() {
     setMarketingError('')
     setMarketingMessage('')
     try {
-      const payload: { action: MarketingActionType; order_no?: string } = { action }
+      const payload: {
+        action: MarketingActionType
+        order_no?: string
+        pending_days?: PendingShipmentDaysOption
+        pending_limit?: number
+      } = {
+        action,
+        pending_days: pendingShipmentDays,
+        pending_limit: 80,
+      }
       if (action === 'send_shipped') payload.order_no = orderNo
 
       const response = await apiRequest<MarketingEmailActionResponse>('/api/admin/marketing-emails', {
@@ -178,6 +265,7 @@ export default function Dashboard() {
             : `Kargo maili gonderildi: ${shippedOrderNo}`
         )
         setManualShippedOrderNo('')
+        setSelectedPendingOrderNo('')
       } else {
         const abandonedSent = asNumber(response?.result?.abandoned_cart?.sent, 0)
         const introSent = asNumber(response?.result?.product_intro?.sent, 0)
@@ -189,6 +277,7 @@ export default function Dashboard() {
           setMarketingMessage(`Tum akislari calistirdiniz. Sepet: ${abandonedSent}, Tanitim: ${introSent}`)
         }
       }
+      await loadMarketingStatus(pendingShipmentDays)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Mail aksiyonu calistirilamadi'
       setMarketingError(msg)
@@ -386,19 +475,74 @@ export default function Dashboard() {
         </div>
 
         <div style={mailActionRowStyle}>
+          <select
+            value={pendingShipmentDays}
+            onChange={(event) => {
+              const nextDays = normalizePendingShipmentDaysOption(event.target.value)
+              setPendingShipmentDays(nextDays)
+              setMarketingError('')
+              setMarketingMessage('')
+              void loadMarketingStatus(nextDays)
+            }}
+            style={mailSelectStyle}
+          >
+            {pendingShipmentDayOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedPendingOrderNo}
+            onChange={(event) => setSelectedPendingOrderNo(event.target.value)}
+            style={mailSelectStyle}
+            disabled={!pendingShipmentRows.length}
+          >
+            {!pendingShipmentRows.length ? (
+              <option value="">Odeme alinmis, kargolanmamis siparis yok</option>
+            ) : (
+              pendingShipmentRows.map((row) => {
+                const orderNo = String(row?.order_no || '').trim()
+                const orderId = String(row?.order_id || '').trim()
+                const customer = String(row?.customer_name || '-').trim() || '-'
+                const dateValue = formatDate(row?.paid_at || row?.created_at)
+                const statusValue = workflowStatusLabel(row?.status)
+                return (
+                  <option key={orderId || orderNo || `${customer}-${dateValue}`} value={orderNo}>
+                    {`${orderNo} | ${customer} | ${dateValue} | ${statusValue}`}
+                  </option>
+                )
+              })
+            )}
+          </select>
+          <button
+            type="button"
+            onClick={() => void runMarketingAction('send_shipped', selectedPendingOrderNo)}
+            style={mailPrimaryButtonStyle}
+            disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured || !selectedPendingOrderNo}
+          >
+            {marketingBusyAction === 'send_shipped' ? 'Gonderiliyor...' : 'Secilen siparise kargo maili gonder'}
+          </button>
+        </div>
+
+        <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px', marginBottom: 0 }}>
+          Odemesi alinmis ve henuz kargolanmamis siparis: {pendingShipmentTotal}
+        </p>
+
+        <div style={mailActionRowStyle}>
           <input
             value={manualShippedOrderNo}
             onChange={(event) => setManualShippedOrderNo(event.target.value)}
-            placeholder="Kargo maili icin siparis no (or: BLN-12345)"
+            placeholder="Manuel siparis no (or: BLN-12345)"
             style={mailInputStyle}
           />
           <button
             type="button"
-            onClick={() => void runMarketingAction('send_shipped')}
+            onClick={() => void runMarketingAction('send_shipped', manualShippedOrderNo)}
             style={mailPrimaryButtonStyle}
             disabled={marketingBusyAction !== '' || !emailEnv?.resend_configured}
           >
-            {marketingBusyAction === 'send_shipped' ? 'Gonderiliyor...' : 'Kargoya verildi mailini gonder'}
+            {marketingBusyAction === 'send_shipped' ? 'Gonderiliyor...' : 'Manuel siparis no ile gonder'}
           </button>
         </div>
 
@@ -810,6 +954,12 @@ const mailInputStyle: CSSProperties = {
   fontSize: '12px',
   minWidth: '280px',
   flex: '1 1 280px',
+}
+
+const mailSelectStyle: CSSProperties = {
+  ...mailInputStyle,
+  minWidth: '260px',
+  flex: '1 1 320px',
 }
 
 const disabledButtonStyle: CSSProperties = {

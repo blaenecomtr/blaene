@@ -1548,7 +1548,82 @@ async function handleAnalytics(req, res, ctx) {
   });
 }
 
-async function buildMarketingEmailStatus(config, presetEnvStatus = null) {
+function normalizePendingShipmentDays(input, fallback = 30) {
+  const raw = normalizeText(input, 20).toLowerCase();
+  if (!raw) return fallback;
+  if (raw === 'all' || raw === '0') return 0;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  if (parsed < 0) return fallback;
+  return Math.min(parsed, 3650);
+}
+
+function normalizePendingShipmentLimit(input, fallback = 40) {
+  return normalizePositiveInt(input, fallback, 200);
+}
+
+async function buildPendingShipmentCandidates(config, options = {}) {
+  const days = normalizePendingShipmentDays(options.pending_days, 30);
+  const limit = normalizePendingShipmentLimit(options.pending_limit, 40);
+  const startIso = days > 0 ? toIsoDaysAgo(days) : null;
+
+  const rows = await safeSelect(config, 'orders', {
+    select: 'id,order_no,customer_name,email,status,payment_status,total,currency,paid_at,created_at,shipped_at',
+    order: 'created_at.desc',
+    limit: 5000,
+  }, []);
+
+  const nowTs = Date.now();
+  const pendingRows = (rows || [])
+    .filter((row) => {
+      const paymentStatus = normalizeText(row?.payment_status, 40).toLowerCase();
+      if (paymentStatus !== 'paid') return false;
+
+      const status = normalizeText(row?.status, 40).toLowerCase();
+      if (['shipped', 'delivered', 'cancelled'].includes(status)) return false;
+
+      const shippedAt = normalizeText(row?.shipped_at, 80);
+      if (shippedAt) return false;
+
+      if (!startIso) return true;
+      const compareDate = normalizeText(row?.paid_at, 80) || normalizeText(row?.created_at, 80);
+      return compareDate ? isWithinRange(compareDate, startIso, null) : false;
+    })
+    .map((row) => {
+      const paidAt = normalizeText(row?.paid_at, 80) || null;
+      const createdAt = normalizeText(row?.created_at, 80) || null;
+      const compareDate = paidAt || createdAt || null;
+      let ageDays = null;
+      if (compareDate) {
+        const ts = Date.parse(compareDate);
+        if (!Number.isNaN(ts)) ageDays = Math.max(0, Math.floor((nowTs - ts) / (24 * 60 * 60 * 1000)));
+      }
+      return {
+        order_id: normalizeText(row?.id, 120) || null,
+        order_no: normalizeText(row?.order_no, 120) || null,
+        customer_name: normalizeText(row?.customer_name, 180) || null,
+        email: normalizeEmail(row?.email) || null,
+        status: normalizeText(row?.status, 40).toLowerCase() || null,
+        payment_status: normalizeText(row?.payment_status, 40).toLowerCase() || null,
+        total: Number(row?.total || 0),
+        currency: normalizeText(row?.currency, 12) || 'TRY',
+        paid_at: paidAt,
+        created_at: createdAt,
+        age_days: ageDays,
+      };
+    })
+    .sort((a, b) => String(b.paid_at || b.created_at || '').localeCompare(String(a.paid_at || a.created_at || '')));
+
+  return {
+    days_filter: days === 0 ? 'all' : String(days),
+    available_day_filters: ['all', '7', '14', '30', '90'],
+    total: pendingRows.length,
+    limit,
+    items: pendingRows.slice(0, limit),
+  };
+}
+
+async function buildMarketingEmailStatus(config, presetEnvStatus = null, options = {}) {
   const envStatus = presetEnvStatus || (
     typeof marketingCronHandler.getEnvStatus === 'function'
       ? marketingCronHandler.getEnvStatus()
@@ -1604,7 +1679,8 @@ async function buildMarketingEmailStatus(config, presetEnvStatus = null) {
     });
   });
 
-  return { env: envStatus, summary };
+  const pendingShipment = await buildPendingShipmentCandidates(config, options);
+  return { env: envStatus, summary, pending_shipment: pendingShipment };
 }
 
 async function handleMarketingEmails(req, res, ctx) {
@@ -1619,9 +1695,14 @@ async function handleMarketingEmails(req, res, ctx) {
       resend_configured: Boolean(process.env.RESEND_API_KEY),
       cron_secret_configured: Boolean(normalizeText(process.env.MARKETING_CRON_SECRET, 300) || normalizeText(process.env.CRON_SECRET, 300)),
     };
+  const query = getUrl(req).searchParams;
+  const buildStatusOptions = (input = {}) => ({
+    pending_days: input?.pending_days ?? query.get('pending_days'),
+    pending_limit: input?.pending_limit ?? query.get('pending_limit'),
+  });
 
   if (req.method === 'GET') {
-    const status = await buildMarketingEmailStatus(config, envStatus);
+    const status = await buildMarketingEmailStatus(config, envStatus, buildStatusOptions());
     return sendSuccess(res, status);
   }
 
@@ -1657,7 +1738,7 @@ async function handleMarketingEmails(req, res, ctx) {
       result,
     }, { entityType: 'marketing_email' });
 
-    const status = await buildMarketingEmailStatus(config, envStatus);
+    const status = await buildMarketingEmailStatus(config, envStatus, buildStatusOptions(body));
     return sendSuccess(res, {
       action,
       mode,
@@ -1720,7 +1801,7 @@ async function handleMarketingEmails(req, res, ctx) {
       sent: true,
     }, { entityType: 'order', entityId: order.id });
 
-    const status = await buildMarketingEmailStatus(config, envStatus);
+    const status = await buildMarketingEmailStatus(config, envStatus, buildStatusOptions(body));
     return sendSuccess(res, {
       action,
       executed_at: new Date().toISOString(),
