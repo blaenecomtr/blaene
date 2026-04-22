@@ -228,22 +228,24 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
     )
     .join('')
 
-  const logoHtml = logoDataUrl
-    ? `<img src="${logoDataUrl}" alt="Blaene" style="height:80px;width:auto;" />`
-    : `<span style="font-size:28px;font-weight:700;letter-spacing:0.05em;font-family:Arial,sans-serif;">BLAENE</span>`
+  const logoBlock = logoDataUrl
+    ? `<img src="${logoDataUrl}" alt="Blaene" style="height:80px;width:auto;display:block;" />`
+    : `<span style="font-size:28px;font-weight:700;letter-spacing:0.05em;font-family:Arial,sans-serif;display:block;">BLAENE</span>`
 
   const qrHtml = qrDataUrl
-    ? `<img src="${qrDataUrl}" alt="QR" style="width:120px;height:120px;" />`
+    ? `<img src="${qrDataUrl}" alt="QR" style="width:80px;height:80px;display:block;" />`
     : ''
 
   return `
     <html>
       <head>
         <meta charset="UTF-8" />
-        <title>Kargo Fişi - ${order.order_no}</title>
+        <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
-          .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
+          .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
+          .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+          .logo-site { font-size: 11px; font-family: Arial, sans-serif; color: #444; letter-spacing: 0.02em; display: block; width: 100%; text-align: center; }
           .meta { margin-bottom: 16px; }
           .meta p { margin: 4px 0; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
@@ -254,7 +256,10 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string) {
       </head>
       <body>
         <div class="header">
-          ${logoHtml}
+          <div class="logo-block">
+            ${logoBlock}
+            <span class="logo-site">www.blaene.com.tr</span>
+          </div>
           ${qrHtml}
         </div>
         <div class="meta">
@@ -556,11 +561,14 @@ export default function Orders() {
       setError('Tarayıcı pop-up engelledi. Lütfen izin verin.')
       return
     }
-    const origin = window.location.origin
-    const qrData = `${origin}/account.html?order=${encodeURIComponent(order.order_no || '')}`
+    const items = Array.isArray(order.items) ? order.items : []
+    const itemLines = items
+      .map((it) => `- ${it.product_name || it.product_code || '?'} x${it.quantity || 1}`)
+      .join('\n')
+    const qrData = `Siparis: ${order.order_no}\nMusteri: ${order.customer_name || ''}\nUrunler:\n${itemLines}\nToplam: ${order.total} TL`
     const [logoDataUrl, qrDataUrl] = await Promise.all([
       fetchLogoDataUrl(),
-      QRCode.toDataURL(qrData, { width: 200, margin: 1 }).catch(() => ''),
+      QRCode.toDataURL(qrData, { width: 160, margin: 1, errorCorrectionLevel: 'L' }).catch(() => ''),
     ])
     win.document.open()
     win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl))
