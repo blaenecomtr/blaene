@@ -20,6 +20,8 @@ interface Order {
   city?: string
   total: number
   payment_status: string
+  payment_provider?: string | null
+  payment_method?: string | null
   status: string
   created_at: string
   tracking_code?: string | null
@@ -34,15 +36,44 @@ interface ShippingProviderInfo {
 
 interface ReturnRequest {
   id: string
+  order_id?: string
+  order_no?: string
   customer_name?: string | null
-  customer_email?: string
-  subject?: string
-  status?: string
-  priority?: string
-  updated_at?: string
+  customer_email?: string | null
+  reason?: string | null
+  details?: string | null
+  status?: string | null
+  refund_amount?: number | null
+  updated_at?: string | null
+  created_at?: string | null
+  refunds?: Array<{
+    id: string
+    amount?: number
+    status?: string
+    payment_provider?: string | null
+    created_at?: string
+  }>
 }
 
-type OrdersTab = 'all' | 'returns'
+interface TransferTicket {
+  id: string
+  subject?: string | null
+  status?: string | null
+  category?: string | null
+  customer_name?: string | null
+  customer_email?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+  metadata?: {
+    order_no?: string | null
+    transfer_amount?: string | null
+    transfer_date?: string | null
+    transfer_bank?: string | null
+    transfer_note?: string | null
+  } | null
+}
+
+type OrdersTab = 'all' | 'returns' | 'transfers'
 
 const FALLBACK_SHIPPING_PROVIDERS: ShippingProviderInfo[] = [
   { provider: 'yurtici', configured: true },
@@ -69,6 +100,39 @@ function paymentLabel(value: string) {
   if (normalized === 'paid') return 'Odendi'
   if (normalized === 'failed') return 'Basarisiz'
   return 'Bekliyor'
+}
+
+function normalizePaymentMethod(order: Order) {
+  const method = String(order.payment_method || '').toLowerCase().trim()
+  if (method === 'bank_transfer' || method === 'havale' || method === 'eft') return 'bank_transfer'
+  if (method === 'card' || method === 'credit_card') return 'card'
+
+  const provider = String(order.payment_provider || '').toLowerCase().trim()
+  if (provider === 'bank_transfer' || provider === 'havale' || provider === 'eft') return 'bank_transfer'
+  if (provider === 'manual') return 'bank_transfer'
+  if (provider === 'paytr' || provider === 'iyzico' || provider === 'mock') return 'card'
+  return method || provider || 'unknown'
+}
+
+function paymentMethodLabel(order: Order) {
+  const method = normalizePaymentMethod(order)
+  if (method === 'bank_transfer') return 'Havale / EFT'
+  if (method === 'card') return 'Kredi Karti'
+  return 'Belirtilmedi'
+}
+
+function extractOrderNoFromTransfer(ticket: TransferTicket) {
+  const fromMeta = String(ticket?.metadata?.order_no || '').trim()
+  if (fromMeta) return fromMeta
+  const subject = String(ticket?.subject || '')
+  const match = subject.match(/siparis\s*#\s*([a-z0-9\-_/]+)/i)
+  return match && match[1] ? String(match[1]).trim() : '-'
+}
+
+function isTransferTicket(ticket: TransferTicket) {
+  const category = String(ticket?.category || '').toLowerCase().trim()
+  const subject = String(ticket?.subject || '').toLowerCase()
+  return category === 'transfer' || category === 'havale' || subject.includes('havale bildirimi')
 }
 
 function workflowLabel(value: string) {
@@ -145,30 +209,43 @@ function buildSlipHtml(order: Order) {
     )
     .join('')
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.blaene.com.tr'
+  const logoUrl = `${origin}/logo/blaene-logo.png`
+  const qrData = `${origin}/account.html?order=${encodeURIComponent(order.order_no || '')}`
+
   return `
     <html>
       <head>
-        <title>Kargo Fisi - ${order.order_no}</title>
+        <meta charset="UTF-8" />
+        <title>Kargo Fişi - ${order.order_no}</title>
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
-          h1 { margin-bottom: 8px; }
+          .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; }
+          .header img { height: 48px; width: auto; }
+          .header #qr-canvas { display: block; }
           .meta { margin-bottom: 16px; }
-          .meta p { margin: 4px 0; }
+          .meta p { margin: 4px 0; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
           th { background: #f3f4f6; }
+          @media print { body { padding: 10px; } }
         </style>
       </head>
       <body>
-        <h1>Blaene Kargo Fisi</h1>
+        <div class="header">
+          <img src="${logoUrl}" alt="Blaene" onerror="this.style.display='none';document.getElementById('brand-text').style.display='block';" />
+          <span id="brand-text" style="display:none;font-size:22px;font-weight:700;letter-spacing:0.05em;">BLAENE</span>
+          <canvas id="qr-canvas"></canvas>
+        </div>
         <div class="meta">
-          <p><strong>Siparis:</strong> ${order.order_no}</p>
-          <p><strong>Musteri:</strong> ${order.customer_name || '-'}</p>
+          <p><strong>Sipariş:</strong> ${order.order_no}</p>
+          <p><strong>Müşteri:</strong> ${order.customer_name || '-'}</p>
           <p><strong>E-posta:</strong> ${order.email || '-'}</p>
           <p><strong>Telefon:</strong> ${order.phone || '-'}</p>
           <p><strong>Adres:</strong> ${order.address || '-'}</p>
-          <p><strong>Sehir:</strong> ${order.city || '-'}</p>
-          <p><strong>Kargo:</strong> ${order.shipping_provider || 'manual'}</p>
+          <p><strong>Şehir:</strong> ${order.city || '-'}</p>
+          <p><strong>Kargo:</strong> ${order.shipping_provider || 'manuel'}</p>
           <p><strong>Takip:</strong> ${order.tracking_code || '-'}</p>
           <p><strong>Toplam:</strong> ${formatPrice(order.total || 0)}</p>
           <p><strong>Tarih:</strong> ${formatDate(order.created_at)}</p>
@@ -177,15 +254,28 @@ function buildSlipHtml(order: Order) {
           <thead>
             <tr>
               <th>Kod</th>
-              <th>Urun</th>
+              <th>Ürün</th>
               <th>Adet</th>
               <th>Tutar</th>
             </tr>
           </thead>
           <tbody>
-            ${itemRows || '<tr><td colspan="4">Satir bulunamadi</td></tr>'}
+            ${itemRows || '<tr><td colspan="4">Satır bulunamadı</td></tr>'}
           </tbody>
         </table>
+        <script>
+          (function() {
+            var canvas = document.getElementById('qr-canvas');
+            function tryRender() {
+              if (typeof QRCode !== 'undefined' && canvas) {
+                QRCode.toCanvas(canvas, '${qrData}', { width: 90, margin: 1 }, function() {});
+              } else {
+                setTimeout(tryRender, 100);
+              }
+            }
+            tryRender();
+          })();
+        <\/script>
       </body>
     </html>
   `
@@ -198,6 +288,8 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([])
   const [returnsLoading, setReturnsLoading] = useState(false)
   const [returns, setReturns] = useState<ReturnRequest[]>([])
+  const [transferLoading, setTransferLoading] = useState(false)
+  const [transferTickets, setTransferTickets] = useState<TransferTicket[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [search, setSearch] = useState('')
@@ -264,13 +356,35 @@ export default function Orders() {
     setReturnsLoading(true)
     setError('')
     try {
-      const data = await apiRequest<ReturnRequest[]>('/api/admin/support-tickets?page_size=300&search=iade', { token })
+      const data = await apiRequest<ReturnRequest[]>('/api/admin/returns?page_size=300&include_refunds=true', { token })
       setReturns(Array.isArray(data) ? data : [])
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Iade talepleri yuklenemedi'
       setError(msg)
     } finally {
       setReturnsLoading(false)
+    }
+  }
+
+  const loadTransferTickets = async () => {
+    if (!token) return
+    setTransferLoading(true)
+    setError('')
+    try {
+      const data = await apiRequest<TransferTicket[]>('/api/admin/support-tickets?page_size=500', { token })
+      const nextTickets = (Array.isArray(data) ? data : [])
+        .filter(isTransferTicket)
+        .sort((a, b) => {
+          const aTs = new Date(String(a.created_at || 0)).getTime()
+          const bTs = new Date(String(b.created_at || 0)).getTime()
+          return bTs - aTs
+        })
+      setTransferTickets(nextTickets)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Havale bildirimleri yuklenemedi'
+      setError(msg)
+    } finally {
+      setTransferLoading(false)
     }
   }
 
@@ -282,7 +396,10 @@ export default function Orders() {
     if (activeTab === 'returns' && !returns.length && !returnsLoading) {
       void loadReturnRequests()
     }
-  }, [activeTab])
+    if (activeTab === 'transfers' && !transferTickets.length && !transferLoading) {
+      void loadTransferTickets()
+    }
+  }, [activeTab, returns.length, returnsLoading, transferTickets.length, transferLoading])
 
   const runAction = async (orderId: string, actionName: string, task: () => Promise<void>) => {
     setActionLoading((prev) => ({ ...prev, [orderId]: actionName }))
@@ -316,6 +433,35 @@ export default function Orders() {
       })
       setMessage(`${order.order_no}: ${successMessage}`)
     })
+  }
+
+  const approveBankTransfer = async (order: Order) => {
+    if (!token) return
+    if (String(order.payment_status || '').toLowerCase() === 'paid') {
+      setMessage(`${order.order_no}: havale odemesi zaten onayli`)
+      return
+    }
+    const confirmApprove = window.confirm(`${order.order_no} icin havale odemesini onaylamak istiyor musunuz?`)
+    if (!confirmApprove) return
+
+    await runAction(order.id, 'bank_transfer_approve', async () => {
+      await apiRequest('/api/admin/order-status', {
+        method: 'POST',
+        token,
+        body: {
+          order_ids: [order.id],
+          status: 'paid',
+          workflow_status: 'processing',
+        },
+      })
+      setMessage(`${order.order_no}: havale odemesi onaylandi`)
+    })
+  }
+
+  const rejectOrder = async (order: Order) => {
+    const confirmed = window.confirm(`${order.order_no} siparisini iptal etmek istediginize emin misiniz?`)
+    if (!confirmed) return
+    await updateOrderWorkflow(order, 'cancelled', 'siparis reddedildi')
   }
 
   const saveTrackingCode = async (order: Order) => {
@@ -401,7 +547,7 @@ export default function Orders() {
   const printShippingSlip = (order: Order) => {
     const win = window.open('', '_blank', 'width=900,height=700')
     if (!win) {
-      setError('Tarayici pop-up engelledi. Lutfen izin verin.')
+      setError('Tarayıcı pop-up engelledi. Lütfen izin verin.')
       return
     }
     win.document.open()
@@ -410,7 +556,107 @@ export default function Orders() {
     win.focus()
     setTimeout(() => {
       win.print()
-    }, 200)
+    }, 1200)
+  }
+
+  const updateReturnStatus = async (item: ReturnRequest, status: string, successMessage: string) => {
+    if (!token) return
+    const key = `return-${item.id}`
+    setActionLoading((prev) => ({ ...prev, [key]: status }))
+    setError('')
+    setMessage('')
+    try {
+      await apiRequest('/api/admin/returns', {
+        method: 'PUT',
+        token,
+        body: {
+          id: item.id,
+          status,
+          review_note: successMessage,
+        },
+      })
+      setMessage(`${item.order_no || item.id.slice(0, 8)}: ${successMessage}`)
+      await loadReturnRequests()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Iade guncellenemedi'
+      setError(msg)
+    } finally {
+      setActionLoading((prev) => {
+        const next = { ...prev }
+        delete next[key]
+        return next
+      })
+    }
+  }
+
+  const createRefundForReturn = async (item: ReturnRequest) => {
+    if (!token) return
+    if (!item.order_id) {
+      setError('Iade kaydi icin order_id bulunamadi')
+      return
+    }
+    const amount = Number(item.refund_amount || 0)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError(`${item.order_no || item.id.slice(0, 8)}: once iade tutari belirleyin`)
+      return
+    }
+    const key = `refund-${item.id}`
+    setActionLoading((prev) => ({ ...prev, [key]: 'refund' }))
+    setError('')
+    setMessage('')
+    try {
+      await apiRequest('/api/admin/refunds', {
+        method: 'POST',
+        token,
+        body: {
+          return_request_id: item.id,
+          order_id: item.order_id,
+          amount,
+          reason: item.reason || 'Iade talebi',
+        },
+      })
+      setMessage(`${item.order_no || item.id.slice(0, 8)}: refund islemi kaydedildi`)
+      await loadReturnRequests()
+      await loadOrders()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Refund basarisiz'
+      setError(msg)
+    } finally {
+      setActionLoading((prev) => {
+        const next = { ...prev }
+        delete next[key]
+        return next
+      })
+    }
+  }
+
+  const updateTransferStatus = async (ticket: TransferTicket, status: string, successMessage: string) => {
+    if (!token) return
+    const key = `transfer-${ticket.id}`
+    setActionLoading((prev) => ({ ...prev, [key]: status }))
+    setError('')
+    setMessage('')
+    try {
+      await apiRequest('/api/admin/support-tickets', {
+        method: 'PUT',
+        token,
+        body: {
+          id: ticket.id,
+          status,
+        },
+      })
+      setMessage(`${extractOrderNoFromTransfer(ticket)}: ${successMessage}`)
+      await loadTransferTickets()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Havale bildirimi guncellenemedi'
+      setError(msg)
+    } finally {
+      setActionLoading((prev) => {
+        const next = { ...prev }
+        delete next[key]
+        return next
+      })
+    }
   }
 
   return (
@@ -431,6 +677,13 @@ export default function Orders() {
             style={activeTab === 'returns' ? activeTabButton : tabButton}
           >
             Iade Talepleri
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('transfers')}
+            style={activeTab === 'transfers' ? activeTabButton : tabButton}
+          >
+            Havale Bildirimleri
           </button>
         </div>
 
@@ -503,7 +756,10 @@ export default function Orders() {
                           </td>
                           <td style={tdStyle}>{formatPrice(order.total || 0)}</td>
                           <td style={tdStyle}>
-                            <span style={statusBadgeStyle(order.payment_status)}>{paymentLabel(order.payment_status)}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span style={statusBadgeStyle(order.payment_status)}>{paymentLabel(order.payment_status)}</span>
+                              <span style={{ color: '#94a3b8', fontSize: '11px' }}>{paymentMethodLabel(order)}</span>
+                            </div>
                           </td>
                           <td style={tdStyle}>
                             <span style={statusBadgeStyle(order.status)}>{workflowLabel(order.status)}</span>
@@ -538,16 +794,34 @@ export default function Orders() {
                           <td style={tdStyle}>{formatDate(order.created_at)}</td>
                           <td style={tdStyle}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '160px' }}>
+                              {normalizePaymentMethod(order) === 'bank_transfer' ? (
+                                <button
+                                  disabled={busy || String(order.payment_status || '').toLowerCase() === 'paid'}
+                                  onClick={() => void approveBankTransfer(order)}
+                                  style={approveButtonStyle}
+                                >
+                                  {actionLoading[order.id] === 'bank_transfer_approve'
+                                    ? 'Isleniyor...'
+                                    : String(order.payment_status || '').toLowerCase() === 'paid'
+                                      ? 'Havale Onayli'
+                                      : 'Havale Onayla'}
+                                </button>
+                              ) : normalizePaymentMethod(order) === 'card' ? (
+                                <span style={statusBadgeStyle('paid')}>
+                                  Kredi Karti ile Odendi
+                                </span>
+                              ) : (
+                                <button
+                                  disabled={busy}
+                                  onClick={() => void updateOrderWorkflow(order, 'processing', 'siparis onaylandi')}
+                                  style={approveButtonStyle}
+                                >
+                                  {actionLoading[order.id] === 'processing' ? 'Isleniyor...' : 'Onayla'}
+                                </button>
+                              )}
                               <button
                                 disabled={busy}
-                                onClick={() => void updateOrderWorkflow(order, 'processing', 'siparis onaylandi')}
-                                style={approveButtonStyle}
-                              >
-                                {actionLoading[order.id] === 'processing' ? 'Isleniyor...' : 'Onayla'}
-                              </button>
-                              <button
-                                disabled={busy}
-                                onClick={() => void updateOrderWorkflow(order, 'cancelled', 'siparis reddedildi')}
+                                onClick={() => void rejectOrder(order)}
                                 style={rejectButtonStyle}
                               >
                                 {actionLoading[order.id] === 'cancelled' ? 'Isleniyor...' : 'Reddet'}
@@ -574,11 +848,11 @@ export default function Orders() {
               </div>
             )}
           </>
-        ) : (
+        ) : activeTab === 'returns' ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
               <p style={{ color: '#94a3b8', margin: 0 }}>
-                Iade talepleri destek kayitlarindan "iade" anahtar kelimesi ile listelenir.
+                Iade talepleri musterinin siparisinden olusturulur ve buradan yonetilir.
               </p>
               <button onClick={() => void loadReturnRequests()} style={buttonStyle}>
                 Yenile
@@ -594,31 +868,164 @@ export default function Orders() {
                   <thead>
                     <tr>
                       <th style={thStyle}>Talep No</th>
+                      <th style={thStyle}>Siparis</th>
                       <th style={thStyle}>Musteri</th>
-                      <th style={thStyle}>Konu</th>
+                      <th style={thStyle}>Sebep</th>
+                      <th style={thStyle}>Iade Tutari</th>
                       <th style={thStyle}>Durum</th>
-                      <th style={thStyle}>Oncelik</th>
+                      <th style={thStyle}>Refundlar</th>
                       <th style={thStyle}>Guncel</th>
+                      <th style={thStyle}>Islem</th>
                     </tr>
                   </thead>
                   <tbody>
                     {returns.map((item) => (
                       <tr key={item.id}>
                         <td style={tdStyle}>{item.id.slice(0, 8)}</td>
+                        <td style={tdStyle}>{item.order_no || '-'}</td>
                         <td style={tdStyle}>
                           <div>{item.customer_name || '-'}</div>
                           <div style={{ color: '#94a3b8', fontSize: '11px' }}>{item.customer_email || '-'}</div>
                         </td>
-                        <td style={tdStyle}>{item.subject || '-'}</td>
+                        <td style={tdStyle}>{item.reason || '-'}</td>
+                        <td style={tdStyle}>{formatPrice(Number(item.refund_amount || 0))}</td>
                         <td style={tdStyle}>
-                          <span style={statusBadgeStyle(String(item.status || 'open'))}>{item.status || 'open'}</span>
+                          <span style={statusBadgeStyle(String(item.status || 'pending'))}>{item.status || 'pending'}</span>
                         </td>
                         <td style={tdStyle}>
-                          <span style={statusBadgeStyle(String(item.priority || 'medium'))}>{item.priority || 'medium'}</span>
+                          {!Array.isArray(item.refunds) || !item.refunds.length ? (
+                            <span style={{ color: '#94a3b8' }}>-</span>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {item.refunds.slice(0, 3).map((refund) => (
+                                <span key={refund.id} style={statusBadgeStyle(String(refund.status || 'pending'))}>
+                                  {formatPrice(Number(refund.amount || 0))} / {refund.status || 'pending'}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td style={tdStyle}>{item.updated_at ? formatDate(item.updated_at) : '-'}</td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '150px' }}>
+                            <button
+                              type="button"
+                              onClick={() => void updateReturnStatus(item, 'approved', 'iade talebi onaylandi')}
+                              style={approveButtonStyle}
+                              disabled={Boolean(actionLoading[`return-${item.id}`] || actionLoading[`refund-${item.id}`])}
+                            >
+                              {actionLoading[`return-${item.id}`] === 'approved' ? 'Isleniyor...' : 'Onayla'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void updateReturnStatus(item, 'rejected', 'iade talebi reddedildi')}
+                              style={rejectButtonStyle}
+                              disabled={Boolean(actionLoading[`return-${item.id}`] || actionLoading[`refund-${item.id}`])}
+                            >
+                              {actionLoading[`return-${item.id}`] === 'rejected' ? 'Isleniyor...' : 'Reddet'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void createRefundForReturn(item)}
+                              style={shipButtonStyle}
+                              disabled={Boolean(actionLoading[`return-${item.id}`] || actionLoading[`refund-${item.id}`])}
+                            >
+                              {actionLoading[`refund-${item.id}`] ? 'Isleniyor...' : 'Refund Olustur'}
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <p style={{ color: '#94a3b8', margin: 0 }}>
+                Musteriden gelen havale bildirimleri burada gorunur. Kontrol edilen talepleri kapatabilirsiniz.
+              </p>
+              <button onClick={() => void loadTransferTickets()} style={buttonStyle}>
+                Yenile
+              </button>
+            </div>
+            {transferLoading ? (
+              <p style={{ color: '#94a3b8' }}>Havale bildirimleri yukleniyor...</p>
+            ) : !transferTickets.length ? (
+              <p style={{ color: '#94a3b8' }}>Havale bildirimi bulunamadi.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Talep No</th>
+                      <th style={thStyle}>Siparis</th>
+                      <th style={thStyle}>Musteri</th>
+                      <th style={thStyle}>Tutar</th>
+                      <th style={thStyle}>Gonderen Banka</th>
+                      <th style={thStyle}>Transfer Tarihi</th>
+                      <th style={thStyle}>Durum</th>
+                      <th style={thStyle}>Islem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transferTickets.map((item) => {
+                      const key = `transfer-${item.id}`
+                      const isClosed = String(item.status || '').toLowerCase() === 'closed'
+                      const amountRaw = String(item.metadata?.transfer_amount || '').trim()
+                      const parsedAmount = Number(amountRaw.replace(',', '.'))
+                      const amountText =
+                        Number.isFinite(parsedAmount) && parsedAmount > 0
+                          ? formatPrice(parsedAmount)
+                          : amountRaw || '-'
+                      const transferDate = String(item.metadata?.transfer_date || '').trim()
+                      const transferBank = String(item.metadata?.transfer_bank || '').trim() || '-'
+                      return (
+                        <tr key={item.id}>
+                          <td style={tdStyle}>{item.id.slice(0, 8)}</td>
+                          <td style={tdStyle}>{extractOrderNoFromTransfer(item)}</td>
+                          <td style={tdStyle}>
+                            <div>{item.customer_name || '-'}</div>
+                            <div style={{ color: '#94a3b8', fontSize: '11px' }}>{item.customer_email || '-'}</div>
+                          </td>
+                          <td style={tdStyle}>{amountText}</td>
+                          <td style={tdStyle}>{transferBank}</td>
+                          <td style={tdStyle}>{transferDate || (item.created_at ? formatDate(item.created_at) : '-')}</td>
+                          <td style={tdStyle}>
+                            <span style={statusBadgeStyle(String(item.status || 'open'))}>{item.status || 'open'}</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '150px' }}>
+                              {isClosed ? (
+                                <button
+                                  type="button"
+                                  onClick={() => void updateTransferStatus(item, 'open', 'havale bildirimi tekrar acildi')}
+                                  style={buttonStyle}
+                                  disabled={Boolean(actionLoading[key])}
+                                >
+                                  {actionLoading[key] ? 'Isleniyor...' : 'Tekrar Ac'}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const confirmed = window.confirm('Bu havale bildirimini kontrol edildi olarak onaylamak istiyor musunuz?')
+                                    if (!confirmed) return
+                                    void updateTransferStatus(item, 'closed', 'havale bildirimi onaylandi ve kapatildi')
+                                  }}
+                                  style={approveButtonStyle}
+                                  disabled={Boolean(actionLoading[key])}
+                                >
+                                  {actionLoading[key] ? 'Isleniyor...' : 'Havale Onayla'}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
