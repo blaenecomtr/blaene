@@ -276,6 +276,12 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
     ? `border:${s.border_width}px ${s.border_style} ${s.border_color};border-radius:${s.border_radius}px;padding:${s.border_padding}px;`
     : 'padding:20px;'
 
+  const pageW = s.paper_width_cm
+  const pageH = s.paper_height_cm
+  const marginCm = 0.3
+  const usableW = pageW - marginCm * 2
+  const usableH = pageH - marginCm * 2
+
   return `
     <html>
       <head>
@@ -283,9 +289,9 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           body { font-family: Arial, sans-serif; color: #111; font-size: 10px; }
-          .slip-inner { width: 100%; ${borderCss} }
+          .slip-inner { width: ${usableW}cm; ${borderCss} }
           .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-bottom: 4px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
           .site-url-row { text-align: center; font-size: 9px; color: #444; padding-bottom: 4px; }
@@ -296,11 +302,31 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
           th { background: #f3f4f6; font-weight: 700; }
           img { display: block !important; }
           @media print {
-            @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 3mm; }
-            html, body { width: ${s.paper_width_cm}cm; height: ${s.paper_height_cm}cm; overflow: hidden; }
-            .slip-inner { overflow: hidden; }
+            @page { size: ${pageW}cm ${pageH}cm; margin: ${marginCm}cm; }
+            html { width: ${usableW}cm; height: ${usableH}cm; overflow: hidden; }
+            body { width: ${usableW}cm; height: ${usableH}cm; overflow: hidden; }
+            .slip-inner { max-height: ${usableH}cm; overflow: hidden; }
           }
         </style>
+        <script>
+          window.onload = function() {
+            var inner = document.querySelector('.slip-inner');
+            if (!inner) return;
+            var pageHpx = ${usableH} * 37.7953;
+            var pageWpx = ${usableW} * 37.7953;
+            var h = inner.scrollHeight;
+            var w = inner.scrollWidth;
+            var scaleH = h > pageHpx ? pageHpx / h : 1;
+            var scaleW = w > pageWpx ? pageWpx / w : 1;
+            var scale = Math.min(scaleH, scaleW);
+            if (scale < 1) {
+              inner.style.transform = 'scale(' + scale.toFixed(4) + ')';
+              inner.style.transformOrigin = 'top left';
+              inner.style.display = 'block';
+              inner.style.width = (${usableW} * 37.7953 / scale) + 'px';
+            }
+          };
+        <\/script>
       </head>
       <body>
         <div class="slip-inner">
@@ -729,22 +755,7 @@ export default function Orders() {
     win.document.write(buildSlipHtml(order, logoDataUrl, qrSvg, slipCfg))
     win.document.close()
     win.focus()
-    setTimeout(() => {
-      try {
-        const inner = win.document.querySelector('.slip-inner') as HTMLElement | null
-        if (inner) {
-          const contentH = inner.scrollHeight
-          const pageH = slipCfg.paper_height_cm * 37.795
-          if (contentH > pageH) {
-            const scale = (pageH - 15) / contentH
-            inner.style.transform = `scale(${scale.toFixed(4)})`
-            inner.style.transformOrigin = 'top left'
-            inner.style.display = 'inline-block'
-          }
-        }
-      } catch { /* print yine devam eder */ }
-      win.print()
-    }, 400)
+    setTimeout(() => { win.print() }, 600)
   }
 
   const updateReturnStatus = async (item: ReturnRequest, status: string, successMessage: string) => {
