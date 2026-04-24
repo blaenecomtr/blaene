@@ -731,14 +731,14 @@ export default function Orders() {
     const itemNote = items
       .map((it) => `${it.product_name || it.product_code || '?'}${it.product_color ? ` (${it.product_color})` : ''} x${it.quantity || 1}`)
       .join(', ')
-    const qrData = [
-      order.order_no,
-      order.customer_name || '',
-      order.phone || '',
-      order.address || '',
-      order.city || '',
-      itemNote || '',
-    ].filter(Boolean).join('\n')
+    const qrParts: string[] = []
+    if (order.order_no) qrParts.push(`Siparis: ${order.order_no}`)
+    if (order.customer_name) qrParts.push(`Musteri: ${order.customer_name}`)
+    if (order.phone) qrParts.push(`Tel: ${order.phone}`)
+    if (order.address) qrParts.push(`Adres: ${order.address}`)
+    if (order.city) qrParts.push(`Sehir: ${order.city}`)
+    if (itemNote) qrParts.push(`Urunler: ${itemNote}`)
+    const qrData = qrParts.join('\n')
 
     const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
     const logoDataUrl = slipCfg.show_logo ? await fetchLogoDataUrl() : ''
