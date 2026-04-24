@@ -54,6 +54,7 @@ export interface SlipSettings {
   border_radius: number
   border_padding: number
   paper_width_cm: number
+  paper_height_cm: number
   paper_fit: 'exact' | 'fit' | 'fill'
 }
 
@@ -138,6 +139,7 @@ export const DEFAULT_SLIP: SlipSettings = {
   border_radius: 0,
   border_padding: 16,
   paper_width_cm: 14.8,
+  paper_height_cm: 10.5,
   paper_fit: 'exact',
 }
 
@@ -351,7 +353,8 @@ export default function SiteSettings() {
       table{width:100%;border-collapse:collapse;margin-top:10px;}
       th,td{border:1px solid #ddd;padding:5px 7px;text-align:left;font-size:11px;}
       th{background:#f3f4f6;}
-      @media print{@page{size:${s.paper_width_cm}cm auto;margin:4mm;} body{padding:0;${s.paper_fit === 'exact' ? `width:${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width:${s.paper_width_cm}cm;` : 'width:100%;'}} .slip-wrap{page-break-inside:avoid;}}
+      img{display:block !important;visibility:visible !important;}
+      @media print{@page{size:${s.paper_width_cm}cm ${s.paper_height_cm}cm;margin:4mm;} body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;${s.paper_fit === 'exact' ? `width:${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width:${s.paper_width_cm}cm;` : 'width:100%;'}} img{display:block !important;visibility:visible !important;} .slip-wrap{page-break-inside:avoid;}}
     </style></head><body>
     <div class="slip-wrap">
     <div class="header">
@@ -800,10 +803,14 @@ export default function SiteSettings() {
                 <input value={slip.site_url} onChange={(e) => setSlip((p) => ({ ...p, site_url: e.target.value }))} style={inputStyle} placeholder="www.blaene.com.tr" />
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
               <div>
-                <div style={labelStyle}>Kağıt genişliği (cm) — örn: 10 termal, 14.8 A6</div>
+                <div style={labelStyle}>Kağıt genişliği (cm) — 10: termal, 14.8: A6</div>
                 <input type="number" value={slip.paper_width_cm} onChange={(e) => setSlip((p) => ({ ...p, paper_width_cm: Number(e.target.value) || 14.8 }))} style={inputStyle} min={5} max={30} step={0.1} />
+              </div>
+              <div>
+                <div style={labelStyle}>Kağıt yüksekliği (cm) — 10: termal, 10.5: A6</div>
+                <input type="number" value={slip.paper_height_cm} onChange={(e) => setSlip((p) => ({ ...p, paper_height_cm: Number(e.target.value) || 10.5 }))} style={inputStyle} min={5} max={50} step={0.1} />
               </div>
               <div>
                 <div style={labelStyle}>Sığdırma modu</div>

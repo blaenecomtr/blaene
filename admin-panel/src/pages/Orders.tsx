@@ -289,12 +289,12 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { height: 100%; }
-          body { font-family: Arial, sans-serif; color: #111; font-size: 12px; }
+          body { font-family: Arial, sans-serif; color: #111; font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .slip-wrap { display: inline-block; width: 100%; }
           .slip-inner { ${borderCss} }
           .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 6px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+          .logo-qr-row img { display: block !important; visibility: visible !important; }
           .site-url-row { text-align: center; font-size: 11px; color: #444; padding-bottom: 8px; }
           .divider { border: none; border-top: 2px solid #111; margin-bottom: 10px; }
           .meta p { margin: 3px 0; font-size: 12px; line-height: 1.4; }
@@ -302,8 +302,9 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
           th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; font-size: 11px; }
           th { background: #f3f4f6; }
           @media print {
-            @page { size: ${s.paper_width_cm}cm auto; margin: 4mm; }
+            @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 4mm; }
             body { padding: 0; ${s.paper_fit === 'exact' ? `width: ${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width: ${s.paper_width_cm}cm;` : 'width: 100%;'} }
+            img { display: block !important; visibility: visible !important; }
           }
         </style>
       </head>
