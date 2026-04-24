@@ -228,12 +228,32 @@ function statusBadgeStyle(value: string): CSSProperties {
 
 import QRCode from 'qrcode'
 
-async function buildQrDataUrl(value: string, sizePx: number): Promise<string> {
-  try {
-    return await QRCode.toDataURL(value, { width: sizePx, margin: 1, errorCorrectionLevel: 'M' })
-  } catch {
-    return ''
+function buildQrSvg(value: string, sizePx: number): string {
+  let qd: ReturnType<typeof QRCode.create> | null = null
+  try { qd = QRCode.create(value, { errorCorrectionLevel: 'M' }) } catch { return '' }
+  if (!qd) return ''
+  const mc = qd.modules.size
+  const ms = sizePx / mc
+  const r = ms * 0.45
+  const fg = '#000'
+  const bg = '#fff'
+  const fs = 7 * ms
+  const ip = ms; const iw = 5 * ms; const ib = 3 * ms
+  const inFinder = (row: number, col: number) =>
+    (row < 7 && col < 7) || (row < 7 && col >= mc - 7) || (row >= mc - 7 && col < 7)
+  let out = `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">`
+  out += `<rect width="${sizePx}" height="${sizePx}" fill="${bg}"/>`
+  for (const [fr, fc] of [[0,0],[0,mc-7],[mc-7,0]] as [number,number][]) {
+    const x = fc * ms; const y = fr * ms
+    out += `<rect x="${x}" y="${y}" width="${fs}" height="${fs}" fill="${fg}" rx="${ms*0.8}"/>`
+    out += `<rect x="${x+ip}" y="${y+ip}" width="${iw}" height="${iw}" fill="${bg}" rx="${ms*0.5}"/>`
+    out += `<rect x="${x+ip*2}" y="${y+ip*2}" width="${ib}" height="${ib}" fill="${fg}" rx="${ms*0.3}"/>`
   }
+  for (let row = 0; row < mc; row++)
+    for (let col = 0; col < mc; col++)
+      if (qd.modules.get(row, col) && !inFinder(row, col))
+        out += `<circle cx="${(col+0.5)*ms}" cy="${(row+0.5)*ms}" r="${r}" fill="${fg}"/>`
+  return out + '</svg>'
 }
 
 async function fetchLogoDataUrl(): Promise<string> {
@@ -253,7 +273,7 @@ async function fetchLogoDataUrl(): Promise<string> {
   }
 }
 
-function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: SlipSettings) {
+function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: SlipSettings) {
   const items = Array.isArray(order.items) ? order.items : []
   const itemRows = items
     .map(
@@ -280,9 +300,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
     : ''
 
   const qrDisplaySize = Math.round(s.qr_size * 1.2)
-  const qrHtml = (s.show_qr && qrDataUrl)
-    ? `<img src="${qrDataUrl}" style="width:${qrDisplaySize}px;height:${qrDisplaySize}px;display:block;flex-shrink:0;" />`
-    : ''
+  const qrHtml = (s.show_qr && qrSvg) ? qrSvg : ''
 
   const row = (show: boolean, label: string, value: string) =>
     show ? `<p><strong>${label}:</strong> ${value || '-'}</p>` : ''
@@ -298,10 +316,9 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body { width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           body { font-family: Arial, sans-serif; color: #111; font-size: 10px; }
-          #slip-root { transform-origin: top left; }
-          .slip-inner { ${borderCss} }
+          .slip-inner { width: 100%; ${borderCss} }
           .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-bottom: 4px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
           .site-url-row { text-align: center; font-size: 9px; color: #444; padding-bottom: 4px; }
@@ -310,29 +327,14 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
           table { width: 100%; border-collapse: collapse; margin-top: 6px; }
           th, td { border: 1px solid #ccc; padding: 2px 4px; text-align: left; font-size: 9px; line-height: 1.2; }
           th { background: #f3f4f6; font-weight: 700; }
-          img { display: block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          img { display: block !important; }
           @media print {
             @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 3mm; }
-            html, body { margin: 0; padding: 0; }
+            body { width: ${s.paper_width_cm}cm; }
           }
         </style>
       </head>
       <body>
-        <script>
-          window.addEventListener('load', function() {
-            var root = document.getElementById('slip-root');
-            var pageW = ${s.paper_width_cm} * 37.8 - 24;
-            var pageH = ${s.paper_height_cm} * 37.8 - 24;
-            var contentW = root.scrollWidth;
-            var contentH = root.scrollHeight;
-            var scaleX = pageW / contentW;
-            var scaleH = pageH / contentH;
-            var scale = Math.min(scaleX, scaleH, 1);
-            root.style.transform = 'scale(' + scale + ')';
-            root.style.width = (contentW * scale) + 'px';
-          });
-        <\/script>
-        <div id="slip-root">
         <div class="slip-inner">
         <div class="logo-qr-row">
           <div class="logo-block">${logoBlock}</div>
@@ -367,7 +369,6 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
             ${itemRows || '<tr><td colspan="5">Satir bulunamadi</td></tr>'}
           </tbody>
         </table>` : ''}
-        </div>
         </div>
       </body>
     </html>
@@ -747,12 +748,10 @@ export default function Orders() {
     ].filter(Boolean).join('\r\n')
 
     const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
-    const [logoDataUrl, qrDataUrl] = await Promise.all([
-      slipCfg.show_logo ? fetchLogoDataUrl() : Promise.resolve(''),
-      slipCfg.show_qr ? buildQrDataUrl(qrData, qrDisplaySize * 2) : Promise.resolve(''),
-    ])
+    const logoDataUrl = slipCfg.show_logo ? await fetchLogoDataUrl() : ''
+    const qrSvg = slipCfg.show_qr ? buildQrSvg(qrData, qrDisplaySize) : ''
     win.document.open()
-    win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl, slipCfg))
+    win.document.write(buildSlipHtml(order, logoDataUrl, qrSvg, slipCfg))
     win.document.close()
     win.focus()
     setTimeout(() => { win.print() }, 400)
