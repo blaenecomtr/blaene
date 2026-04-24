@@ -2,6 +2,7 @@ import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../lib/api'
 import { getSiteSetting } from '../lib/siteSettings'
 import { type SlipSettings, DEFAULT_SLIP } from './SiteSettings'
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/Tabs'
 
 interface OrderItem {
   id: string
@@ -227,51 +228,12 @@ function statusBadgeStyle(value: string): CSSProperties {
 
 import QRCode from 'qrcode'
 
-function isInFinderPattern(row: number, col: number, size: number): boolean {
-  return (
-    (row < 7 && col < 7) ||
-    (row < 7 && col >= size - 7) ||
-    (row >= size - 7 && col < 7)
-  )
-}
-
-function buildQrSvgHtml(value: string, sizePx: number, ecLevel: 'L' | 'M' | 'Q' | 'H' = 'M'): string {
-  let qrData: ReturnType<typeof QRCode.create> | null = null
-  try { qrData = QRCode.create(value, { errorCorrectionLevel: ecLevel }) } catch { return '' }
-  if (!qrData) return ''
-
-  const mc = qrData.modules.size
-  const ms = sizePx / mc
-  const r = ms * 0.48
-  const fg = '#111111'
-  const bg = '#ffffff'
-  const finderSize = 7 * ms
-  const ip = ms
-  const iw = 5 * ms
-  const ib = 3 * ms
-
-  const finders: [number, number][] = [[0, 0], [0, mc - 7], [mc - 7, 0]]
-  const finderSvg = finders.map(([fr, fc]) => {
-    const x = fc * ms
-    const y = fr * ms
-    return `<rect x="${x}" y="${y}" width="${finderSize}" height="${finderSize}" fill="${fg}" rx="10" ry="10"/>` +
-      `<rect x="${x + ip}" y="${y + ip}" width="${iw}" height="${iw}" fill="${bg}" rx="7" ry="7"/>` +
-      `<rect x="${x + ip * 2}" y="${y + ip * 2}" width="${ib}" height="${ib}" fill="${fg}" rx="3" ry="3"/>`
-  }).join('')
-
-  let dots = ''
-  for (let row = 0; row < mc; row++) {
-    for (let col = 0; col < mc; col++) {
-      if (qrData.modules.get(row, col) && !isInFinderPattern(row, col, mc)) {
-        dots += `<circle cx="${(col + 0.5) * ms}" cy="${(row + 0.5) * ms}" r="${r}" fill="${fg}"/>`
-      }
-    }
+async function buildQrDataUrl(value: string, sizePx: number): Promise<string> {
+  try {
+    return await QRCode.toDataURL(value, { width: sizePx, margin: 1, errorCorrectionLevel: 'M' })
+  } catch {
+    return ''
   }
-
-  return `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">` +
-    `<rect width="${sizePx}" height="${sizePx}" fill="${bg}" rx="10" ry="10"/>` +
-    finderSvg + dots +
-    `</svg>`
 }
 
 async function fetchLogoDataUrl(): Promise<string> {
@@ -291,7 +253,7 @@ async function fetchLogoDataUrl(): Promise<string> {
   }
 }
 
-function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: SlipSettings) {
+function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: SlipSettings) {
   const items = Array.isArray(order.items) ? order.items : []
   const itemRows = items
     .map(
@@ -317,7 +279,10 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
     ? `<span style="font-size:11px;font-family:Arial,sans-serif;color:#444;display:block;width:100%;text-align:center;">${s.site_url || 'www.blaene.com.tr'}</span>`
     : ''
 
-  const qrHtml = (s.show_qr && qrSvg) ? qrSvg : ''
+  const qrDisplaySize = Math.round(s.qr_size * 1.2)
+  const qrHtml = (s.show_qr && qrDataUrl)
+    ? `<img src="${qrDataUrl}" style="width:${qrDisplaySize}px;height:${qrDisplaySize}px;display:block;flex-shrink:0;" />`
+    : ''
 
   const row = (show: boolean, label: string, value: string) =>
     show ? `<p><strong>${label}:</strong> ${value || '-'}</p>` : ''
@@ -335,6 +300,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
           * { box-sizing: border-box; margin: 0; padding: 0; }
           html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           body { font-family: Arial, sans-serif; color: #111; font-size: 10px; }
+          #slip-root { transform-origin: top left; }
           .slip-inner { ${borderCss} }
           .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-bottom: 4px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -344,15 +310,29 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
           table { width: 100%; border-collapse: collapse; margin-top: 6px; }
           th, td { border: 1px solid #ccc; padding: 2px 4px; text-align: left; font-size: 9px; line-height: 1.2; }
           th { background: #f3f4f6; font-weight: 700; }
+          img { display: block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           @media print {
             @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 3mm; }
-            html, body { width: ${s.paper_width_cm}cm; height: ${s.paper_height_cm}cm; overflow: hidden; }
-            .slip-inner { overflow: hidden; }
+            html, body { margin: 0; padding: 0; }
           }
         </style>
       </head>
       <body>
-        <div class="slip-wrap">
+        <script>
+          window.addEventListener('load', function() {
+            var root = document.getElementById('slip-root');
+            var pageW = ${s.paper_width_cm} * 37.8 - 24;
+            var pageH = ${s.paper_height_cm} * 37.8 - 24;
+            var contentW = root.scrollWidth;
+            var contentH = root.scrollHeight;
+            var scaleX = pageW / contentW;
+            var scaleH = pageH / contentH;
+            var scale = Math.min(scaleX, scaleH, 1);
+            root.style.transform = 'scale(' + scale + ')';
+            root.style.width = (contentW * scale) + 'px';
+          });
+        <\/script>
+        <div id="slip-root">
         <div class="slip-inner">
         <div class="logo-qr-row">
           <div class="logo-block">${logoBlock}</div>
@@ -767,12 +747,12 @@ export default function Orders() {
     ].filter(Boolean).join('\r\n')
 
     const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
-    const [logoDataUrl, qrSvg] = await Promise.all([
+    const [logoDataUrl, qrDataUrl] = await Promise.all([
       slipCfg.show_logo ? fetchLogoDataUrl() : Promise.resolve(''),
-      Promise.resolve(slipCfg.show_qr ? buildQrSvgHtml(qrData, qrDisplaySize) : ''),
+      slipCfg.show_qr ? buildQrDataUrl(qrData, qrDisplaySize * 2) : Promise.resolve(''),
     ])
     win.document.open()
-    win.document.write(buildSlipHtml(order, logoDataUrl, qrSvg, slipCfg))
+    win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl, slipCfg))
     win.document.close()
     win.focus()
     setTimeout(() => { win.print() }, 400)
@@ -882,29 +862,13 @@ export default function Orders() {
     <div>
       <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Siparisler</h2>
       <div style={panelStyle}>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-          <button
-            type="button"
-            onClick={() => setActiveTab('all')}
-            style={activeTab === 'all' ? activeTabButton : tabButton}
-          >
-            Tum Siparisler
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('returns')}
-            style={activeTab === 'returns' ? activeTabButton : tabButton}
-          >
-            Iade Talepleri
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('transfers')}
-            style={activeTab === 'transfers' ? activeTabButton : tabButton}
-          >
-            Havale Bildirimleri
-          </button>
-        </div>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as OrdersTab)}>
+          <TabsList className="admin-orders-tabs-list">
+            <TabsTrigger value="all">Tum Siparisler</TabsTrigger>
+            <TabsTrigger value="returns">Iade Talepleri</TabsTrigger>
+            <TabsTrigger value="transfers">Havale Bildirimleri</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {message && <div style={okStyle}>{message}</div>}
         {error && <div style={errorStyle}>{error}</div>}
@@ -1437,17 +1401,6 @@ const mailFinalButtonStyle: CSSProperties = {
   ...buttonStyle,
   background: '#0b6bcb',
   color: '#dbeafe',
-}
-
-const tabButton: CSSProperties = {
-  ...buttonStyle,
-  padding: '8px 14px',
-}
-
-const activeTabButton: CSSProperties = {
-  ...tabButton,
-  background: '#2563eb',
-  color: '#fff',
 }
 
 const stageButtonStyle: CSSProperties = {
