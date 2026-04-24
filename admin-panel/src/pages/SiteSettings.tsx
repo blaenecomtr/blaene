@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { getSiteSetting, saveSiteSetting } from '../lib/siteSettings'
 import { buildQrSvg, type QrStyle } from '../lib/qrUtils'
+import { useAdminStore } from '../store/admin'
 
 interface ShippingTier {
   min: number
@@ -183,6 +184,7 @@ function parseNumber(value: string, fallback = 0) {
 
 export default function SiteSettings() {
   const token = localStorage.getItem('admin_token')
+  const setCurrentPage = useAdminStore((state) => state.setCurrentPage)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -406,6 +408,15 @@ export default function SiteSettings() {
   return (
     <div>
       <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#fff' }}>Site Ayarlari</h2>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+        <button
+          type="button"
+          onClick={() => setCurrentPage('barcode-print')}
+          style={{ ...primaryButton, background: '#0ea5e9' }}
+        >
+          Barkod Yazdir Ekrani
+        </button>
+      </div>
 
       <div style={panelStyle}>
         <h3 style={panelTitleStyle}>Kargo baremleri</h3>
@@ -843,13 +854,45 @@ export default function SiteSettings() {
                 </div>
               ))}
             </div>
+            {/* Kağıt boyutu hızlı seçim */}
+            <div style={{ marginBottom: '10px' }}>
+              <div style={labelStyle}>Kağıt Boyutu</div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                {([
+                  { label: '100 × 100 mm', w: 10, h: 10 },
+                  { label: '150 × 100 mm', w: 15, h: 10 },
+                ] as { label: string; w: number; h: number }[]).map(({ label, w, h }) => {
+                  const active = slip.paper_width_cm === w && slip.paper_height_cm === h
+                  return (
+                    <div
+                      key={label}
+                      onClick={() => setSlip((p) => ({ ...p, paper_width_cm: w, paper_height_cm: h }))}
+                      style={{
+                        border: active ? '2px solid #2563eb' : '1px solid #334155',
+                        background: active ? '#1e3a5f' : '#0f172a',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        cursor: 'pointer',
+                        color: active ? '#e2e8f0' : '#94a3b8',
+                        fontWeight: active ? 700 : 400,
+                        fontSize: '12px',
+                        transition: 'all 150ms',
+                        userSelect: 'none' as const,
+                      }}
+                    >
+                      {label}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
               <div>
-                <div style={labelStyle}>Kağıt genişliği (cm) — 10: termal, 14.8: A6</div>
+                <div style={labelStyle}>Kağıt genişliği (cm)</div>
                 <input type="number" value={slip.paper_width_cm} onChange={(e) => setSlip((p) => ({ ...p, paper_width_cm: Number(e.target.value) || 14.8 }))} style={inputStyle} min={5} max={30} step={0.1} />
               </div>
               <div>
-                <div style={labelStyle}>Kağıt yüksekliği (cm) — 10: termal, 10.5: A6</div>
+                <div style={labelStyle}>Kağıt yüksekliği (cm)</div>
                 <input type="number" value={slip.paper_height_cm} onChange={(e) => setSlip((p) => ({ ...p, paper_height_cm: Number(e.target.value) || 10.5 }))} style={inputStyle} min={5} max={50} step={0.1} />
               </div>
               <div>
