@@ -53,6 +53,8 @@ export interface SlipSettings {
   border_style: string
   border_radius: number
   border_padding: number
+  paper_width_cm: number
+  paper_fit: 'exact' | 'fit' | 'fill'
 }
 
 interface ManualSlipItem {
@@ -135,6 +137,8 @@ export const DEFAULT_SLIP: SlipSettings = {
   border_style: 'solid',
   border_radius: 0,
   border_padding: 16,
+  paper_width_cm: 14.8,
+  paper_fit: 'exact',
 }
 
 const DEFAULT_MANUAL_SLIP: ManualSlip = {
@@ -293,16 +297,19 @@ export default function SiteSettings() {
 
     let qrDataUrl = ''
     if (s.show_qr) {
-      const lines: string[] = []
-      if (m.customer_name) lines.push(`Ad Soyad: ${m.customer_name}`)
-      if (m.phone) lines.push(`Telefon: ${m.phone}`)
       const validItems = m.items.filter((it) => it.name.trim())
-      if (validItems.length) {
-        lines.push('Urunler:')
-        validItems.forEach((it) => lines.push(`- ${it.name} x${it.qty || 1}`))
-      }
-      if (m.note) lines.push(`Not: ${m.note}`)
-      qrDataUrl = await QRCode.toDataURL(lines.join('\n') || 'Manuel Fis', {
+      const itemNote = validItems.map((it) => `${it.name} x${it.qty || 1}`).join(', ')
+      const noteParts = [itemNote, m.note].filter(Boolean).join(' | ')
+      const vcard = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        m.customer_name ? `FN:${m.customer_name}` : 'FN:',
+        m.phone ? `TEL;TYPE=CELL:${m.phone}` : '',
+        (m.address || m.city) ? `ADR;TYPE=HOME:;;${m.address || ''};;${m.city || ''};;TR` : '',
+        noteParts ? `NOTE:${noteParts}` : '',
+        'END:VCARD',
+      ].filter(Boolean).join('\r\n')
+      qrDataUrl = await QRCode.toDataURL(vcard, {
         width: s.qr_size * 2,
         margin: 1,
         errorCorrectionLevel: 'M',
@@ -344,7 +351,7 @@ export default function SiteSettings() {
       table{width:100%;border-collapse:collapse;margin-top:10px;}
       th,td{border:1px solid #ddd;padding:5px 7px;text-align:left;font-size:11px;}
       th{background:#f3f4f6;}
-      @media print{@page{margin:8mm;size:A6 portrait;} body{padding:0;} .slip-wrap{page-break-inside:avoid;}}
+      @media print{@page{size:${s.paper_width_cm}cm auto;margin:4mm;} body{padding:0;${s.paper_fit === 'exact' ? `width:${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width:${s.paper_width_cm}cm;` : 'width:100%;'}} .slip-wrap{page-break-inside:avoid;}}
     </style></head><body>
     <div class="slip-wrap">
     <div class="header">
@@ -779,7 +786,7 @@ export default function SiteSettings() {
           <div>
             {/* Tasarım */}
             <div style={sectionLabelStyle}>Tasarim</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
               <div>
                 <div style={labelStyle}>Logo yüksekliği (px)</div>
                 <input type="number" value={slip.logo_height} onChange={(e) => setSlip((p) => ({ ...p, logo_height: Number(e.target.value) || 80 }))} style={inputStyle} min={20} max={200} />
@@ -791,6 +798,20 @@ export default function SiteSettings() {
               <div>
                 <div style={labelStyle}>Site adresi metni</div>
                 <input value={slip.site_url} onChange={(e) => setSlip((p) => ({ ...p, site_url: e.target.value }))} style={inputStyle} placeholder="www.blaene.com.tr" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+              <div>
+                <div style={labelStyle}>Kağıt genişliği (cm) — örn: 10 termal, 14.8 A6</div>
+                <input type="number" value={slip.paper_width_cm} onChange={(e) => setSlip((p) => ({ ...p, paper_width_cm: Number(e.target.value) || 14.8 }))} style={inputStyle} min={5} max={30} step={0.1} />
+              </div>
+              <div>
+                <div style={labelStyle}>Sığdırma modu</div>
+                <select value={slip.paper_fit} onChange={(e) => setSlip((p) => ({ ...p, paper_fit: e.target.value as SlipSettings['paper_fit'] }))} style={inputStyle}>
+                  <option value="exact">Tam boyut (exact)</option>
+                  <option value="fit">Sığdır (fit)</option>
+                  <option value="fill">Doldur (fill)</option>
+                </select>
               </div>
             </div>
 

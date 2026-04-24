@@ -7,6 +7,7 @@ interface OrderItem {
   id: string
   product_code?: string
   product_name?: string
+  product_color?: string | null
   unit_price?: number
   quantity?: number
   line_total?: number
@@ -251,6 +252,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
       <tr>
         <td>${item.product_code || '-'}</td>
         <td>${item.product_name || '-'}</td>
+        <td>${item.product_color || '-'}</td>
         <td>${Number(item.quantity || 0)}</td>
         <td>${formatPrice(Number(item.line_total || 0))}</td>
       </tr>
@@ -300,8 +302,8 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
           th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; font-size: 11px; }
           th { background: #f3f4f6; }
           @media print {
-            @page { margin: 6mm; size: A6 portrait; }
-            body { padding: 0; }
+            @page { size: ${s.paper_width_cm}cm auto; margin: 4mm; }
+            body { padding: 0; ${s.paper_fit === 'exact' ? `width: ${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width: ${s.paper_width_cm}cm;` : 'width: 100%;'} }
           }
         </style>
       </head>
@@ -332,12 +334,13 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
             <tr>
               <th>Kod</th>
               <th>Urun</th>
+              <th>Renk</th>
               <th>Adet</th>
               <th>Tutar</th>
             </tr>
           </thead>
           <tbody>
-            ${itemRows || '<tr><td colspan="4">Satir bulunamadi</td></tr>'}
+            ${itemRows || '<tr><td colspan="5">Satir bulunamadi</td></tr>'}
           </tbody>
         </table>` : ''}
         </div>
@@ -706,17 +709,18 @@ export default function Orders() {
     const slipCfg: SlipSettings = { ...DEFAULT_SLIP, ...s }
 
     const items = Array.isArray(order.items) ? order.items : []
-    const itemLines = items
-      .map((it) => `- ${it.product_name || it.product_code || '?'} x${it.quantity || 1}`)
-      .join('\n')
-    const qrParts = [
-      `Ad Soyad: ${order.customer_name || '-'}`,
-      `Telefon: ${order.phone || '-'}`,
-      `Urunler:`,
-      itemLines || '- (urun yok)',
-      `Toplam: ${order.total} TL`,
-    ]
-    const qrData = qrParts.join('\n')
+    const itemNote = items
+      .map((it) => `${it.product_name || it.product_code || '?'}${it.product_color ? ` (${it.product_color})` : ''} x${it.quantity || 1}`)
+      .join(', ')
+    const qrData = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `FN:${order.customer_name || ''}`,
+      order.phone ? `TEL;TYPE=CELL:${order.phone}` : '',
+      (order.address || order.city) ? `ADR;TYPE=HOME:;;${order.address || ''};;${order.city || ''};;TR` : '',
+      `NOTE:Siparis: ${order.order_no} | ${itemNote || 'urun yok'} | Toplam: ${order.total} TL`,
+      'END:VCARD',
+    ].filter(Boolean).join('\r\n')
 
     const [logoDataUrl, qrDataUrl] = await Promise.all([
       slipCfg.show_logo ? fetchLogoDataUrl() : Promise.resolve(''),
