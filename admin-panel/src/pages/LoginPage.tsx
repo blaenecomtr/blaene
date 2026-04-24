@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { useAuthStore } from '../store/auth'
 import { apiRequest } from '../lib/api'
+import { Button } from '../components/ui/Button'
 
 interface LoginResponse {
   token: string
@@ -247,24 +248,15 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              opacity: loading ? 0.7 : 1,
-            }}
+            className="admin-login-submit"
+            variant="solid"
+            size="default"
           >
             {loading ? 'Giris yapiliyor...' : 'Giris Yap'}
-          </button>
+          </Button>
         </form>
 
         <div

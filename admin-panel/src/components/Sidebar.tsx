@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useAuthStore } from '../store/auth'
+import { Button } from './ui/Button'
 
 interface SidebarProps {
   currentPage: string
@@ -42,13 +43,16 @@ export default function Sidebar({ currentPage, onNavigate, isMobile = false, isO
         </div>
 
         {isMobile && (
-          <button
+          <Button
             onClick={onClose}
             aria-label="Menuyu Kapat"
             className="admin-icon-btn"
+            variant="ghost"
+            size="sm"
+            neon={false}
           >
             Kapat
-          </button>
+          </Button>
         )}
       </div>
 

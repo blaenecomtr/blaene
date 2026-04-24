@@ -1,5 +1,6 @@
 import { useAuthStore } from '../store/auth'
 import { useAdminStore, type AdminTheme } from '../store/admin'
+import { Button } from './ui/Button'
 
 interface HeaderProps {
   pageTitle: string
@@ -27,13 +28,16 @@ export default function Header({
     <header className={`admin-header${isMobile ? ' is-mobile' : ''}`}>
       <div className="admin-header-left">
         {showMenuButton && (
-          <button
+          <Button
             onClick={onMenuClick}
             aria-label="Menuyu Ac"
+            variant="ghost"
+            size="sm"
+            neon={false}
             className="admin-icon-btn"
           >
             MENU
-          </button>
+          </Button>
         )}
 
         <div className="admin-header-titles">
@@ -56,9 +60,15 @@ export default function Header({
           <option value="sunset">Sunset</option>
         </select>
         <span className="admin-status-chip">Canli Yonetim</span>
-        <button onClick={onLogoutClick} className="admin-logout-btn">
+        <Button
+          onClick={onLogoutClick}
+          className="admin-logout-btn"
+          variant="ghost"
+          size="sm"
+          neon={false}
+        >
           Cikis Yap
-        </button>
+        </Button>
       </div>
 
       <select
@@ -74,12 +84,15 @@ export default function Header({
         <option value="sunset">Sunset</option>
       </select>
 
-      <button
+      <Button
         onClick={onLogoutClick}
         className="admin-logout-btn admin-logout-btn-mobile"
+        variant="ghost"
+        size="sm"
+        neon={false}
       >
         Cikis Yap
-      </button>
+      </Button>
     </header>
   )
 }

@@ -562,6 +562,191 @@ body[data-admin-theme='mono-orange'] .admin-theme-select-mobile option {
   background: #140700;
 }
 
+.ui-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--admin-accent-rgb), 0.35);
+  color: var(--admin-text);
+  background: rgba(var(--admin-accent-rgb), 0.08);
+  text-align: center;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+
+.ui-btn:hover {
+  transform: translateY(-1px);
+}
+
+.ui-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+}
+
+.ui-btn-default {
+  background: rgba(var(--admin-accent-rgb), 0.08);
+  border-color: rgba(var(--admin-accent-rgb), 0.3);
+}
+
+.ui-btn-default:hover {
+  background: rgba(var(--admin-accent-rgb), 0.02);
+}
+
+.ui-btn-solid {
+  background: rgba(var(--admin-accent-rgb), 0.88);
+  border-color: rgba(var(--admin-accent-rgb), 0.95);
+  color: #ffffff;
+}
+
+.ui-btn-solid:hover {
+  background: rgba(var(--admin-accent-rgb), 0.98);
+  border-color: rgba(226, 232, 240, 0.55);
+}
+
+.ui-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.ui-btn-ghost:hover {
+  border-color: rgba(var(--admin-accent-rgb), 0.55);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ui-btn-size-default {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ui-btn-size-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ui-btn-size-lg {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ui-btn-neon {
+  position: absolute;
+  left: 12.5%;
+  width: 75%;
+  height: 1px;
+  display: none;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--admin-accent-rgb), 0.95) 50%,
+    transparent 100%
+  );
+}
+
+.ui-btn-neon.is-visible {
+  display: block;
+}
+
+.ui-btn-neon-top {
+  top: 0;
+}
+
+.ui-btn-neon-bottom {
+  bottom: 0;
+  opacity: 0.2;
+}
+
+.ui-btn:hover .ui-btn-neon-top.is-visible {
+  opacity: 1;
+}
+
+.ui-btn:hover .ui-btn-neon-bottom.is-visible {
+  opacity: 0.35;
+}
+
+.ui-tabs-list {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--admin-accent-rgb), 0.28);
+  background: rgba(var(--admin-accent-rgb), 0.1);
+  padding: 4px;
+  color: var(--admin-muted);
+}
+
+.ui-tabs-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  color: #bfd3f3;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  outline-offset: 2px;
+  transition: all 0.2s ease;
+}
+
+.ui-tabs-trigger:hover {
+  color: #e2e8f0;
+  border-color: rgba(var(--admin-accent-rgb), 0.42);
+  background: rgba(var(--admin-accent-rgb), 0.12);
+}
+
+.ui-tabs-trigger:focus-visible {
+  outline: 2px solid rgba(var(--admin-accent-rgb), 0.55);
+}
+
+.ui-tabs-trigger:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.ui-tabs-trigger[data-state='active'] {
+  color: #ffffff;
+  border-color: rgba(var(--admin-accent-rgb), 0.88);
+  background: rgba(var(--admin-accent-rgb), 0.86);
+  box-shadow: 0 2px 10px rgba(2, 6, 23, 0.35);
+}
+
+.ui-tabs-content {
+  margin-top: 10px;
+  outline-offset: 2px;
+}
+
+.ui-tabs-content:focus-visible {
+  outline: 2px solid rgba(var(--admin-accent-rgb), 0.55);
+}
+
+.admin-orders-tabs-list {
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.admin-login-submit {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .admin-logout-btn {
   padding: 8px 13px;
   border-radius: 10px;
@@ -579,6 +764,10 @@ body[data-admin-theme='mono-orange'] .admin-theme-select-mobile option {
 }
 
 .admin-logout-btn-mobile {
+  display: none;
+}
+
+.admin-theme-select-mobile {
   display: none;
 }
 
@@ -981,8 +1170,4 @@ body[data-admin-theme='mono-orange'] .admin-theme-select-mobile option {
   .admin-page-title {
     font-size: 18px;
   }
-}
-
-.admin-theme-select-mobile {
-  display: none;
 }
