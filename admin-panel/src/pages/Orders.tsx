@@ -227,6 +227,53 @@ function statusBadgeStyle(value: string): CSSProperties {
 
 import QRCode from 'qrcode'
 
+function isInFinderPattern(row: number, col: number, size: number): boolean {
+  return (
+    (row < 7 && col < 7) ||
+    (row < 7 && col >= size - 7) ||
+    (row >= size - 7 && col < 7)
+  )
+}
+
+function buildQrSvgHtml(value: string, sizePx: number, ecLevel: 'L' | 'M' | 'Q' | 'H' = 'M'): string {
+  let qrData: ReturnType<typeof QRCode.create> | null = null
+  try { qrData = QRCode.create(value, { errorCorrectionLevel: ecLevel }) } catch { return '' }
+  if (!qrData) return ''
+
+  const mc = qrData.modules.size
+  const ms = sizePx / mc
+  const r = ms * (1 / 3)
+  const fg = '#111111'
+  const bg = '#ffffff'
+  const finderSize = 7 * ms
+  const ip = ms
+  const iw = 5 * ms
+  const ib = 3 * ms
+
+  const finders: [number, number][] = [[0, 0], [0, mc - 7], [mc - 7, 0]]
+  const finderSvg = finders.map(([fr, fc]) => {
+    const x = fc * ms
+    const y = fr * ms
+    return `<rect x="${x}" y="${y}" width="${finderSize}" height="${finderSize}" fill="${fg}" rx="10" ry="10"/>` +
+      `<rect x="${x + ip}" y="${y + ip}" width="${iw}" height="${iw}" fill="${bg}" rx="7" ry="7"/>` +
+      `<rect x="${x + ip * 2}" y="${y + ip * 2}" width="${ib}" height="${ib}" fill="${fg}" rx="3" ry="3"/>`
+  }).join('')
+
+  let dots = ''
+  for (let row = 0; row < mc; row++) {
+    for (let col = 0; col < mc; col++) {
+      if (qrData.modules.get(row, col) && !isInFinderPattern(row, col, mc)) {
+        dots += `<circle cx="${(col + 0.5) * ms}" cy="${(row + 0.5) * ms}" r="${r}" fill="${fg}"/>`
+      }
+    }
+  }
+
+  return `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">` +
+    `<rect width="${sizePx}" height="${sizePx}" fill="${bg}" rx="10" ry="10"/>` +
+    finderSvg + dots +
+    `</svg>`
+}
+
 async function fetchLogoDataUrl(): Promise<string> {
   try {
     const origin = window.location.origin
@@ -244,7 +291,7 @@ async function fetchLogoDataUrl(): Promise<string> {
   }
 }
 
-function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: SlipSettings) {
+function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: SlipSettings) {
   const items = Array.isArray(order.items) ? order.items : []
   const itemRows = items
     .map(
@@ -270,10 +317,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrDataUrl: string, s: 
     ? `<span style="font-size:11px;font-family:Arial,sans-serif;color:#444;display:block;width:100%;text-align:center;">${s.site_url || 'www.blaene.com.tr'}</span>`
     : ''
 
-  const qrDisplaySize = Math.round(s.qr_size * 1.2)
-  const qrHtml = (s.show_qr && qrDataUrl)
-    ? `<img src="${qrDataUrl}" alt="QR" style="width:${qrDisplaySize}px;height:${qrDisplaySize}px;display:block;flex-shrink:0;" />`
-    : ''
+  const qrHtml = (s.show_qr && qrSvg) ? qrSvg : ''
 
   const row = (show: boolean, label: string, value: string) =>
     show ? `<p><strong>${label}:</strong> ${value || '-'}</p>` : ''
@@ -723,14 +767,13 @@ export default function Orders() {
       'END:VCARD',
     ].filter(Boolean).join('\r\n')
 
-    const [logoDataUrl, qrDataUrl] = await Promise.all([
+    const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
+    const [logoDataUrl, qrSvg] = await Promise.all([
       slipCfg.show_logo ? fetchLogoDataUrl() : Promise.resolve(''),
-      slipCfg.show_qr
-        ? QRCode.toDataURL(qrData, { width: slipCfg.qr_size * 2, margin: 1, errorCorrectionLevel: 'M' }).catch(() => '')
-        : Promise.resolve(''),
+      Promise.resolve(slipCfg.show_qr ? buildQrSvgHtml(qrData, qrDisplaySize) : ''),
     ])
     win.document.open()
-    win.document.write(buildSlipHtml(order, logoDataUrl, qrDataUrl, slipCfg))
+    win.document.write(buildSlipHtml(order, logoDataUrl, qrSvg, slipCfg))
     win.document.close()
     win.focus()
     setTimeout(() => { win.print() }, 400)

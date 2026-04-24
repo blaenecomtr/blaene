@@ -297,7 +297,7 @@ export default function SiteSettings() {
       } catch { /* no logo */ }
     }
 
-    let qrDataUrl = ''
+    let qrHtml = ''
     if (s.show_qr) {
       const validItems = m.items.filter((it) => it.name.trim())
       const itemNote = validItems.map((it) => `${it.name} x${it.qty || 1}`).join(', ')
@@ -311,11 +311,36 @@ export default function SiteSettings() {
         noteParts ? `NOTE:${noteParts}` : '',
         'END:VCARD',
       ].filter(Boolean).join('\r\n')
-      qrDataUrl = await QRCode.toDataURL(vcard, {
-        width: s.qr_size * 2,
-        margin: 1,
-        errorCorrectionLevel: 'M',
-      }).catch(() => '')
+      try {
+        const qd = QRCode.create(vcard, { errorCorrectionLevel: 'M' })
+        const sizePx = s.qr_size
+        const mc = qd.modules.size
+        const ms = sizePx / mc
+        const r = ms / 3
+        const fg = '#111111'
+        const bg = '#ffffff'
+        const fSize = 7 * ms
+        const ip = ms
+        const iw = 5 * ms
+        const ib = 3 * ms
+        const finders: [number, number][] = [[0, 0], [0, mc - 7], [mc - 7, 0]]
+        const isInFinder = (row: number, col: number) =>
+          (row < 7 && col < 7) || (row < 7 && col >= mc - 7) || (row >= mc - 7 && col < 7)
+        const finderSvg = finders.map(([fr, fc]) => {
+          const x = fc * ms; const y = fr * ms
+          return `<rect x="${x}" y="${y}" width="${fSize}" height="${fSize}" fill="${fg}" rx="10" ry="10"/>` +
+            `<rect x="${x+ip}" y="${y+ip}" width="${iw}" height="${iw}" fill="${bg}" rx="7" ry="7"/>` +
+            `<rect x="${x+ip*2}" y="${y+ip*2}" width="${ib}" height="${ib}" fill="${fg}" rx="3" ry="3"/>`
+        }).join('')
+        let dots = ''
+        for (let row = 0; row < mc; row++)
+          for (let col = 0; col < mc; col++)
+            if (qd.modules.get(row, col) && !isInFinder(row, col))
+              dots += `<circle cx="${(col+0.5)*ms}" cy="${(row+0.5)*ms}" r="${r}" fill="${fg}"/>`
+        qrHtml = `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">` +
+          `<rect width="${sizePx}" height="${sizePx}" fill="${bg}" rx="10" ry="10"/>` +
+          finderSvg + dots + `</svg>`
+      } catch { qrHtml = '' }
     }
 
     const logoBlock = logoDataUrl
@@ -324,10 +349,6 @@ export default function SiteSettings() {
 
     const siteUrlHtml = s.show_site_url
       ? `<span style="font-size:11px;font-family:Arial,sans-serif;color:#444;display:block;width:100%;text-align:center;">${s.site_url || 'www.blaene.com.tr'}</span>`
-      : ''
-
-    const qrHtml = qrDataUrl
-      ? `<img src="${qrDataUrl}" alt="QR" style="width:${s.qr_size}px;height:${s.qr_size}px;display:block;" />`
       : ''
 
     const itemRows = m.items
