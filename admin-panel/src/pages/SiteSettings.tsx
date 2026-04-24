@@ -316,7 +316,7 @@ export default function SiteSettings() {
         const sizePx = s.qr_size
         const mc = qd.modules.size
         const ms = sizePx / mc
-        const r = ms / 3
+        const r = ms * 0.48
         const fg = '#111111'
         const bg = '#ffffff'
         const fSize = 7 * ms
@@ -366,16 +366,16 @@ export default function SiteSettings() {
     return `<html><head><meta charset="UTF-8"/><title>Manuel Kargo Fisi</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0;}
-      body{font-family:Arial,sans-serif;color:#111;font-size:12px;}
+      html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      body{font-family:Arial,sans-serif;color:#111;font-size:10px;}
       .slip-wrap{${borderCss}}
-      .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;border-bottom:2px solid #111;padding-bottom:10px;}
-      .logo-block{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
-      .meta p{margin:3px 0;font-size:12px;line-height:1.4;}
-      table{width:100%;border-collapse:collapse;margin-top:10px;}
-      th,td{border:1px solid #ddd;padding:5px 7px;text-align:left;font-size:11px;}
-      th{background:#f3f4f6;}
-      img{display:block !important;visibility:visible !important;}
-      @media print{@page{size:${s.paper_width_cm}cm ${s.paper_height_cm}cm;margin:4mm;} body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;${s.paper_fit === 'exact' ? `width:${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width:${s.paper_width_cm}cm;` : 'width:100%;'}} img{display:block !important;visibility:visible !important;} .slip-wrap{page-break-inside:avoid;}}
+      .header{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;border-bottom:2px solid #111;padding-bottom:4px;}
+      .logo-block{display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
+      .meta p{margin:1px 0;font-size:10px;line-height:1.3;}
+      table{width:100%;border-collapse:collapse;margin-top:6px;}
+      th,td{border:1px solid #ccc;padding:2px 4px;text-align:left;font-size:9px;line-height:1.2;}
+      th{background:#f3f4f6;font-weight:700;}
+      @media print{@page{size:${s.paper_width_cm}cm ${s.paper_height_cm}cm;margin:3mm;} html,body{width:${s.paper_width_cm}cm;height:${s.paper_height_cm}cm;overflow:hidden;} .slip-wrap{overflow:hidden;}}
     </style></head><body>
     <div class="slip-wrap">
     <div class="header">

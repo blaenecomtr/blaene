@@ -242,7 +242,7 @@ function buildQrSvgHtml(value: string, sizePx: number, ecLevel: 'L' | 'M' | 'Q' 
 
   const mc = qrData.modules.size
   const ms = sizePx / mc
-  const r = ms * (1 / 3)
+  const r = ms * 0.48
   const fg = '#111111'
   const bg = '#ffffff'
   const finderSize = 7 * ms
@@ -333,22 +333,21 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
         <title>Kargo Fisi - ${order.order_no}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: Arial, sans-serif; color: #111; font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .slip-wrap { display: inline-block; width: 100%; }
+          html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { font-family: Arial, sans-serif; color: #111; font-size: 10px; }
           .slip-inner { ${borderCss} }
-          .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 6px; }
-          .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
-          .logo-qr-row img { display: block !important; visibility: visible !important; }
-          .site-url-row { text-align: center; font-size: 11px; color: #444; padding-bottom: 8px; }
-          .divider { border: none; border-top: 2px solid #111; margin-bottom: 10px; }
-          .meta p { margin: 3px 0; font-size: 12px; line-height: 1.4; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; font-size: 11px; }
-          th { background: #f3f4f6; }
+          .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-bottom: 4px; }
+          .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+          .site-url-row { text-align: center; font-size: 9px; color: #444; padding-bottom: 4px; }
+          .divider { border: none; border-top: 2px solid #111; margin-bottom: 6px; }
+          .meta p { margin: 1px 0; font-size: 10px; line-height: 1.3; }
+          table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+          th, td { border: 1px solid #ccc; padding: 2px 4px; text-align: left; font-size: 9px; line-height: 1.2; }
+          th { background: #f3f4f6; font-weight: 700; }
           @media print {
-            @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 4mm; }
-            body { padding: 0; ${s.paper_fit === 'exact' ? `width: ${s.paper_width_cm}cm;` : s.paper_fit === 'fit' ? `max-width: ${s.paper_width_cm}cm;` : 'width: 100%;'} }
-            img { display: block !important; visibility: visible !important; }
+            @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 3mm; }
+            html, body { width: ${s.paper_width_cm}cm; height: ${s.paper_height_cm}cm; overflow: hidden; }
+            .slip-inner { overflow: hidden; }
           }
         </style>
       </head>
