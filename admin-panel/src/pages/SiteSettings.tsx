@@ -305,17 +305,15 @@ export default function SiteSettings() {
     if (s.show_qr) {
       const validItems = m.items.filter((it) => it.name.trim())
       const itemNote = validItems.map((it) => `${it.name} x${it.qty || 1}`).join(', ')
-      const noteParts = [itemNote, m.note].filter(Boolean).join(' | ')
-      const vcard = [
-        'BEGIN:VCARD',
-        'VERSION:3.0',
-        m.customer_name ? `FN:${m.customer_name}` : 'FN:',
-        m.phone ? `TEL;TYPE=CELL:${m.phone}` : '',
-        (m.address || m.city) ? `ADR;TYPE=HOME:;;${m.address || ''};;${m.city || ''};;TR` : '',
-        noteParts ? `NOTE:${noteParts}` : '',
-        'END:VCARD',
-      ].filter(Boolean).join('\r\n')
-      qrHtml = buildQrSvg(vcard, s.qr_size, s.qr_style ?? 'rounded', s.qr_style === 'logo' ? logoDataUrl : undefined)
+      const qrData = [
+        m.customer_name || '',
+        m.phone || '',
+        m.address || '',
+        m.city || '',
+        itemNote || '',
+        m.note || '',
+      ].filter(Boolean).join('\n')
+      qrHtml = buildQrSvg(qrData, s.qr_size, s.qr_style ?? 'rounded', s.qr_style === 'logo' ? logoDataUrl : undefined)
     }
 
     const logoBlock = logoDataUrl

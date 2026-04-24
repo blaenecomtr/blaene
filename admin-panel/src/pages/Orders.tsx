@@ -732,14 +732,13 @@ export default function Orders() {
       .map((it) => `${it.product_name || it.product_code || '?'}${it.product_color ? ` (${it.product_color})` : ''} x${it.quantity || 1}`)
       .join(', ')
     const qrData = [
-      'BEGIN:VCARD',
-      'VERSION:3.0',
-      `FN:${order.customer_name || ''}`,
-      order.phone ? `TEL;TYPE=CELL:${order.phone}` : '',
-      (order.address || order.city) ? `ADR;TYPE=HOME:;;${order.address || ''};;${order.city || ''};;TR` : '',
-      `NOTE:Siparis: ${order.order_no} | ${itemNote || 'urun yok'} | Toplam: ${order.total} TL`,
-      'END:VCARD',
-    ].filter(Boolean).join('\r\n')
+      order.order_no,
+      order.customer_name || '',
+      order.phone || '',
+      order.address || '',
+      order.city || '',
+      itemNote || '',
+    ].filter(Boolean).join('\n')
 
     const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
     const logoDataUrl = slipCfg.show_logo ? await fetchLogoDataUrl() : ''
