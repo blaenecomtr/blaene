@@ -1,6 +1,6 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { getSiteSetting, saveSiteSetting } from '../lib/siteSettings'
+import { buildQrSvg, type QrStyle } from '../lib/qrUtils'
 
 interface ShippingTier {
   min: number
@@ -36,6 +36,7 @@ export interface SlipSettings {
   logo_height: number
   show_qr: boolean
   qr_size: number
+  qr_style: QrStyle
   show_order_no: boolean
   show_customer_name: boolean
   show_email: boolean
@@ -121,6 +122,7 @@ export const DEFAULT_SLIP: SlipSettings = {
   logo_height: 80,
   show_qr: true,
   qr_size: 150,
+  qr_style: 'rounded',
   show_order_no: true,
   show_customer_name: true,
   show_email: true,
@@ -311,36 +313,7 @@ export default function SiteSettings() {
         noteParts ? `NOTE:${noteParts}` : '',
         'END:VCARD',
       ].filter(Boolean).join('\r\n')
-      try {
-        const qd = QRCode.create(vcard, { errorCorrectionLevel: 'M' })
-        const sizePx = s.qr_size
-        const mc = qd.modules.size
-        const ms = sizePx / mc
-        const r = ms * 0.48
-        const fg = '#111111'
-        const bg = '#ffffff'
-        const fSize = 7 * ms
-        const ip = ms
-        const iw = 5 * ms
-        const ib = 3 * ms
-        const finders: [number, number][] = [[0, 0], [0, mc - 7], [mc - 7, 0]]
-        const isInFinder = (row: number, col: number) =>
-          (row < 7 && col < 7) || (row < 7 && col >= mc - 7) || (row >= mc - 7 && col < 7)
-        const finderSvg = finders.map(([fr, fc]) => {
-          const x = fc * ms; const y = fr * ms
-          return `<rect x="${x}" y="${y}" width="${fSize}" height="${fSize}" fill="${fg}" rx="10" ry="10"/>` +
-            `<rect x="${x+ip}" y="${y+ip}" width="${iw}" height="${iw}" fill="${bg}" rx="7" ry="7"/>` +
-            `<rect x="${x+ip*2}" y="${y+ip*2}" width="${ib}" height="${ib}" fill="${fg}" rx="3" ry="3"/>`
-        }).join('')
-        let dots = ''
-        for (let row = 0; row < mc; row++)
-          for (let col = 0; col < mc; col++)
-            if (qd.modules.get(row, col) && !isInFinder(row, col))
-              dots += `<circle cx="${(col+0.5)*ms}" cy="${(row+0.5)*ms}" r="${r}" fill="${fg}"/>`
-        qrHtml = `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">` +
-          `<rect width="${sizePx}" height="${sizePx}" fill="${bg}" rx="10" ry="10"/>` +
-          finderSvg + dots + `</svg>`
-      } catch { qrHtml = '' }
+      qrHtml = buildQrSvg(vcard, s.qr_size, s.qr_style ?? 'rounded', s.qr_style === 'logo' ? logoDataUrl : undefined)
     }
 
     const logoBlock = logoDataUrl
@@ -403,7 +376,22 @@ export default function SiteSettings() {
     win.document.write(html)
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print() }, 400)
+    setTimeout(() => {
+      try {
+        const inner = win.document.querySelector('.slip-wrap') as HTMLElement | null
+        if (inner) {
+          const contentH = inner.scrollHeight
+          const pageH = slip.paper_height_cm * 37.795
+          if (contentH > pageH) {
+            const scale = (pageH - 15) / contentH
+            inner.style.transform = `scale(${scale.toFixed(4)})`
+            inner.style.transformOrigin = 'top left'
+            inner.style.display = 'inline-block'
+          }
+        }
+      } catch { /* print yine devam eder */ }
+      win.print()
+    }, 400)
   }
 
   const updatePreview = async () => {
@@ -824,6 +812,37 @@ export default function SiteSettings() {
                 <input value={slip.site_url} onChange={(e) => setSlip((p) => ({ ...p, site_url: e.target.value }))} style={inputStyle} placeholder="www.blaene.com.tr" />
               </div>
             </div>
+
+            {/* QR Stili */}
+            <div style={sectionLabelStyle}>QR Kodu Stili</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
+              {([
+                { value: 'standard', label: 'Standart', desc: 'Klasik kare' },
+                { value: 'rounded', label: 'Yuvarlak', desc: 'Yuvarlak noktalar' },
+                { value: 'dots', label: 'Tam Yuvarlak', desc: 'Finder\'lar da yuvarlak' },
+                { value: 'square', label: 'Kare', desc: 'Keskin kenarlı' },
+                { value: 'logo', label: 'Logo QR', desc: 'Merkezde Blaene logosu' },
+                { value: 'color', label: 'Renkli', desc: 'Lacivert noktalı' },
+              ] as { value: QrStyle; label: string; desc: string }[]).map(({ value, label, desc }) => (
+                <div
+                  key={value}
+                  onClick={() => setSlip((p) => ({ ...p, qr_style: value }))}
+                  style={{
+                    border: slip.qr_style === value ? '2px solid #2563eb' : '1px solid #334155',
+                    background: slip.qr_style === value ? '#1e3a5f' : '#0f172a',
+                    borderRadius: '8px',
+                    padding: '8px 6px',
+                    cursor: 'pointer',
+                    textAlign: 'center' as const,
+                    transition: 'all 150ms',
+                    userSelect: 'none' as const,
+                  }}
+                >
+                  <div style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '11px', marginBottom: '2px' }}>{label}</div>
+                  <div style={{ color: '#94a3b8', fontSize: '10px' }}>{desc}</div>
+                </div>
+              ))}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '14px' }}>
               <div>
                 <div style={labelStyle}>Kağıt genişliği (cm) — 10: termal, 14.8: A6</div>
@@ -967,9 +986,16 @@ export default function SiteSettings() {
                     )}
                   </div>
                   {slip.show_qr && (
-                    <div style={{ background: '#e2e8f0', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: `${slip.qr_size * 0.4}px`, height: `${slip.qr_size * 0.4}px`, fontSize: '8px', color: '#64748b', flexShrink: 0 }}>
-                      QR
-                    </div>
+                    <div
+                      style={{ flexShrink: 0 }}
+                      dangerouslySetInnerHTML={{
+                        __html: buildQrSvg(
+                          'https://blaene.com.tr',
+                          Math.round(slip.qr_size * 0.4),
+                          slip.qr_style ?? 'rounded',
+                        ),
+                      }}
+                    />
                   )}
                 </div>
                 {/* Meta satırları */}

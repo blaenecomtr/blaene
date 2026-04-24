@@ -226,35 +226,7 @@ function statusBadgeStyle(value: string): CSSProperties {
   }
 }
 
-import QRCode from 'qrcode'
-
-function buildQrSvg(value: string, sizePx: number): string {
-  let qd: ReturnType<typeof QRCode.create> | null = null
-  try { qd = QRCode.create(value, { errorCorrectionLevel: 'M' }) } catch { return '' }
-  if (!qd) return ''
-  const mc = qd.modules.size
-  const ms = sizePx / mc
-  const r = ms * 0.45
-  const fg = '#000'
-  const bg = '#fff'
-  const fs = 7 * ms
-  const ip = ms; const iw = 5 * ms; const ib = 3 * ms
-  const inFinder = (row: number, col: number) =>
-    (row < 7 && col < 7) || (row < 7 && col >= mc - 7) || (row >= mc - 7 && col < 7)
-  let out = `<svg width="${sizePx}" height="${sizePx}" viewBox="0 0 ${sizePx} ${sizePx}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">`
-  out += `<rect width="${sizePx}" height="${sizePx}" fill="${bg}"/>`
-  for (const [fr, fc] of [[0,0],[0,mc-7],[mc-7,0]] as [number,number][]) {
-    const x = fc * ms; const y = fr * ms
-    out += `<rect x="${x}" y="${y}" width="${fs}" height="${fs}" fill="${fg}" rx="${ms*0.8}"/>`
-    out += `<rect x="${x+ip}" y="${y+ip}" width="${iw}" height="${iw}" fill="${bg}" rx="${ms*0.5}"/>`
-    out += `<rect x="${x+ip*2}" y="${y+ip*2}" width="${ib}" height="${ib}" fill="${fg}" rx="${ms*0.3}"/>`
-  }
-  for (let row = 0; row < mc; row++)
-    for (let col = 0; col < mc; col++)
-      if (qd.modules.get(row, col) && !inFinder(row, col))
-        out += `<circle cx="${(col+0.5)*ms}" cy="${(row+0.5)*ms}" r="${r}" fill="${fg}"/>`
-  return out + '</svg>'
-}
+import { buildQrSvg } from '../lib/qrUtils'
 
 async function fetchLogoDataUrl(): Promise<string> {
   try {
@@ -295,11 +267,6 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
         : `<span style="font-size:24px;font-weight:700;font-family:Arial,sans-serif;display:block;">BLAENE</span>`)
     : ''
 
-  const siteUrlHtml = s.show_site_url
-    ? `<span style="font-size:11px;font-family:Arial,sans-serif;color:#444;display:block;width:100%;text-align:center;">${s.site_url || 'www.blaene.com.tr'}</span>`
-    : ''
-
-  const qrDisplaySize = Math.round(s.qr_size * 1.2)
   const qrHtml = (s.show_qr && qrSvg) ? qrSvg : ''
 
   const row = (show: boolean, label: string, value: string) =>
@@ -330,7 +297,8 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
           img { display: block !important; }
           @media print {
             @page { size: ${s.paper_width_cm}cm ${s.paper_height_cm}cm; margin: 3mm; }
-            body { width: ${s.paper_width_cm}cm; }
+            html, body { width: ${s.paper_width_cm}cm; height: ${s.paper_height_cm}cm; overflow: hidden; }
+            .slip-inner { overflow: hidden; }
           }
         </style>
       </head>
@@ -749,12 +717,34 @@ export default function Orders() {
 
     const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
     const logoDataUrl = slipCfg.show_logo ? await fetchLogoDataUrl() : ''
-    const qrSvg = slipCfg.show_qr ? buildQrSvg(qrData, qrDisplaySize) : ''
+    const qrSvg = slipCfg.show_qr
+      ? buildQrSvg(
+          qrData,
+          qrDisplaySize,
+          slipCfg.qr_style ?? 'rounded',
+          slipCfg.qr_style === 'logo' ? logoDataUrl : undefined,
+        )
+      : ''
     win.document.open()
     win.document.write(buildSlipHtml(order, logoDataUrl, qrSvg, slipCfg))
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print() }, 400)
+    setTimeout(() => {
+      try {
+        const inner = win.document.querySelector('.slip-inner') as HTMLElement | null
+        if (inner) {
+          const contentH = inner.scrollHeight
+          const pageH = slipCfg.paper_height_cm * 37.795
+          if (contentH > pageH) {
+            const scale = (pageH - 15) / contentH
+            inner.style.transform = `scale(${scale.toFixed(4)})`
+            inner.style.transformOrigin = 'top left'
+            inner.style.display = 'inline-block'
+          }
+        }
+      } catch { /* print yine devam eder */ }
+      win.print()
+    }, 400)
   }
 
   const updateReturnStatus = async (item: ReturnRequest, status: string, successMessage: string) => {
