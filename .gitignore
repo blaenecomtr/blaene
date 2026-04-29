@@ -4,3 +4,16 @@
 .env.*.local
 
 .env*.local
+.env.vercel
+.env.vercel-prod
+
+# Temporary/work files
+tmp_*
+tmp_docx_check/
+tmp_docx_ui/
+gorev.docx
+
+# Dependencies and local build caches
+node_modules/
+**/node_modules/
+admin-panel/.vite/
