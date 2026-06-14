@@ -280,8 +280,7 @@
             display: flex; align-items: center; justify-content: center;
         }
         .card-img {
-            width: 100%; height: 100%; object-fit: contain; display: block;
-            padding: 0.5rem;
+            width: 100%; height: 100%; object-fit: cover; display: block;
             opacity: 0; transform: scale(1.03);
             transition: opacity 0.5s, transform 0.55s cubic-bezier(0.22,1,0.36,1);
         }
@@ -484,7 +483,7 @@
             <button class="sort-tab" data-sort="az" aria-pressed="false">A—Z</button>
             <button class="sort-tab" data-sort="thick" aria-pressed="false">Kalınlık</button>
         </div>
-        <span class="sort-count" id="sort-count">26 ürün</span>
+        <span class="sort-count" id="sort-count">20 ürün</span>
     </div>
 
     <div class="product-grid" id="product-grid" role="list" aria-label="BANYO ürünleri"></div>
@@ -603,12 +602,6 @@ const PRODUCTS = [
         { code: 'BTH-017', name: 'Banyo Organizer', thickness: '1.5mm', dims: '40×10×5 cm', images: ['KUNYE/bath/BTH-017/BTH-017 (6) KAPAK.jpg', 'KUNYE/bath/BTH-017/BTH-017 (1).jpg', 'KUNYE/bath/BTH-017/BTH-017 (2).jpg', 'KUNYE/bath/BTH-017/BTH-017 (3).jpg', 'KUNYE/bath/BTH-017/BTH-017 (4).jpg', 'KUNYE/bath/BTH-017/BTH-017 (5).jpg'] },
         { code: 'BTH-018', name: 'Havluluk', thickness: '1.5mm', dims: '32×12×15 cm', images: ['KUNYE/bath/BTH-018/BTH-018 (2) KAPAK.jpg', 'KUNYE/bath/BTH-018/BTH-018 (1).jpg', 'KUNYE/bath/BTH-018/BTH-018 (3).jpg', 'KUNYE/bath/BTH-018/BTH-018 (4).jpg', 'KUNYE/bath/BTH-018/BTH-018 (5).jpg'] },
         { code: 'BTH-019', name: 'Banyo Organizer', thickness: '1.5mm', dims: '28×10×8 cm', images: ['KUNYE/bath/BTH-019/BTH - 019 (7) KAPAK .jpg', 'KUNYE/bath/BTH-019/BTH - 019 (1).jpg', 'KUNYE/bath/BTH-019/BTH - 019 (2).jpg', 'KUNYE/bath/BTH-019/BTH - 019 (4).jpg', 'KUNYE/bath/BTH-019/BTH - 019 (6).jpg'] },
-        { code: 'BTH-020', name: 'Fön Makinası Askısı', thickness: '2mm', dims: '12×12×4 cm', images: ['bath/bath/BTH-020-304-2MM-27.03.2026.jpg'] },
-        { code: 'BTH-021', name: 'Banyo Organizer', thickness: '1.5mm', dims: '50×12×4 cm', images: ['bath/bath/BTH-021-304-1,5MM-27.03.2026.jpg'] },
-        { code: 'BTH-022', name: 'Havluluk', thickness: '2mm', dims: '7×30×7 cm', images: ['bath/bath/BTH-022-304-2MM-27.03.2026.jpg'] },
-        { code: 'BTH-023', name: 'Tuvalet Kağıdı Askısı', thickness: '1.5mm', dims: '14×8 cm', images: ['bath/bath/BTH-023-304-1,5MM-27.03.2026.jpg'] },
-        { code: 'BTH-024', name: 'Banyo Organizer', thickness: '1.5mm', dims: '35×10×5 cm', images: ['bath/bath/BTH-024-304-1,5MM-27.03.2026 .jpg'] },
-        { code: 'BTH-025', name: 'Tuvalet Kağıdı Askısı', thickness: '1.5mm', dims: '30×11×10 cm', images: ['bath/bath/BTH-025-304-1,5MM-28.03.2026.jpg'] },
 ].map(p => ({ ...p, material: '304 Paslanmaz Çelik' }));
 
 const LANG_KEY = 'blaene_lang';
