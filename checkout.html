@@ -94,12 +94,8 @@
       transition: background 0.15s;
       user-select: none;
     }
-    .step-pill:hover:not(.locked) {
+    .step-pill:hover {
       background: #f3f4f6;
-    }
-    .step-pill.locked {
-      cursor: default;
-      opacity: 0.45;
     }
     .step-pill .num {
       width: 26px;
@@ -384,6 +380,65 @@
       font-size: 0.72rem;
       color: #475569;
     }
+    .bank-transfer-preview .reminder {
+      margin-top: 0.45rem;
+      font-size: 0.72rem;
+      color: #7c2d12;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 0.42rem 0.5rem;
+      line-height: 1.45;
+    }
+    .shipping-provider-logo-strip {
+      margin-top: 0.55rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+      gap: 0.45rem;
+    }
+    .shipping-provider-logo-item {
+      border: 1px solid #d8dee7;
+      border-radius: 10px;
+      background: #fff;
+      padding: 0.36rem 0.42rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.26rem;
+      cursor: pointer;
+      min-height: 64px;
+      transition: border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+      user-select: none;
+    }
+    .shipping-provider-logo-item:hover {
+      border-color: #9ca3af;
+      background: #f8fafc;
+    }
+    .shipping-provider-logo-item.active {
+      border-color: #111827;
+      box-shadow: inset 0 0 0 1px #111827;
+      background: #f8fafc;
+    }
+    .shipping-provider-logo-item:focus-visible {
+      outline: 2px solid #111827;
+      outline-offset: 1px;
+    }
+    .shipping-provider-logo-item img {
+      width: 100%;
+      max-width: 84px;
+      height: 24px;
+      object-fit: contain;
+      display: block;
+    }
+    .shipping-provider-logo-item span {
+      font-size: 0.67rem;
+      color: #334155;
+      text-align: center;
+      line-height: 1.25;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
     .actions {
       margin-top: 0.95rem;
       display: flex;
@@ -438,6 +493,12 @@
       grid-template-columns: 56px 1fr;
       gap: 0.55rem;
       background: #fff;
+    }
+    .item[data-product-href] {
+      cursor: pointer;
+    }
+    .item[data-product-href]:hover {
+      border-color: #cbd5e1;
     }
     .item img {
       width: 56px;
@@ -512,6 +573,232 @@
     .item .remove-line:hover {
       color: #991b1b;
     }
+    .legal-consent-box {
+      margin-top: 0.85rem;
+      padding: 0.72rem 0.78rem;
+      border: 1px solid #dbe2ea;
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+    .legal-consent-box .inline-check {
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      color: #0f172a;
+      line-height: 1.5;
+    }
+    .legal-consent-box .contract-toggle {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #1a56db;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: inherit;
+      font-family: inherit;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: normal;
+      width: auto;
+      margin-top: 0;
+    }
+    .legal-consent-box .contract-toggle:hover {
+      color: #1e40af;
+    }
+    .legal-consent-box .contract-accordion {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.7rem 0.85rem;
+      margin-top: 0.42rem;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: #334155;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .legal-consent-box .contract-loading {
+      margin: 0;
+      color: #6b7280;
+      font-size: 0.76rem;
+    }
+    .legal-consent-box .contract-text {
+      margin: 0;
+    }
+    .consent-error {
+      margin-top: 0.42rem;
+      font-size: 0.74rem;
+      color: #b91c1c;
+      display: none;
+    }
+    .order-success-screen {
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      background: #f0fdf4;
+      padding: 0.95rem;
+      margin-top: 0.6rem;
+    }
+    .order-success-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.45rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid #d1fae5;
+      margin-bottom: 0.75rem;
+    }
+    .order-success-title {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #14532d;
+    }
+    .order-success-sub {
+      margin: 0.18rem 0 0;
+      font-size: 0.78rem;
+      color: #166534;
+    }
+    .order-success-pill {
+      align-self: flex-start;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #065f46;
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      border-radius: 999px;
+      padding: 0.24rem 0.56rem;
+      white-space: nowrap;
+    }
+    .order-success-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .order-success-meta-item {
+      background: #fff;
+      border: 1px solid #dcfce7;
+      border-radius: 10px;
+      padding: 0.54rem 0.6rem;
+    }
+    .order-success-meta-item strong {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #166534;
+      margin-bottom: 0.2rem;
+    }
+    .order-success-meta-item span {
+      font-size: 0.78rem;
+      color: #14532d;
+      word-break: break-word;
+      line-height: 1.45;
+    }
+    .order-success-items {
+      background: #fff;
+      border: 1px solid #dcfce7;
+      border-radius: 10px;
+      padding: 0.6rem;
+      margin-bottom: 0.7rem;
+      display: grid;
+      gap: 0.45rem;
+    }
+    .order-success-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      color: #14532d;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px dashed #dcfce7;
+    }
+    .order-success-item-main {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .order-success-item-image {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid #dcfce7;
+      background: #fff;
+      flex: 0 0 46px;
+    }
+    .order-success-item-info {
+      min-width: 0;
+    }
+    .order-success-provider {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      font-weight: 700;
+      color: #14532d;
+    }
+    .order-success-provider-logo {
+      width: 72px;
+      height: 22px;
+      object-fit: contain;
+      border: 1px solid #dcfce7;
+      border-radius: 6px;
+      background: #fff;
+      padding: 1px 4px;
+    }
+    .order-success-item:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+    .order-success-item strong {
+      color: #166534;
+      white-space: nowrap;
+    }
+    .order-success-totals {
+      background: #fff;
+      border: 1px solid #dcfce7;
+      border-radius: 10px;
+      padding: 0.6rem;
+      display: grid;
+      gap: 0.34rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.78rem;
+      color: #14532d;
+    }
+    .order-success-totals .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .order-success-totals .grand {
+      font-weight: 800;
+      font-size: 0.86rem;
+      color: #14532d;
+      padding-top: 0.25rem;
+      border-top: 1px solid #dcfce7;
+    }
+    .order-success-home-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      text-decoration: none;
+      border: 1px solid #166534;
+      background: #166534;
+      color: #fff;
+      border-radius: 10px;
+      padding: 0.58rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .order-success-home-btn:hover {
+      background: #14532d;
+      border-color: #14532d;
+    }
     .totals {
       margin-top: 0.7rem;
       border-top: 1px solid var(--border);
@@ -551,6 +838,7 @@
       .grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
       .checkout-panel { border-right: 1px solid #dbdbdb; }
+      .order-success-meta { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -563,12 +851,12 @@
 
     <div class="grid">
       <section class="panel checkout-panel">
-        <div class="checkout-steps">
+        <div class="checkout-steps" id="checkout-steps-bar">
           <span class="step-pill active" id="pill-1" data-step="1" onclick="goToStep(1)"><span class="num">1</span>Adres</span>
           <span class="step-sep"></span>
-          <span class="step-pill locked" id="pill-2" data-step="2" onclick="goToStep(2)"><span class="num">2</span>Kargo</span>
+          <span class="step-pill" id="pill-2" data-step="2" onclick="goToStep(2)"><span class="num">2</span>Kargo</span>
           <span class="step-sep"></span>
-          <span class="step-pill locked" id="pill-3" data-step="3" onclick="goToStep(3)"><span class="num">3</span>Ödeme</span>
+          <span class="step-pill" id="pill-3" data-step="3" onclick="goToStep(3)"><span class="num">3</span>Ödeme</span>
         </div>
 
         <div id="shipping-offer-box" style="display:none;margin:0.35rem 0 0.9rem;border:1px solid #fdba74;border-radius:10px;overflow:hidden;background:#fff;">
@@ -580,7 +868,7 @@
           </div>
         </div>
 
-        <div class="step-section">
+        <div class="step-section" id="step-address-section">
           <h2 class="step-title"><span class="step-index">1</span>Adres</h2>
           <p class="step-note">Teslimat bilgilerinizi girin veya üye girişi ile otomatik doldurun.</p>
 
@@ -706,6 +994,7 @@
           <div>
             <label for="shipping-provider-select">Kargo firması</label>
             <select id="shipping-provider-select"></select>
+            <div id="shipping-provider-logo-strip" class="shipping-provider-logo-strip"></div>
           </div>
           <div class="actions" style="margin-top:1rem;">
             <button type="button" id="continue-to-payment-btn">Ödemeye Devam Et →</button>
@@ -731,16 +1020,37 @@
             <div class="alert success" id="order-created-message"></div>
             <div class="iframe-wrap" id="iframe-wrap"></div>
           </div>
+          <div class="legal-consent-box">
+            <label class="inline-check" for="legal-consent-checkbox">
+              <input id="legal-consent-checkbox" type="checkbox" />
+              <span>
+                <button type="button" class="contract-toggle" data-target="pre-information-text" data-contract-key="pre_information">Ön Bilgilendirme Formu</button>
+                ve
+                <button type="button" class="contract-toggle" data-target="distance-sales-text" data-contract-key="distance_sales">Mesafeli Satış Sözleşmesi</button>
+                'ni okudum, onaylıyorum.
+              </span>
+            </label>
+            <div id="pre-information-text" class="contract-accordion" hidden>
+              <p class="contract-loading">Yükleniyor...</p>
+            </div>
+            <div id="distance-sales-text" class="contract-accordion" hidden>
+              <p class="contract-loading">Yükleniyor...</p>
+            </div>
+            <div id="legal-consent-error" class="consent-error">Ödeme yapmadan önce bu onayı vermeniz gerekiyor.</div>
+          </div>
           <div class="actions" style="margin-top:1rem;">
             <button id="pay-btn" type="submit" form="checkout-form">Siparişi Tamamla</button>
             <button type="button" class="secondary" onclick="goToStep(2)">← Geri</button>
           </div>
         </div>
+
+        <div id="order-success-screen" class="order-success-screen" style="display:none;"></div>
       </section>
 
       <aside class="panel summary-panel">
         <h2 class="summary-title">Sipariş Özeti</h2>
         <p class="muted" id="summary-note">Sepetinizdeki ürünler</p>
+        <p class="muted" id="estimated-delivery-note" style="margin-top:0.15rem;">Tahmini teslimat: 2 iş günü</p>
         <div id="summary-list" class="summary-list"></div>
         <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border);">
           <label style="margin-bottom: 0.4rem;">İndirim Kodu</label>
@@ -765,29 +1075,27 @@
   <script src="assets/js/user-auth.js"></script>
   <script>
     var currentStep = 1;
-    var maxReachedStep = 1;
 
     function goToStep(step) {
-      if (step > maxReachedStep) return;
       currentStep = step;
+      var addressSection = document.getElementById('step-address-section');
       var shippingSection = document.getElementById('step-shipping-section');
       var paymentSection = document.getElementById('step-payment-section');
+      if (addressSection) addressSection.style.display = step === 1 ? '' : 'none';
       if (shippingSection) shippingSection.style.display = step === 2 ? '' : 'none';
       if (paymentSection) paymentSection.style.display = step === 3 ? '' : 'none';
       ['pill-1', 'pill-2', 'pill-3'].forEach(function(id, i) {
         var pill = document.getElementById(id);
         if (!pill) return;
         var stepNum = i + 1;
-        pill.classList.remove('active', 'done', 'locked');
+        pill.classList.remove('active', 'done');
         if (stepNum === step) pill.classList.add('active');
         else if (stepNum < step) pill.classList.add('done');
-        else pill.classList.add('locked');
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function advanceToStep(step) {
-      if (step > maxReachedStep) maxReachedStep = step;
       goToStep(step);
     }
   </script>
@@ -822,7 +1130,10 @@
       const billingCityEl = document.getElementById('billing-city');
       const billingDistrictEl = document.getElementById('billing-district');
       const billingAddressEl = document.getElementById('billing-address');
+      const legalConsentCheckbox = document.getElementById('legal-consent-checkbox');
+      const legalConsentError = document.getElementById('legal-consent-error');
       const shippingProviderSelect = document.getElementById('shipping-provider-select');
+      const shippingProviderLogoStrip = document.getElementById('shipping-provider-logo-strip');
       const paymentMethodInputs = Array.from(document.querySelectorAll('input[name="payment-method"]'));
       const promoCodeInput = document.getElementById('promo-code');
       const applyPromoBtn = document.getElementById('apply-promo-btn');
@@ -830,6 +1141,13 @@
       const discountRow = document.getElementById('discount-row');
       const discountAmount = document.getElementById('discount-amount');
       const urlParams = new URLSearchParams(window.location.search);
+      const checkoutStepsBar = document.getElementById('checkout-steps-bar');
+      const shippingOfferBox = document.getElementById('shipping-offer-box');
+      const addressSection = document.getElementById('step-address-section');
+      const shippingSection = document.getElementById('step-shipping-section');
+      const paymentSection = document.getElementById('step-payment-section');
+      const orderSuccessScreen = document.getElementById('order-success-screen');
+      const ORDER_SUCCESS_SNAPSHOT_KEY = 'blaene_checkout_order_success_v1';
 
       const DEFAULT_CHECKOUT_SETTINGS = {
         shipping: {
@@ -838,8 +1156,10 @@
           tiers: [],
           providers: [
             { provider: 'yurtici', label: 'Yurtici Kargo', enabled: true },
-            { provider: 'mng', label: 'MNG Kargo', enabled: true },
+            { provider: 'dhl', label: 'DHL', enabled: true },
+            { provider: 'surat', label: 'Surat Kargo', enabled: true },
             { provider: 'aras', label: 'Aras Kargo', enabled: true },
+            { provider: 'ptt', label: 'PTT Kargo', enabled: true },
           ],
         },
         payment: {
@@ -863,6 +1183,30 @@
 
       let appliedPromo = null;
       let checkoutSettings = DEFAULT_CHECKOUT_SETTINGS;
+      var contractCache = {};
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      async function loadContractData() {
+        if (contractCache._loaded) return contractCache;
+        try {
+          var response = await fetch('/api/public/site-content?key=contracts', { method: 'GET' });
+          var payload = await response.json().catch(function () { return null; });
+          var contracts = payload && payload.data && payload.data.contracts ? payload.data.contracts : {};
+          contractCache.pre_information = String((contracts && contracts.pre_information) || '').trim();
+          contractCache.distance_sales = String((contracts && contracts.distance_sales) || '').trim();
+        } catch (_) {
+          contractCache.pre_information = '';
+          contractCache.distance_sales = '';
+        }
+        contractCache._loaded = true;
+        return contractCache;
+      }
 
       function getSelectedCheckoutCustomerType() {
         const selected = checkoutCustomerTypeInputs.find(function (input) { return input.checked; });
@@ -1005,13 +1349,22 @@
       function normalizeShippingProviders(rawProviders) {
         const fallback = DEFAULT_CHECKOUT_SETTINGS.shipping.providers.slice();
         const list = Array.isArray(rawProviders) ? rawProviders : fallback;
+        const seenProviders = new Set();
         const normalized = list
           .map(function (item, index) {
-            const provider = String(typeof item === 'string' ? item : (item && item.provider) || '')
+            const providerRaw = String(typeof item === 'string' ? item : (item && item.provider) || '')
               .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
               .replace(/[^a-z0-9_-]/g, '')
               .trim();
+            const aliasMap = {
+              mng: 'dhl',
+              suratkargo: 'surat',
+            };
+            const provider = aliasMap[providerRaw] || providerRaw;
             if (!provider) return null;
+            seenProviders.add(provider);
             return {
               provider: provider,
               label: String(typeof item === 'string' ? '' : (item && item.label) || '').trim() || provider || ('provider-' + (index + 1)),
@@ -1023,6 +1376,15 @@
             return arr.findIndex(function (row) { return row.provider === item.provider; }) === index;
           })
           .filter(function (item) { return item.enabled !== false; });
+        fallback.forEach(function (item) {
+          const provider = String(item && item.provider ? item.provider : '').toLowerCase().trim();
+          if (!provider || seenProviders.has(provider)) return;
+          normalized.push({
+            provider: provider,
+            label: String(item && item.label ? item.label : provider).trim() || provider,
+            enabled: true,
+          });
+        });
         return normalized.length ? normalized : fallback;
       }
 
@@ -1038,6 +1400,41 @@
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;');
+      }
+
+      function shippingProviderWordmark(provider, label) {
+        const key = String(provider || '').toLowerCase();
+        const visualMap = {
+          yurtici: { text: 'YURTICI', bg: '#fff7ed', fg: '#c2410c', stroke: '#fb923c' },
+          surat: { text: 'SURAT', bg: '#eff6ff', fg: '#1d4ed8', stroke: '#93c5fd' },
+          aras: { text: 'ARAS', bg: '#fef2f2', fg: '#b91c1c', stroke: '#fca5a5' },
+          dhl: { text: 'DHL', bg: '#fef9c3', fg: '#b45309', stroke: '#fcd34d' },
+          ptt: { text: 'PTT', bg: '#f0fdf4', fg: '#166534', stroke: '#86efac' },
+        };
+        const picked = visualMap[key] || { text: String(label || provider || '').toUpperCase().slice(0, 10), bg: '#f8fafc', fg: '#334155', stroke: '#cbd5e1' };
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="168" height="48" viewBox="0 0 168 48">' +
+          '<rect x="1" y="1" width="166" height="46" rx="10" fill="' + picked.bg + '" stroke="' + picked.stroke + '" stroke-width="2"/>' +
+          '<text x="84" y="31" text-anchor="middle" fill="' + picked.fg + '" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">' + picked.text + '</text>' +
+          '</svg>';
+        return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+      }
+
+      function renderShippingProviderLogos(providers) {
+        if (!shippingProviderLogoStrip || !shippingProviderSelect) return;
+        const selectedProvider = String(shippingProviderSelect.value || '').trim().toLowerCase();
+        shippingProviderLogoStrip.innerHTML = providers
+          .map(function (item) {
+            const provider = String(item && item.provider ? item.provider : '').trim().toLowerCase();
+            if (!provider) return '';
+            const label = String(item && item.label ? item.label : provider).trim();
+            return (
+              '<div class="shipping-provider-logo-item' + (provider === selectedProvider ? ' active' : '') + '" data-provider="' + provider + '" role="button" tabindex="0" title="' + escapeHtml(label) + '">' +
+                '<img src="' + shippingProviderWordmark(provider, label) + '" alt="' + escapeHtml(label) + ' logo" />' +
+                '<span>' + escapeHtml(label) + '</span>' +
+              '</div>'
+            );
+          })
+          .join('');
       }
 
       function normalizeBankTransferAccounts(rawAccounts, useFallback) {
@@ -1138,6 +1535,7 @@
             '<div class="company">' + escapeHtml(payload.company_name) + '</div>' +
             '<div class="accounts">' + accountBlocks + '</div>' +
             '<div class="hint"><strong>Açıklama:</strong> ' + escapeHtml(payload.note_hint) + '</div>' +
+            '<div class="reminder"><strong>Not:</strong> Havale yaptıktan sonra üyelik bilgileri sayfasından havale bildirimi yapmayı unutmayın.</div>' +
           '</div>'
         );
       }
@@ -1258,6 +1656,7 @@
           }
           shippingProviderSelect.appendChild(option);
         });
+        renderShippingProviderLogos(providers);
       }
 
       function showAlert(message, type) {
@@ -1322,9 +1721,355 @@
         return String(item && item.code ? item.code : '').trim();
       }
 
+      function hasAcceptedLegalConsent() {
+        return Boolean(legalConsentCheckbox && legalConsentCheckbox.checked);
+      }
+
       function updatePayButtonState() {
         const state = getCartState();
-        payBtn.disabled = !state.items.length;
+        payBtn.disabled = !state.items.length || !hasAcceptedLegalConsent();
+      }
+
+      function computeCheckoutTotals(state, promo) {
+        const safeState = state && typeof state === 'object' ? state : { items: [], subtotal: 0, totalItems: 0 };
+        let subtotal = normalizeMoney(safeState.subtotal, 0);
+        let discount = 0;
+
+        if (promo && promo.discount_value && promo.discount_type) {
+          if (promo.discount_type === 'percent') {
+            discount = subtotal * (Number(promo.discount_value || 0) / 100);
+          } else if (promo.discount_type === 'fixed') {
+            discount = Number(promo.discount_value || 0);
+          }
+        }
+
+        discount = normalizeMoney(discount, 0);
+        if (discount > subtotal) discount = subtotal;
+
+        const discountedSubtotal = normalizeMoney(subtotal - discount, 0);
+        const shipping = normalizeMoney(computeShippingFee(discountedSubtotal), 0);
+        const grandTotal = normalizeMoney(discountedSubtotal + shipping, 0);
+
+        return {
+          subtotal: subtotal,
+          discount: discount,
+          discounted_subtotal: discountedSubtotal,
+          shipping: shipping,
+          grand_total: grandTotal,
+        };
+      }
+
+      function getSelectedShippingProviderInfo() {
+        const providerCode = shippingProviderSelect
+          ? String(shippingProviderSelect.value || '').trim().toLowerCase()
+          : '';
+        const providerLabel = shippingProviderSelect && shippingProviderSelect.selectedOptions && shippingProviderSelect.selectedOptions.length
+          ? String(shippingProviderSelect.selectedOptions[0].textContent || '').trim()
+          : '';
+
+        return {
+          provider_code: providerCode,
+          provider_label: providerLabel || providerCode || '-',
+          estimated_delivery: '2 iş günü',
+        };
+      }
+
+      function getPaymentMethodLabel(resultMode, method) {
+        const normalizedMode = String(resultMode || '').trim().toLowerCase();
+        const normalizedMethod = String(method || '').trim().toLowerCase();
+
+        if (normalizedMode === 'bank_transfer' || normalizedMethod === 'bank_transfer') {
+          return 'Havale / EFT';
+        }
+        if (normalizedMode === 'iyzico') {
+          return 'Kredi Kartı (İyzico)';
+        }
+        if (normalizedMode === 'paytr') {
+          return 'Kredi Kartı (PayTR)';
+        }
+        if (normalizedMode === 'mock') {
+          return 'Ödeme (Test Modu)';
+        }
+        return 'Kredi Kartı';
+      }
+
+      function getAccountStatusText(account) {
+        if (!account || !account.requested) return '';
+        if (account.created) return 'Hesabınız sipariş ile birlikte oluşturuldu.';
+        if (account.existing) return 'Siparişiniz mevcut hesabınıza bağlandı.';
+        return 'Hesap durumu sistem tarafından işlendi.';
+      }
+
+      function buildOrderSuccessSnapshot(options) {
+        const source = options && typeof options === 'object' ? options : {};
+        const payload = source.payload && typeof source.payload === 'object' ? source.payload : {};
+        const result = source.result && typeof source.result === 'object' ? source.result : {};
+        const state = source.state && typeof source.state === 'object' ? source.state : getCartState();
+        const promo = source.promo || appliedPromo;
+        const totals = computeCheckoutTotals(state, promo);
+        const customer = payload.customer && typeof payload.customer === 'object' ? payload.customer : {};
+        const billing = payload.billing && typeof payload.billing === 'object' ? payload.billing : {};
+        const payment = payload.payment && typeof payload.payment === 'object' ? payload.payment : {};
+        const shipping = payload.shipping && typeof payload.shipping === 'object' ? payload.shipping : {};
+        const shippingInfo = source.shippingInfo && typeof source.shippingInfo === 'object'
+          ? source.shippingInfo
+          : getSelectedShippingProviderInfo();
+
+        const fallbackProviderCode = String(shipping.provider || '').trim().toLowerCase();
+        const providerCode = String(shippingInfo.provider_code || fallbackProviderCode || '').trim().toLowerCase();
+        const providerLabel = String(shippingInfo.provider_label || providerCode || '-').trim();
+
+        const items = Array.isArray(state.items)
+          ? state.items.map(function (item) {
+              const qty = Math.max(1, Number(item && item.qty) || 1);
+              const unitPrice = normalizeMoney(item && item.price, 0);
+              return {
+                code: String(item && item.code ? item.code : '').trim(),
+                name: String(item && item.name ? item.name : 'Ürün').trim(),
+                image: String(item && item.image ? item.image : '').trim(),
+                color: String(item && item.color ? item.color : '').trim(),
+                qty: qty,
+                unit_price: unitPrice,
+                line_total: normalizeMoney(unitPrice * qty, 0),
+              };
+            })
+          : [];
+
+        const sameBilling = billing.same_as_shipping !== false;
+        const resultMode = String(result.mode || '').trim().toLowerCase();
+        const selectedMethod = String(payment.method || '').trim().toLowerCase() === 'bank_transfer'
+          ? 'bank_transfer'
+          : 'card';
+
+        return {
+          order_no: String(result.order_no || source.orderNo || '').trim(),
+          created_at: new Date().toISOString(),
+          mode: resultMode || (selectedMethod === 'bank_transfer' ? 'bank_transfer' : 'card'),
+          payment_label: getPaymentMethodLabel(resultMode, selectedMethod),
+          shipping: {
+            provider_code: providerCode,
+            provider_label: providerLabel,
+            estimated_delivery: String(shippingInfo.estimated_delivery || '2 iş günü').trim(),
+          },
+          customer: {
+            name: String(customer.name || '').trim(),
+            email: String(customer.email || '').trim(),
+            phone: String(customer.phone || '').trim(),
+            city: String(customer.city || '').trim(),
+            address: String(customer.address || '').trim(),
+            note: String(customer.note || '').trim(),
+            customer_type: String(customer.customer_type || 'bireysel').trim().toLowerCase(),
+            company_name: String(customer.company_name || '').trim(),
+            national_id: String(customer.national_id || '').trim(),
+            tax_number: String(customer.tax_number || '').trim(),
+            tax_office: String(customer.tax_office || '').trim(),
+          },
+          billing: {
+            same_as_shipping: sameBilling,
+            name: sameBilling ? String(customer.name || '').trim() : String(billing.name || '').trim(),
+            city: sameBilling ? String(customer.city || '').trim() : String(billing.city || '').trim(),
+            district: sameBilling ? '' : String(billing.district || '').trim(),
+            address: sameBilling ? String(customer.address || '').trim() : String(billing.address || '').trim(),
+          },
+          account_text: getAccountStatusText(result.account),
+          promo_code: promo && promo.code ? String(promo.code).trim() : '',
+          totals: totals,
+          items: items,
+          bank_transfer: resultMode === 'bank_transfer'
+            ? getBankTransferPayload(result.bank_transfer || {}, String(result.order_no || source.orderNo || '').trim())
+            : null,
+        };
+      }
+
+      function saveOrderSuccessSnapshot(snapshot) {
+        try {
+          if (!snapshot) return;
+          sessionStorage.setItem(ORDER_SUCCESS_SNAPSHOT_KEY, JSON.stringify(snapshot));
+        } catch (_) {}
+      }
+
+      function readOrderSuccessSnapshot() {
+        try {
+          const raw = sessionStorage.getItem(ORDER_SUCCESS_SNAPSHOT_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function clearOrderSuccessSnapshot() {
+        try {
+          sessionStorage.removeItem(ORDER_SUCCESS_SNAPSHOT_KEY);
+        } catch (_) {}
+      }
+
+      function clearPayStatusFromUrl() {
+        try {
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete('pay');
+          const nextUrl = cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : '') + cleanUrl.hash;
+          window.history.replaceState({}, document.title, nextUrl);
+        } catch (_) {}
+      }
+
+      function formatOrderDate(value) {
+        const date = new Date(value || Date.now());
+        if (!Number.isFinite(date.getTime())) return '-';
+        try {
+          return new Intl.DateTimeFormat('tr-TR', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }).format(date);
+        } catch (_) {
+          return date.toLocaleString('tr-TR');
+        }
+      }
+
+      function buildFallbackOrderSnapshotFromCurrent() {
+        const state = getCartState();
+        const fallbackPayload = {
+          customer: {
+            name: String((document.getElementById('name') && document.getElementById('name').value) || '').trim(),
+            email: String((document.getElementById('email') && document.getElementById('email').value) || '').trim(),
+            phone: String((document.getElementById('phone') && document.getElementById('phone').value) || '').trim(),
+            city: String((document.getElementById('city') && document.getElementById('city').value) || '').trim(),
+            address: String((document.getElementById('address') && document.getElementById('address').value) || '').trim(),
+          },
+          billing: { same_as_shipping: true },
+          payment: { method: getSelectedPaymentMethod() },
+          shipping: { provider: getSelectedShippingProviderInfo().provider_code },
+        };
+        const fromUrlOrderNo = String(urlParams.get('order_no') || urlParams.get('merchant_oid') || '').trim();
+        return buildOrderSuccessSnapshot({
+          payload: fallbackPayload,
+          state: state,
+          result: {
+            mode: preferredPaymentProvider(),
+            order_no: fromUrlOrderNo,
+          },
+          promo: appliedPromo,
+        });
+      }
+
+      function showOrderSuccessScreen(snapshot) {
+        if (!orderSuccessScreen || !snapshot) return;
+
+        const customer = snapshot.customer && typeof snapshot.customer === 'object' ? snapshot.customer : {};
+        const billing = snapshot.billing && typeof snapshot.billing === 'object' ? snapshot.billing : {};
+        const shipping = snapshot.shipping && typeof snapshot.shipping === 'object' ? snapshot.shipping : {};
+        const totals = snapshot.totals && typeof snapshot.totals === 'object' ? snapshot.totals : {};
+        const items = Array.isArray(snapshot.items) ? snapshot.items : [];
+
+        const itemRows = items.length
+          ? items.map(function (item) {
+              const codePart = item.code ? (' <span style="color:#6b7280;">(' + escapeHtml(item.code) + ')</span>') : '';
+              const colorPart = item.color ? ('<div style="font-size:0.7rem;color:#6b7280;">Renk: ' + escapeHtml(item.color) + '</div>') : '';
+              const imageSrc = String(item.image || '').trim() || 'logo/sitelogo.png';
+              return (
+                '<div class="order-success-item">' +
+                  '<div class="order-success-item-main">' +
+                    '<img class="order-success-item-image" src="' + escapeHtml(imageSrc) + '" alt="' + escapeHtml(item.name || 'Ürün') + '" />' +
+                    '<div class="order-success-item-info">' +
+                      '<div><strong style="display:inline;color:#14532d;font-size:0.78rem;text-transform:none;letter-spacing:0;">' + escapeHtml(item.name || 'Ürün') + '</strong>' + codePart + '</div>' +
+                      colorPart +
+                      '<div style="font-size:0.72rem;color:#166534;">' + String(item.qty || 1) + ' adet x ' + formatPrice(item.unit_price || 0) + '</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<strong>' + formatPrice(item.line_total || 0) + '</strong>' +
+                '</div>'
+              );
+            }).join('')
+          : '<div class="order-success-item"><div>Ürün bilgisi bulunamadı.</div><strong>-</strong></div>';
+
+        const shippingAddressText = [customer.address, customer.city].filter(Boolean).join(' / ');
+        const billingAddressText = [billing.address, billing.district, billing.city].filter(Boolean).join(' / ');
+        const shippingProviderCode = String(shipping.provider_code || '').trim().toLowerCase();
+        const shippingProviderLabel = String(shipping.provider_label || '-').trim();
+        const shippingLogoSrc = shippingProviderCode
+          ? shippingProviderWordmark(shippingProviderCode, shippingProviderLabel)
+          : '';
+        const shippingProviderHtml = shippingLogoSrc
+          ? (
+            '<span class="order-success-provider">' +
+              '<img class="order-success-provider-logo" src="' + escapeHtml(shippingLogoSrc) + '" alt="' + escapeHtml(shippingProviderLabel) + ' logo" />' +
+              '<span>' + escapeHtml(shippingProviderLabel) + '</span>' +
+            '</span>'
+          )
+          : escapeHtml(shippingProviderLabel || '-');
+        const shippingPriceText = Number(totals.shipping || 0) > 0 ? formatPrice(totals.shipping || 0) : 'Ücretsiz';
+        const discountRowHtml = Number(totals.discount || 0) > 0
+          ? '<div class="row"><span>İndirim</span><strong>-' + formatPrice(totals.discount || 0) + '</strong></div>'
+          : '';
+        const corporateInfoHtml = customer.customer_type === 'kurumsal'
+          ? (
+            '<div class="order-success-meta-item"><strong>Kurumsal Bilgiler</strong><span>' +
+            'Firma: ' + escapeHtml(customer.company_name || '-') + '<br />' +
+            'TC: ' + escapeHtml(customer.national_id || '-') + '<br />' +
+            'Vergi No: ' + escapeHtml(customer.tax_number || '-') + '<br />' +
+            'Vergi Dairesi: ' + escapeHtml(customer.tax_office || '-') +
+            '</span></div>'
+          )
+          : '';
+        const accountInfoHtml = snapshot.account_text
+          ? '<div class="order-success-meta-item"><strong>Hesap Durumu</strong><span>' + escapeHtml(snapshot.account_text) + '</span></div>'
+          : '';
+        const promoInfoHtml = snapshot.promo_code
+          ? '<div class="order-success-meta-item"><strong>Kullanılan Kupon</strong><span>' + escapeHtml(snapshot.promo_code) + '</span></div>'
+          : '';
+        const customerNoteHtml = customer.note
+          ? '<div class="order-success-meta-item"><strong>Sipariş Notu</strong><span>' + escapeHtml(customer.note) + '</span></div>'
+          : '';
+        const bankTransferHtml = snapshot.mode === 'bank_transfer' && snapshot.bank_transfer
+          ? (
+            '<div class="order-success-items">' +
+              renderBankTransferHtml(snapshot.bank_transfer, 'Havale / EFT Bilgileri') +
+            '</div>'
+          )
+          : '';
+
+        orderSuccessScreen.innerHTML =
+          '<div class="order-success-head">' +
+            '<div>' +
+              '<h3 class="order-success-title">Siparişiniz Alındı</h3>' +
+              '<p class="order-success-sub">Sipariş detaylarınız aşağıda yer alıyor.</p>' +
+            '</div>' +
+            '<span class="order-success-pill">Sipariş No: ' + escapeHtml(snapshot.order_no || '-') + '</span>' +
+          '</div>' +
+          '<div class="order-success-meta">' +
+            '<div class="order-success-meta-item"><strong>Sipariş Tarihi</strong><span>' + escapeHtml(formatOrderDate(snapshot.created_at)) + '</span></div>' +
+            '<div class="order-success-meta-item"><strong>Ödeme Yöntemi</strong><span>' + escapeHtml(snapshot.payment_label || '-') + '</span></div>' +
+            '<div class="order-success-meta-item"><strong>Kargo Firması</strong><span>' + shippingProviderHtml + '</span></div>' +
+            '<div class="order-success-meta-item"><strong>Tahmini Teslimat</strong><span>' + escapeHtml(shipping.estimated_delivery || '2 iş günü') + '</span></div>' +
+            '<div class="order-success-meta-item"><strong>Müşteri</strong><span>' + escapeHtml(customer.name || '-') + '<br />' + escapeHtml(customer.email || '-') + '<br />' + escapeHtml(customer.phone || '-') + '</span></div>' +
+            '<div class="order-success-meta-item"><strong>Teslimat Adresi</strong><span>' + escapeHtml(shippingAddressText || '-') + '</span></div>' +
+            '<div class="order-success-meta-item"><strong>Fatura Bilgisi</strong><span>' + escapeHtml((billing.name || customer.name || '-') + ' / ' + (billingAddressText || shippingAddressText || '-')) + '</span></div>' +
+            accountInfoHtml +
+            promoInfoHtml +
+            customerNoteHtml +
+            corporateInfoHtml +
+          '</div>' +
+          '<div class="order-success-items">' +
+            itemRows +
+          '</div>' +
+          '<div class="order-success-totals">' +
+            '<div class="row"><span>Ara Toplam</span><strong>' + formatPrice(totals.subtotal || 0) + '</strong></div>' +
+            discountRowHtml +
+            '<div class="row"><span>Kargo</span><strong>' + shippingPriceText + '</strong></div>' +
+            '<div class="row grand"><span>Toplam</span><strong>' + formatPrice(totals.grand_total || 0) + '</strong></div>' +
+          '</div>' +
+          bankTransferHtml +
+          '<a class="order-success-home-btn" href="index.html">Ana sayfaya geri dön</a>';
+
+        if (checkoutStepsBar) checkoutStepsBar.style.display = 'none';
+        if (shippingOfferBox) shippingOfferBox.style.display = 'none';
+        if (addressSection) addressSection.style.display = 'none';
+        if (shippingSection) shippingSection.style.display = 'none';
+        if (paymentSection) paymentSection.style.display = 'none';
+        if (paymentShell) paymentShell.style.display = 'none';
+        orderSuccessScreen.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
       const SUPABASE_URL = 'https://myufpjuyfjmpbunrkozy.supabase.co';
@@ -1493,13 +2238,16 @@
         summaryList.innerHTML = items
           .map(function (item) {
             const lineId = resolveSummaryLineId(item);
+            const productHref = item && item.code
+              ? ('product.html?code=' + encodeURIComponent(String(item.code)))
+              : '';
             const stock = Number(item && item.stock);
             const hasStock = Number.isFinite(stock);
             const canDecrease = Number(item.qty) > 1;
             const canIncrease = !hasStock || Number(item.qty) < stock;
             const variantLabel = String(item.color || '').trim() || 'Belirtilmedi';
             return (
-              '<div class="item">' +
+              '<div class="item" data-product-href="' + productHref + '">' +
                 '<img src="' + (item.image || 'logo/sitelogo.png') + '" alt="' + item.code + '" />' +
                 '<div>' +
                   '<div style="font-size:0.72rem;font-weight:600;">' + item.name + '</div>' +
@@ -1686,10 +2434,16 @@
       form.addEventListener('submit', async function (event) {
         event.preventDefault();
         alertBox.innerHTML = '';
+        if (legalConsentError) legalConsentError.style.display = 'none';
 
         const state = getCartState();
         if (!state.items.length) {
           showAlert('Sepetiniz boş.', 'error');
+          return;
+        }
+        if (!hasAcceptedLegalConsent()) {
+          if (legalConsentError) legalConsentError.style.display = 'block';
+          updatePayButtonState();
           return;
         }
 
@@ -1762,18 +2516,27 @@
           const authToken = window.BlaeneAuth ? await window.BlaeneAuth.getAccessToken() : null;
           const result = await createPaymentToken(payload, authToken);
           const accountMessage = accountResultMessage(result.account);
+          const shippingInfo = getSelectedShippingProviderInfo();
+          const successSnapshot = buildOrderSuccessSnapshot({
+            payload: payload,
+            state: state,
+            result: result,
+            promo: appliedPromo,
+            shippingInfo: shippingInfo,
+          });
+
           if (result.mode === 'mock') {
-            showMockOrderInfo(result.order_no, result.message);
-            showAlert('Sipariş alındı (' + result.order_no + '). Ödeme altyapısı aktif olduğunda bu adım otomatik ödeme sağlayıcısına yönlenecek.' + accountMessage, 'success');
+            showOrderSuccessScreen(successSnapshot);
             if (cart) cart.clear();
           } else if (result.mode === 'bank_transfer') {
-            showBankTransferInfo(result.order_no, result.bank_transfer);
-            showAlert('Sipariş oluşturuldu. Havale/EFT adımlarını tamamlayın.' + accountMessage, 'success');
+            showOrderSuccessScreen(successSnapshot);
             if (cart) cart.clear();
           } else if (result.mode === 'iyzico') {
+            saveOrderSuccessSnapshot(successSnapshot);
             showIyzicoCheckout(result.payment_page_url, result.order_no);
             showAlert('İyzico ödeme sayfası hazırlanıyor.' + accountMessage, 'success');
           } else {
+            saveOrderSuccessSnapshot(successSnapshot);
             showPaytrIframe(result.iframe_token, result.order_no);
             showAlert('Ödeme penceresi hazırlandı.' + accountMessage, 'success');
           }
@@ -1791,32 +2554,43 @@
       });
 
       summaryList.addEventListener('click', function (event) {
-        if (!cart) return;
         const trigger = event.target.closest('button[data-action][data-line]');
-        if (!trigger) return;
+        if (trigger) {
+          if (!cart) return;
 
-        const action = String(trigger.dataset.action || '').trim();
-        const lineRef = String(trigger.dataset.line || '').trim();
-        if (!lineRef) return;
+          const action = String(trigger.dataset.action || '').trim();
+          const lineRef = String(trigger.dataset.line || '').trim();
+          if (!lineRef) return;
 
-        const state = getCartState();
-        const current = (state.items || []).find(function (item) {
-          return resolveSummaryLineId(item) === lineRef || String(item.code || '').trim() === lineRef;
-        });
-        if (!current) return;
+          const state = getCartState();
+          const current = (state.items || []).find(function (item) {
+            return resolveSummaryLineId(item) === lineRef || String(item.code || '').trim() === lineRef;
+          });
+          if (!current) return;
 
-        if (action === 'remove-line') {
-          cart.removeItem(lineRef);
+          if (action === 'remove-line') {
+            cart.removeItem(lineRef);
+            return;
+          }
+
+          if (action === 'decrease-line') {
+            cart.setQuantity(lineRef, Number(current.qty) - 1);
+            return;
+          }
+
+          if (action === 'increase-line') {
+            cart.setQuantity(lineRef, Number(current.qty) + 1);
+          }
           return;
         }
 
-        if (action === 'decrease-line') {
-          cart.setQuantity(lineRef, Number(current.qty) - 1);
-          return;
-        }
+        const productCard = event.target.closest('.item[data-product-href]');
+        if (!productCard) return;
+        if (event.target.closest('a, button, input, select, textarea, label')) return;
 
-        if (action === 'increase-line') {
-          cart.setQuantity(lineRef, Number(current.qty) + 1);
+        const href = String(productCard.dataset.productHref || '').trim();
+        if (href) {
+          window.location.href = href;
         }
       });
 
@@ -1845,6 +2619,34 @@
           }
         });
       }
+      if (shippingProviderSelect) {
+        shippingProviderSelect.addEventListener('change', function () {
+          const providers = normalizeShippingProviders(
+            checkoutSettings && checkoutSettings.shipping ? checkoutSettings.shipping.providers : []
+          );
+          renderShippingProviderLogos(providers);
+        });
+      }
+      if (shippingProviderLogoStrip && shippingProviderSelect) {
+        shippingProviderLogoStrip.addEventListener('click', function (event) {
+          const card = event.target && event.target.closest ? event.target.closest('.shipping-provider-logo-item[data-provider]') : null;
+          if (!card) return;
+          const provider = String(card.getAttribute('data-provider') || '').trim().toLowerCase();
+          if (!provider) return;
+          shippingProviderSelect.value = provider;
+          const providers = normalizeShippingProviders(
+            checkoutSettings && checkoutSettings.shipping ? checkoutSettings.shipping.providers : []
+          );
+          renderShippingProviderLogos(providers);
+        });
+        shippingProviderLogoStrip.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          const card = event.target && event.target.closest ? event.target.closest('.shipping-provider-logo-item[data-provider]') : null;
+          if (!card) return;
+          event.preventDefault();
+          card.click();
+        });
+      }
 
       paymentMethodInputs.forEach(function (input) {
         input.addEventListener('change', function () {
@@ -1852,13 +2654,53 @@
           renderBankTransferPreview();
         });
       });
+      if (legalConsentCheckbox) {
+        legalConsentCheckbox.addEventListener('change', function () {
+          if (legalConsentError) {
+            legalConsentError.style.display = legalConsentCheckbox.checked ? 'none' : 'block';
+          }
+          updatePayButtonState();
+        });
+      }
+      document.querySelectorAll('.legal-consent-box .contract-toggle').forEach(function (btn) {
+        btn.addEventListener('click', async function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          var targetId = btn.getAttribute('data-target');
+          var contractKey = btn.getAttribute('data-contract-key');
+          if (!targetId || !contractKey) return;
+          var panel = document.getElementById(targetId);
+          if (!panel) return;
+
+          if (!panel.hidden) {
+            panel.hidden = true;
+            return;
+          }
+
+          panel.hidden = false;
+          if (!panel.dataset.loaded) {
+            panel.innerHTML = '<p class="contract-loading">Yükleniyor...</p>';
+            var data = await loadContractData();
+            var text = data && data[contractKey] ? String(data[contractKey]) : '';
+            panel.innerHTML = text
+              ? '<div class="contract-text">' + escapeHtml(text) + '</div>'
+              : '<p class="contract-loading">İçerik bulunamadı.</p>';
+            panel.dataset.loaded = '1';
+          }
+        });
+      });
 
       const payStatus = urlParams.get('pay');
       if (payStatus === 'ok') {
-        showAlert('Ödeme sonucu başarılı olarak döndü. Kesin durum webhook ile sipariş kaydına işlenir.', 'success');
+        const snapshot = readOrderSuccessSnapshot() || buildFallbackOrderSnapshotFromCurrent();
+        showOrderSuccessScreen(snapshot);
         if (cart) cart.clear();
+        clearOrderSuccessSnapshot();
+        clearPayStatusFromUrl();
       } else if (payStatus === 'fail') {
         showAlert('Ödeme başarısız veya iptal edildi. Tekrar deneyebilirsiniz.', 'error');
+        clearOrderSuccessSnapshot();
+        clearPayStatusFromUrl();
       }
 
       window.addEventListener('blaene:cart:updated', renderSummary);

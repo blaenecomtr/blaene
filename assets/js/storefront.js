@@ -177,9 +177,9 @@
       .map((variant) => {
         if (!variant || typeof variant !== 'object') return null;
         const images = Array.isArray(variant.images)
-          ? variant.images.filter(Boolean)
+          ? prioritizeCoverImages(variant.images.filter(Boolean))
           : (typeof variant.images === 'string' && variant.images
-              ? safelyParseArray(variant.images).filter(Boolean)
+              ? prioritizeCoverImages(safelyParseArray(variant.images).filter(Boolean))
               : []);
         return {
           ...variant,
@@ -193,7 +193,7 @@
     const colorGroups = {};
     variants.forEach((variant) => {
       const colorKey = String(variant?.color || variant?.label || '').trim();
-      const variantImages = Array.isArray(variant?.images) ? variant.images.filter(Boolean) : [];
+      const variantImages = Array.isArray(variant?.images) ? prioritizeCoverImages(variant.images.filter(Boolean)) : [];
       if (colorKey && variantImages.length) {
         colorGroups[colorKey] = variantImages;
       }
@@ -201,13 +201,13 @@
 
     const fallbackFromVariant = Object.values(colorGroups).flat().filter(Boolean);
     const baseImages = Array.isArray(row.images)
-      ? row.images.filter(Boolean)
+      ? prioritizeCoverImages(row.images.filter(Boolean))
       : (typeof row.images === 'string' && row.images
-          ? safelyParseArray(row.images).filter(Boolean)
+          ? prioritizeCoverImages(safelyParseArray(row.images).filter(Boolean))
           : []);
     const images = baseImages.length
       ? baseImages
-      : (fallbackFromVariant.length ? fallbackFromVariant : ['logo/sitelogo.png']);
+      : (fallbackFromVariant.length ? prioritizeCoverImages(fallbackFromVariant) : ['logo/sitelogo.png']);
 
     return {
       id: row.id,
@@ -238,6 +238,24 @@
     } catch {
       return [];
     }
+  }
+
+  function prioritizeCoverImages(images) {
+    const list = Array.isArray(images) ? images.filter(Boolean).map(String) : [];
+    if (!list.length) return list;
+
+    const coverItems = [];
+    const restItems = [];
+
+    list.forEach((src) => {
+      if (/\b(kapak|cover)\b/i.test(src.replace(/[\\/._-]/g, ' '))) {
+        coverItems.push(src);
+      } else {
+        restItems.push(src);
+      }
+    });
+
+    return coverItems.length ? [...coverItems, ...restItems] : list;
   }
 
   function toBoolean(value, fallback = false) {
@@ -982,9 +1000,7 @@
       // ignore promotion lookup errors on product detail
     }
 
-    if (document.querySelector('.not-found')) {
-      renderSimpleProductView(product);
-    }
+    renderSimpleProductView(product);
 
     injectProductCommerce(product);
   }
@@ -995,13 +1011,13 @@
     const client = getSupabase();
     const category = guessCategoryFromPath();
 
-    if (category) {
+    if (category && !window.BLAENE_DISABLE_REMOTE_PRODUCTS) {
       await syncCategoryPage(client, category);
       return;
     }
 
     const path = location.pathname.toLowerCase();
-    if (path.endsWith('/product.html') || path.endsWith('product.html')) {
+    if (!window.BLAENE_DISABLE_REMOTE_PRODUCTS && (path.endsWith('/product.html') || path.endsWith('product.html'))) {
       await syncProductPage(client);
     }
   }

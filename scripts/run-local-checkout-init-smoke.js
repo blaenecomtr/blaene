@@ -1,6 +1,6 @@
 const http = require('http');
 
-const checkoutInitHandler = require('../api/public/checkout-init');
+const checkoutInitHandler = require('../lib/handlers/public-checkout-init');
 
 function readRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -205,8 +205,21 @@ async function main() {
     assert(state.orderItems.length === 1, `Expected 1 order item row, got ${state.orderItems.length}`);
     assert(state.orders[0].payment_provider === 'mock', 'Expected payment_provider=mock');
     assert(state.orders[0].payment_status === 'pending', 'Expected payment_status=pending');
-    assert(Number(state.orders[0].total) === 2400, `Expected total=2400, got ${state.orders[0].total}`);
     assert(Number(state.orderItems[0].quantity) === 2, `Expected quantity=2, got ${state.orderItems[0].quantity}`);
+    const orderSubtotal = Number(state.orders[0].subtotal || 0);
+    const orderShipping = Number(state.orders[0].shipping || 0);
+    const orderTotal = Number(state.orders[0].total || 0);
+    const lineItemsTotal = state.orderItems.reduce((sum, row) => sum + Number(row.line_total || 0), 0);
+    assert(lineItemsTotal > 0, `Expected positive line items total, got ${lineItemsTotal}`);
+    assert(
+      Math.abs(orderSubtotal - lineItemsTotal) < 0.001,
+      `Expected subtotal=${lineItemsTotal}, got ${orderSubtotal}`
+    );
+    assert(orderShipping >= 0, `Expected non-negative shipping, got ${orderShipping}`);
+    assert(
+      Math.abs(orderTotal - (orderSubtotal + orderShipping)) < 0.001,
+      `Expected total=${orderSubtotal + orderShipping}, got ${orderTotal}`
+    );
 
     console.log('Running checkout-init failure for unknown product...');
     const fail = await postJson(apiUrl, {

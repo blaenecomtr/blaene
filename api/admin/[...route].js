@@ -69,8 +69,11 @@ function shippingProviderLabel(value) {
   if (!key) return '';
   const map = {
     yurtici: 'Yurtici Kargo',
-    mng: 'MNG Kargo',
+    mng: 'DHL',
     aras: 'Aras Kargo',
+    surat: 'Surat Kargo',
+    ptt: 'PTT Kargo',
+    dhl: 'DHL',
   };
   return map[key] || value;
 }
@@ -510,12 +513,19 @@ async function getShippingProvidersFromSettings(config) {
     .map((item, index) => {
       const rawProvider = normalizeText(typeof item === 'string' ? item : item?.provider, 40)
         .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9_-]/g, '')
         .trim();
-      if (!rawProvider) return null;
+      const aliasMap = {
+        mng: 'dhl',
+        suratkargo: 'surat',
+      };
+      const provider = aliasMap[rawProvider] || rawProvider;
+      if (!provider) return null;
       return {
-        provider: rawProvider,
-        label: normalizeText(typeof item === 'string' ? '' : item?.label, 120) || rawProvider || `provider-${index + 1}`,
+        provider: provider,
+        label: normalizeText(typeof item === 'string' ? '' : item?.label, 120) || provider || `provider-${index + 1}`,
         enabled: typeof item === 'object' && item ? item.enabled !== false : true,
       };
     })
@@ -893,6 +903,31 @@ async function supabaseAdminListUsers(config, options = {}) {
   if (Array.isArray(data?.users)) return data.users;
   if (Array.isArray(data)) return data;
   return [];
+}
+
+async function supabaseAdminFindUserByEmail(config, email) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+  const users = await supabaseAdminListUsers(config, { page: 1, perPage: 1000 });
+  return users.find((item) => normalizeEmail(item?.email) === normalizedEmail) || null;
+}
+
+async function supabaseAdminGetUser(config, userId) {
+  const normalizedId = normalizeText(userId, 120);
+  if (!normalizedId) return null;
+  const response = await fetch(`${config.url}/auth/v1/admin/users/${normalizedId}`, {
+    method: 'GET',
+    headers: buildServiceHeaders(config),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = data?.msg || data?.message || data?.error || 'Auth user fetch failed';
+    const error = new Error(message);
+    error.httpStatus = response.status || 400;
+    error.code = response.status === 404 ? 'AUTH_USER_NOT_FOUND' : 'AUTH_USER_FETCH_FAILED';
+    throw error;
+  }
+  return data?.user || data || null;
 }
 
 async function supabaseAdminDeleteUser(config, userId) {
@@ -2384,12 +2419,58 @@ async function handleUsers(req, res, ctx) {
     } catch (error) {
       const message = String(error?.message || '').toLowerCase();
       if (message.includes('already been registered') || message.includes('already registered')) {
-        return sendError(
-          res,
-          409,
-          'Bu e-posta zaten kayitli. Lutfen mevcut kullaniciyi guncelleyin veya sifre yenileyin.',
-          'USER_EMAIL_EXISTS'
-        );
+        const existingAuthUser = await supabaseAdminFindUserByEmail(config, email).catch(() => null);
+        const existingAuthId = normalizeText(existingAuthUser?.id, 120);
+        if (!existingAuthId) {
+          return sendError(
+            res,
+            409,
+            'Bu e-posta zaten kayitli. Lutfen mevcut kullaniciyi guncelleyin veya sifre yenileyin.',
+            'USER_EMAIL_EXISTS'
+          );
+        }
+
+        const profilePayload = {
+          id: existingAuthId,
+          email,
+          full_name: fullName,
+          role,
+          subscription_tier: subscriptionTier,
+          is_active: isActive,
+        };
+
+        const existingProfileById = await restSelect(config, 'user_profiles', {
+          select: 'id',
+          id: `eq.${existingAuthId}`,
+          limit: 1,
+        });
+
+        if (existingProfileById.length) {
+          await restUpdate(config, 'user_profiles', { id: `eq.${existingAuthId}` }, profilePayload);
+        } else {
+          await restInsert(config, 'user_profiles', profilePayload, { prefer: 'return=minimal' });
+        }
+
+        await writeAuditLog(config, req, auth, 'user.link_existing_auth', {
+          user_id: existingAuthId,
+          role,
+          subscription_tier: subscriptionTier,
+          email,
+        }, {
+          entityType: 'user',
+          entityId: existingAuthId,
+        });
+
+        return sendSuccess(res, {
+          id: existingAuthId,
+          email,
+          full_name: fullName,
+          role,
+          subscription_tier: subscriptionTier,
+          is_active: isActive,
+          temporary_password: null,
+          linked_existing_auth_user: true,
+        }, 200);
       }
       throw error;
     }
@@ -3606,6 +3687,10 @@ async function handleCustomers(req, res, ctx) {
           const metadata = user?.user_metadata && typeof user.user_metadata === 'object'
             ? user.user_metadata
             : {};
+          const appMetadata = user?.app_metadata && typeof user.app_metadata === 'object'
+            ? user.app_metadata
+            : {};
+          const metadataIsActive = appMetadata?.is_active ?? metadata?.is_active;
           const email = normalizeEmail(user?.email) || null;
           const fullName = normalizeText(metadata.full_name || metadata.name, 180) || null;
           const username = normalizeText(metadata.username, 120) || null;
@@ -3627,6 +3712,7 @@ async function handleCustomers(req, res, ctx) {
               phone: current.phone || phone,
               default_address: current.default_address || address,
               default_city: current.default_city || city,
+              is_active: current.is_active === false || metadataIsActive === false ? false : true,
               created_at: current.created_at || createdAt,
               updated_at: current.updated_at || updatedAt,
             };
@@ -3646,6 +3732,7 @@ async function handleCustomers(req, res, ctx) {
             consent_marketing_email: null,
             consent_marketing_sms: null,
             consent_marketing_call: null,
+            is_active: metadataIsActive === false ? false : true,
             created_at: createdAt,
             updated_at: updatedAt,
           });
@@ -3674,6 +3761,53 @@ async function handleCustomers(req, res, ctx) {
     return sendSuccess(res, paged.items, 200, paged.meta);
   }
 
+  if (req.method === 'PUT') {
+    if (!hasRole(auth.profile.role, ADMIN_ROLES)) {
+      return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
+    }
+
+    const parsed = await parseBodySafe(req);
+    const body = parsed?.body && typeof parsed.body === 'object' ? parsed.body : {};
+    const id = normalizeText(body.id || query.get('id'), 120);
+    if (!id) return sendError(res, 400, 'id is required', 'VALIDATION_REQUIRED_ID');
+
+    const isActive = toBool(body.is_active, true);
+
+    const authUser = await supabaseAdminGetUser(config, id).catch((error) => {
+      if (normalizeText(error?.code, 80) === 'AUTH_USER_NOT_FOUND') return null;
+      throw error;
+    });
+    if (!authUser) return sendError(res, 404, 'Customer not found', 'CUSTOMER_NOT_FOUND');
+
+    const userMetadata = authUser?.user_metadata && typeof authUser.user_metadata === 'object'
+      ? authUser.user_metadata
+      : {};
+    const appMetadata = authUser?.app_metadata && typeof authUser.app_metadata === 'object'
+      ? authUser.app_metadata
+      : {};
+
+    await supabaseAdminUpdateUser(config, id, {
+      user_metadata: {
+        ...userMetadata,
+        is_active: isActive,
+      },
+      app_metadata: {
+        ...appMetadata,
+        is_active: isActive,
+      },
+    });
+
+    await writeAuditLog(config, req, auth, isActive ? 'customer.activate' : 'customer.deactivate', {
+      id,
+      is_active: isActive,
+    }, {
+      entityType: 'customer',
+      entityId: id,
+    });
+
+    return sendSuccess(res, { id, is_active: isActive });
+  }
+
   if (req.method === 'DELETE') {
     if (!hasRole(auth.profile.role, ADMIN_ROLES)) {
       return sendError(res, 403, 'Forbidden', 'AUTH_FORBIDDEN_ROLE');
@@ -3684,6 +3818,21 @@ async function handleCustomers(req, res, ctx) {
     const id = normalizeText(body.id || query.get('id'), 120);
     if (!id) return sendError(res, 400, 'id is required', 'VALIDATION_REQUIRED_ID');
 
+    const orderRows = await safeSelect(config, 'orders', {
+      select: 'id,order_no,created_at',
+      user_id: `eq.${id}`,
+      order: 'created_at.desc',
+      limit: 1,
+    }, []);
+    if (Array.isArray(orderRows) && orderRows.length) {
+      return sendError(
+        res,
+        409,
+        'Bu musteri silinemez: bu hesaba bagli siparis kayitlari var. Once siparis gecmisi olan hesaplari silmek yerine pasife alin.',
+        'CUSTOMER_DELETE_BLOCKED_ORDERS'
+      );
+    }
+
     let profileDeleted = false;
     let authDeleted = false;
 
@@ -3693,19 +3842,30 @@ async function handleCustomers(req, res, ctx) {
       limit: 1,
     }, []);
 
-    if (Array.isArray(existingRows) && existingRows.length) {
-      await restDelete(config, 'customer_profiles', { id: `eq.${id}` });
-      profileDeleted = true;
-    }
-
     try {
       await supabaseAdminDeleteUser(config, id);
       authDeleted = true;
     } catch (error) {
       const errorCode = normalizeText(error?.code, 80);
       const errorMessage = normalizeText(error?.message, 300).toLowerCase();
+      if (
+        errorMessage.includes('orders_user_id_fkey') ||
+        (errorMessage.includes('foreign key') && errorMessage.includes('orders'))
+      ) {
+        return sendError(
+          res,
+          409,
+          'Bu musteri silinemez: bu hesaba bagli siparis kayitlari var. Once siparis gecmisi olan hesaplari silmek yerine pasife alin.',
+          'CUSTOMER_DELETE_BLOCKED_ORDERS'
+        );
+      }
       const isNotFound = errorCode === 'AUTH_USER_NOT_FOUND' || errorMessage.includes('not found');
       if (!isNotFound) throw error;
+    }
+
+    if (Array.isArray(existingRows) && existingRows.length) {
+      await restDelete(config, 'customer_profiles', { id: `eq.${id}` });
+      profileDeleted = true;
     }
 
     if (!profileDeleted && !authDeleted) {
