@@ -3,6 +3,7 @@ import { useAuthStore } from './store/auth'
 import { useAdminStore } from './store/admin'
 import LoginPage from './pages/LoginPage'
 import DashboardLayout from './components/DashboardLayout'
+import { WebGLShader } from './components/WebGLShader'
 
 export default function App() {
   const { isAuthenticated, checkAuth } = useAuthStore()
@@ -67,16 +68,29 @@ export default function App() {
             'radial-gradient(1200px 600px at 10% -20%, rgba(37,99,235,0.22), transparent 60%), radial-gradient(900px 500px at 90% -15%, rgba(14,165,233,0.14), transparent 55%), linear-gradient(180deg, #070b16 0%, #0b1222 100%)',
         }}
       >
+        <WebGLShader />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(1000px 540px at 12% -10%, rgba(37,99,235,0.2), transparent 58%), radial-gradient(800px 460px at 90% -12%, rgba(14,165,233,0.14), transparent 56%), rgba(2, 6, 23, 0.26)',
+            pointerEvents: 'none',
+          }}
+        />
+
         <img
           src="/logo/blaene-logo-white.png"
           alt="Blaene"
           style={{
             position: 'absolute',
+            left: '50%',
+            top: '26%',
             width: 'min(70vw, 700px)',
             maxWidth: '700px',
             opacity: 0.08,
             filter: 'blur(1px)',
-            transform: 'translateY(-10px)',
+            transform: 'translate(-50%, -50%)',
             pointerEvents: 'none',
             userSelect: 'none',
           }}
@@ -84,6 +98,8 @@ export default function App() {
 
         <div
           style={{
+            position: 'relative',
+            zIndex: 2,
             width: 'min(90vw, 460px)',
             borderRadius: '14px',
             border: '1px solid rgba(148, 163, 184, 0.25)',

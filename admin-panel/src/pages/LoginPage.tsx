@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { useAuthStore } from '../store/auth'
 import { apiRequest } from '../lib/api'
 import { Button } from '../components/ui/Button'
+import { WebGLShader } from '../components/WebGLShader'
 
 interface LoginResponse {
   token: string
@@ -73,23 +74,39 @@ export default function LoginPage() {
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        overflow: 'hidden',
+        background: '#04070f',
         padding: '20px',
       }}
     >
+      <WebGLShader />
       <div
         style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(1100px 540px at 8% -15%, rgba(37, 99, 235, 0.22), transparent 60%), radial-gradient(780px 460px at 92% -10%, rgba(14, 165, 233, 0.14), transparent 58%), rgba(2, 6, 23, 0.28)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
           width: '100%',
           maxWidth: '400px',
-          background: '#1e293b',
-          border: '1px solid #334155',
+          background: 'rgba(15, 23, 42, 0.78)',
+          border: '1px solid rgba(148, 163, 184, 0.24)',
           borderRadius: '12px',
           padding: '40px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 24px 65px rgba(0, 0, 0, 0.5)',
         }}
       >
         <h1

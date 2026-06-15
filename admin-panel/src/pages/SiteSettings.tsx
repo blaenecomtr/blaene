@@ -48,6 +48,7 @@ export interface SlipSettings {
   show_tracking_code: boolean
   show_total: boolean
   show_date: boolean
+  meta_field_order: SlipMetaFieldKey[]
   show_items_table: boolean
   border_enabled: boolean
   border_width: number
@@ -58,6 +59,48 @@ export interface SlipSettings {
   paper_width_cm: number
   paper_height_cm: number
   paper_fit: 'exact' | 'fit' | 'fill'
+}
+
+export type SlipMetaFieldKey =
+  | 'show_order_no'
+  | 'show_customer_name'
+  | 'show_email'
+  | 'show_phone'
+  | 'show_address'
+  | 'show_city'
+  | 'show_shipping_provider'
+  | 'show_tracking_code'
+  | 'show_total'
+  | 'show_date'
+
+export const SLIP_META_FIELDS: Array<{ key: SlipMetaFieldKey; label: string; previewLabel: string }> = [
+  { key: 'show_order_no', label: 'Sipariş no', previewLabel: 'Sipariş' },
+  { key: 'show_customer_name', label: 'Müşteri adı', previewLabel: 'Müşteri' },
+  { key: 'show_email', label: 'E-posta', previewLabel: 'E-posta' },
+  { key: 'show_phone', label: 'Telefon', previewLabel: 'Telefon' },
+  { key: 'show_address', label: 'Adres', previewLabel: 'Adres' },
+  { key: 'show_city', label: 'Şehir', previewLabel: 'Şehir' },
+  { key: 'show_shipping_provider', label: 'Kargo firması', previewLabel: 'Kargo' },
+  { key: 'show_tracking_code', label: 'Takip kodu', previewLabel: 'Takip' },
+  { key: 'show_total', label: 'Toplam tutar', previewLabel: 'Toplam' },
+  { key: 'show_date', label: 'Tarih', previewLabel: 'Tarih' },
+]
+
+function normalizeSlipMetaFieldOrder(input: unknown): SlipMetaFieldKey[] {
+  const valid = new Set<SlipMetaFieldKey>(SLIP_META_FIELDS.map((f) => f.key))
+  const fromInput = Array.isArray(input) ? input : []
+  const unique: SlipMetaFieldKey[] = []
+  for (const item of fromInput) {
+    if (typeof item !== 'string') continue
+    const key = item as SlipMetaFieldKey
+    if (!valid.has(key)) continue
+    if (unique.includes(key)) continue
+    unique.push(key)
+  }
+  for (const f of SLIP_META_FIELDS) {
+    if (!unique.includes(f.key)) unique.push(f.key)
+  }
+  return unique
 }
 
 interface ManualSlipItem {
@@ -103,14 +146,16 @@ const DEFAULT_SHIPPING: ShippingSettings = {
   tiers: [],
   providers: [
     { provider: 'yurtici', label: 'Yurtici Kargo', enabled: true },
-    { provider: 'mng', label: 'MNG Kargo', enabled: true },
+    { provider: 'dhl', label: 'DHL', enabled: true },
+    { provider: 'surat', label: 'Surat Kargo', enabled: true },
     { provider: 'aras', label: 'Aras Kargo', enabled: true },
+    { provider: 'ptt', label: 'PTT Kargo', enabled: true },
   ],
 }
 
 const DEFAULT_CONTACT: ContactSettings = {
   company_name: 'Blaene',
-  email: 'info@blaene.com',
+  email: 'info@blaene.com.tr',
   phone: '',
   whatsapp: '',
   address: '',
@@ -134,6 +179,7 @@ export const DEFAULT_SLIP: SlipSettings = {
   show_tracking_code: true,
   show_total: true,
   show_date: true,
+  meta_field_order: SLIP_META_FIELDS.map((f) => f.key),
   show_items_table: true,
   border_enabled: true,
   border_width: 2,
@@ -143,7 +189,7 @@ export const DEFAULT_SLIP: SlipSettings = {
   border_padding: 16,
   paper_width_cm: 14.8,
   paper_height_cm: 10.5,
-  paper_fit: 'exact',
+  paper_fit: 'fit',
 }
 
 const DEFAULT_MANUAL_SLIP: ManualSlip = {
@@ -216,7 +262,11 @@ export default function SiteSettings() {
           ? paymentSetting.bank_transfer_accounts
           : DEFAULT_PAYMENT.bank_transfer_accounts,
       })
-      setSlip({ ...DEFAULT_SLIP, ...(slipSetting || {}) })
+      setSlip({
+        ...DEFAULT_SLIP,
+        ...(slipSetting || {}),
+        meta_field_order: normalizeSlipMetaFieldOrder((slipSetting as Partial<SlipSettings> | null)?.meta_field_order),
+      })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Ayarlar yuklenemedi'
       setError(msg)
@@ -348,7 +398,7 @@ export default function SiteSettings() {
       table{width:100%;border-collapse:collapse;margin-top:6px;}
       th,td{border:1px solid #ccc;padding:2px 4px;text-align:left;font-size:9px;line-height:1.2;}
       th{background:#f3f4f6;font-weight:700;}
-      @media print{@page{size:${s.paper_width_cm}cm ${s.paper_height_cm}cm;margin:3mm;} html,body{width:${s.paper_width_cm}cm;height:${s.paper_height_cm}cm;overflow:hidden;} .slip-wrap{overflow:hidden;}}
+      @media print{@page{size:${s.paper_width_cm}cm ${s.paper_height_cm}cm;margin:2mm;} html,body{width:${s.paper_width_cm}cm;height:${s.paper_height_cm}cm;overflow:hidden;} .slip-wrap{overflow:hidden;}}
     </style></head><body>
     <div class="slip-wrap">
     <div class="header">
@@ -379,14 +429,34 @@ export default function SiteSettings() {
     setTimeout(() => {
       try {
         const inner = win.document.querySelector('.slip-wrap') as HTMLElement | null
-        if (inner) {
-          const contentH = inner.scrollHeight
-          const pageH = slip.paper_height_cm * 37.795
-          if (contentH > pageH) {
-            const scale = (pageH - 15) / contentH
+        const body = win.document.body as HTMLBodyElement | null
+        if (inner && body) {
+          inner.style.transform = 'none'
+          inner.style.transformOrigin = 'top left'
+          inner.style.display = 'inline-block'
+          inner.style.width = '100%'
+
+          const contentW = Math.max(1, inner.scrollWidth)
+          const contentH = Math.max(1, inner.scrollHeight)
+          const pageW = Math.max(1, body.clientWidth - 6)
+          const pageH = Math.max(1, body.clientHeight - 6)
+
+          const fitW = pageW / contentW
+          const fitH = pageH / contentH
+          const fitScale = Math.min(fitW, fitH)
+
+          let scale = 1
+          if (slip.paper_fit === 'fill') {
+            scale = Math.max(fitW, fitH)
+          } else {
+            scale = Math.min(1, fitScale)
+          }
+
+          if (!Number.isFinite(scale) || scale <= 0) scale = 1
+          if (scale > 1) scale = 1
+
+          if (scale < 1) {
             inner.style.transform = `scale(${scale.toFixed(4)})`
-            inner.style.transformOrigin = 'top left'
-            inner.style.display = 'inline-block'
           }
         }
       } catch { /* print yine devam eder */ }

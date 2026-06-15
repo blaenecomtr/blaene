@@ -17,6 +17,7 @@ const menuItems = [
   { id: 'users', label: 'Kullanicilar', hint: 'Musteri ve ekip' },
   { id: 'seo-content', label: 'SEO ve Icerik', hint: 'Sayfa ve blog' },
   { id: 'site-settings', label: 'Site Ayarlari', hint: 'Odeme ve iletisim' },
+  { id: 'barcode-print', label: 'Barkod Yazdir', hint: 'Etiket ve baski' },
   { id: 'marketing', label: 'Pazarlama', hint: 'Kupon ve banner' },
   { id: 'integrations', label: 'Entegrasyonlar', hint: 'API baglantilari' },
 ]

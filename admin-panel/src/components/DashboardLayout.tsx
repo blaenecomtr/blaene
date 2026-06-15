@@ -10,6 +10,7 @@ import SeoContent from '../pages/SeoContent'
 import SiteSettings from '../pages/SiteSettings'
 import Marketing from '../pages/Marketing'
 import Integrations from '../pages/Integrations'
+import BarcodePrint from '../pages/BarcodePrint'
 import LogoutModal from './LogoutModal'
 
 const PAGE_TITLE: Record<string, string> = {
@@ -19,6 +20,7 @@ const PAGE_TITLE: Record<string, string> = {
   users: 'Kullanicilar',
   'seo-content': 'SEO ve Icerik',
   'site-settings': 'Site Ayarlari',
+  'barcode-print': 'Barkod Yazdir',
   marketing: 'Pazarlama / Kampanya',
   integrations: 'Entegrasyonlar',
 }
@@ -90,6 +92,8 @@ export default function DashboardLayout() {
         return <SeoContent />
       case 'site-settings':
         return <SiteSettings />
+      case 'barcode-print':
+        return <BarcodePrint />
       case 'marketing':
         return <Marketing />
       case 'integrations':

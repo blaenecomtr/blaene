@@ -16,6 +16,7 @@ interface Customer {
   consent_marketing_email?: boolean | null
   consent_marketing_sms?: boolean | null
   consent_marketing_call?: boolean | null
+  is_active?: boolean | null
   created_at?: string
 }
 
@@ -137,12 +138,12 @@ function isProtectedStaff(user: StaffUser) {
 }
 
 export default function Users() {
-  const { userRole, canManageAdminUsers } = useAuthStore()
-  const token = localStorage.getItem('admin_token')
+  const { userRole, canManageAdminUsers, token: authToken, logout } = useAuthStore()
   const [loadingCustomers, setLoadingCustomers] = useState(true)
   const [loadingStaff, setLoadingStaff] = useState(false)
   const [creating, setCreating] = useState(false)
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null)
+  const [togglingCustomerId, setTogglingCustomerId] = useState<string | null>(null)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([])
   const [staffDrafts, setStaffDrafts] = useState<Record<string, StaffDraftState>>({})
@@ -166,6 +167,18 @@ export default function Users() {
     .toLowerCase()
   const canManageStaff = (normalizedUserRole === 'super_admin' || normalizedUserRole === 'admin') && canManageAdminUsers
 
+  const getToken = () => {
+    const raw = String(authToken || localStorage.getItem('admin_token') || '').trim()
+    if (!raw || raw === 'null' || raw === 'undefined') return null
+    return raw
+  }
+
+  const handleInvalidToken = (message: string) => {
+    if (!/invalid token/i.test(message)) return
+    logout()
+    window.location.href = '/admin'
+  }
+
   const activeStaffCount = useMemo(() => staffUsers.filter((item) => item.is_active !== false).length, [staffUsers])
   const marketingConsentCount = useMemo(
     () => customers.filter((item) => item.consent_marketing_email || item.consent_marketing_sms).length,
@@ -173,17 +186,19 @@ export default function Users() {
   )
 
   const loadCustomers = async () => {
+    const token = getToken()
     if (!token) return
     setLoadingCustomers(true)
     setCustomerError('')
     try {
       const params = new URLSearchParams()
-      params.set('page_size', '400')
+      params.set('page_size', '5000')
       if (search.trim()) params.set('search', search.trim())
       const data = await apiRequest<Customer[]>(`/api/admin/customers?${params.toString()}`, { token })
       setCustomers(Array.isArray(data) ? data : [])
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Musteriler yuklenemedi'
+      handleInvalidToken(message)
       setCustomerError(message)
     } finally {
       setLoadingCustomers(false)
@@ -191,12 +206,13 @@ export default function Users() {
   }
 
   const loadStaffUsers = async () => {
+    const token = getToken()
     if (!token || !canManageStaff) return
     setLoadingStaff(true)
     setStaffError('')
     try {
       const params = new URLSearchParams()
-      params.set('page_size', '200')
+      params.set('page_size', '5000')
       if (staffSearch.trim()) params.set('search', staffSearch.trim())
       const data = await apiRequest<StaffUser[]>(`/api/admin/users?${params.toString()}`, { token })
       const list = Array.isArray(data) ? data : []
@@ -210,6 +226,7 @@ export default function Users() {
       setStaffDrafts(nextDrafts)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Admin kullanicilari yuklenemedi'
+      handleInvalidToken(message)
       setStaffError(message)
     } finally {
       setLoadingStaff(false)
@@ -278,6 +295,7 @@ export default function Users() {
 
   const handleCreateStaffUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const token = getToken()
     if (!token) return
 
     setCreateError('')
@@ -315,6 +333,7 @@ export default function Users() {
       await loadStaffUsers()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Kullanici olusturulamadi'
+      handleInvalidToken(message)
       setCreateError(message)
     } finally {
       setCreating(false)
@@ -322,6 +341,7 @@ export default function Users() {
   }
 
   const handleDeleteCustomer = async (customer: Customer) => {
+    const token = getToken()
     if (!token) return
     const customerId = String(customer.id || '').trim()
     if (!customerId) return
@@ -341,10 +361,50 @@ export default function Users() {
       })
       await loadCustomers()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Musteri silinemedi'
+      const rawMessage = err instanceof Error ? err.message : 'Musteri silinemedi'
+      const normalized = String(rawMessage || '').toLowerCase()
+      const message =
+        normalized.includes('orders_user_id_fkey') ||
+        normalized.includes('customer_delete_blocked_orders') ||
+        (normalized.includes('foreign key') && normalized.includes('orders'))
+          ? 'Bu musteri silinemez: bu hesaba bagli siparis kayitlari var. Siparis gecmisi olan hesaplari pasife almaniz gerekir.'
+          : rawMessage
+      handleInvalidToken(message)
       setCustomerError(message)
     } finally {
       setDeletingCustomerId(null)
+    }
+  }
+
+  const handleSetCustomerActive = async (customer: Customer, isActive: boolean) => {
+    const token = getToken()
+    if (!token) return
+    const customerId = String(customer.id || '').trim()
+    if (!customerId) return
+
+    const identity = customer.email || customer.full_name || customer.username || customerId
+    const actionLabel = isActive ? 'aktif etmek' : 'pasife almak'
+    const confirmed = window.confirm(`${identity} hesabini ${actionLabel} istiyor musunuz?`)
+    if (!confirmed) return
+
+    setCustomerError('')
+    setTogglingCustomerId(customerId)
+    try {
+      await apiRequest('/api/admin/customers', {
+        method: 'PUT',
+        token,
+        body: {
+          id: customerId,
+          is_active: isActive,
+        },
+      })
+      await loadCustomers()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Musteri durumu guncellenemedi'
+      handleInvalidToken(message)
+      setCustomerError(message)
+    } finally {
+      setTogglingCustomerId(null)
     }
   }
 
@@ -367,6 +427,7 @@ export default function Users() {
   }
 
   const handleUpdateStaffUser = async (staff: StaffUser) => {
+    const token = getToken()
     if (!token || !canManageStaff) return
     if (isProtectedStaff(staff)) {
       setStaffActionError('Ana hesap degistirilemez.')
@@ -402,6 +463,7 @@ export default function Users() {
       await loadStaffUsers()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Kullanici guncellenemedi'
+      handleInvalidToken(message)
       setStaffActionError(message)
     } finally {
       setSavingStaffId(null)
@@ -409,6 +471,7 @@ export default function Users() {
   }
 
   const handleDeleteStaffUser = async (staff: StaffUser) => {
+    const token = getToken()
     if (!token || !canManageStaff) return
     if (isProtectedStaff(staff)) {
       setStaffActionError('Ana hesap silinemez.')
@@ -435,6 +498,7 @@ export default function Users() {
       await loadStaffUsers()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Kullanici silinemedi'
+      handleInvalidToken(message)
       setStaffActionError(message)
     } finally {
       setDeletingStaffId(null)
@@ -442,6 +506,7 @@ export default function Users() {
   }
 
   const handleResetStaffPassword = async (staff: StaffUser) => {
+    const token = getToken()
     if (!token || !canManageStaff) return
     if (isProtectedStaff(staff)) {
       setResetError('Ana hesap sifresi bu panelden degistirilemez.')
@@ -472,6 +537,7 @@ export default function Users() {
       await loadStaffUsers()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sifre yenileme basarisiz'
+      handleInvalidToken(message)
       setResetError(message)
     } finally {
       setResettingStaffId(null)
@@ -547,6 +613,7 @@ export default function Users() {
                   <th>Mail izni</th>
                   <th>SMS izni</th>
                   <th>Arama izni</th>
+                  <th>Durum</th>
                   <th>Kayit</th>
                   {canManageStaff && <th>Islem</th>}
                 </tr>
@@ -566,13 +633,26 @@ export default function Users() {
                     <td>{boolLabel(customer.consent_marketing_email)}</td>
                     <td>{boolLabel(customer.consent_marketing_sms)}</td>
                     <td>{boolLabel(customer.consent_marketing_call)}</td>
+                    <td>{customer.is_active === false ? 'Pasif' : 'Aktif'}</td>
                     <td>{formatDate(customer.created_at)}</td>
                     {canManageStaff && (
                       <td>
                         <button
                           type="button"
+                          className="users-btn users-btn-secondary users-btn-xs"
+                          disabled={togglingCustomerId === customer.id}
+                          onClick={() => void handleSetCustomerActive(customer, customer.is_active === false)}
+                        >
+                          {togglingCustomerId === customer.id
+                            ? 'Guncelleniyor...'
+                            : customer.is_active === false
+                              ? 'Aktif et'
+                              : 'Pasife al'}
+                        </button>{' '}
+                        <button
+                          type="button"
                           className="users-btn users-btn-danger users-btn-xs"
-                          disabled={deletingCustomerId === customer.id}
+                          disabled={deletingCustomerId === customer.id || togglingCustomerId === customer.id}
                           onClick={() => void handleDeleteCustomer(customer)}
                         >
                           {deletingCustomerId === customer.id ? 'Siliniyor...' : 'Sil'}

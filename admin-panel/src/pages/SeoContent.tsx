@@ -20,6 +20,7 @@ interface SeoEntry {
 
 interface ContractContent {
   kvkk: string
+  pre_information: string
   distance_sales: string
 }
 
@@ -46,6 +47,7 @@ function createSeoEntry(): SeoEntry {
 
 const DEFAULT_CONTRACTS: ContractContent = {
   kvkk: '',
+  pre_information: '',
   distance_sales: '',
 }
 
@@ -91,7 +93,7 @@ export default function SeoContent() {
       await Promise.all([
         saveSiteSetting(token, 'blog_posts', posts, 'Blog ve haber yazilari'),
         saveSiteSetting(token, 'seo_pages', seoEntries, 'Sayfa SEO title/description/slug ayarlari'),
-        saveSiteSetting(token, 'contracts', contracts, 'KVKK ve mesafeli satis sozlesmesi metinleri'),
+        saveSiteSetting(token, 'contracts', contracts, 'KVKK, on bilgilendirme ve mesafeli satis sozlesmesi metinleri'),
       ])
       setMessage('SEO ve icerik kaydedildi')
     } catch (err: unknown) {
@@ -265,11 +267,17 @@ export default function SeoContent() {
       </div>
 
       <div style={panelStyle}>
-        <h3 style={panelTitleStyle}>Sozlesmeler (KVKK / Mesafeli Satis)</h3>
+        <h3 style={panelTitleStyle}>Sozlesmeler (KVKK / On Bilgilendirme / Mesafeli Satis)</h3>
         <textarea
           value={contracts.kvkk}
           onChange={(evt) => setContracts((prev) => ({ ...prev, kvkk: evt.target.value }))}
           placeholder="KVKK metni"
+          style={{ ...inputStyle, width: '100%', minHeight: '120px', resize: 'vertical', marginBottom: '10px' }}
+        />
+        <textarea
+          value={contracts.pre_information}
+          onChange={(evt) => setContracts((prev) => ({ ...prev, pre_information: evt.target.value }))}
+          placeholder="On bilgilendirme formu metni"
           style={{ ...inputStyle, width: '100%', minHeight: '120px', resize: 'vertical', marginBottom: '10px' }}
         />
         <textarea

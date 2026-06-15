@@ -86,8 +86,10 @@ type StageFilter = 'all' | OrderFlowStage
 
 const FALLBACK_SHIPPING_PROVIDERS: ShippingProviderInfo[] = [
   { provider: 'yurtici', configured: true },
-  { provider: 'mng', configured: true },
+  { provider: 'dhl', configured: true },
+  { provider: 'surat', configured: true },
   { provider: 'aras', configured: true },
+  { provider: 'ptt', configured: true },
 ]
 
 function formatPrice(value: number) {
@@ -156,8 +158,11 @@ function workflowLabel(value: string) {
 function shippingProviderLabel(value: string) {
   const normalized = String(value || '').toLowerCase()
   if (normalized === 'yurtici') return 'Yurtici'
-  if (normalized === 'mng') return 'MNG'
+  if (normalized === 'mng') return 'DHL'
   if (normalized === 'aras') return 'Aras'
+  if (normalized === 'surat') return 'Surat'
+  if (normalized === 'ptt') return 'PTT'
+  if (normalized === 'dhl') return 'DHL'
   if (!normalized) return 'manual'
   return normalized
 }
@@ -274,7 +279,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
 
   const borderCss = s.border_enabled
     ? `border:${s.border_width}px ${s.border_style} ${s.border_color};border-radius:${s.border_radius}px;padding:${s.border_padding}px;`
-    : 'padding:20px;'
+    : 'padding:12px;'
 
   const pageW = s.paper_width_cm
   const pageH = s.paper_height_cm
@@ -291,13 +296,20 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
           * { box-sizing: border-box; margin: 0; padding: 0; }
           html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           body { font-family: Arial, sans-serif; color: #111; font-size: 10px; }
-          .slip-inner { width: ${usableW}cm; ${borderCss} }
-          .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-bottom: 4px; }
+          .slip-page { width: ${usableW}cm; height: ${usableH}cm; overflow: hidden; }
+          .slip-inner {
+            width: ${usableW}cm;
+            ${borderCss}
+            break-inside: avoid-page;
+            page-break-inside: avoid;
+          }
+          .logo-qr-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 3px; }
           .logo-block { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
           .site-url-row { text-align: center; font-size: 9px; color: #444; padding-bottom: 4px; }
           .divider { border: none; border-top: 2px solid #111; margin-bottom: 6px; }
-          .meta p { margin: 1px 0; font-size: 10px; line-height: 1.3; }
-          table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+          .meta p { margin: 1px 0; font-size: 9.6px; line-height: 1.22; }
+          table { width: 100%; border-collapse: collapse; margin-top: 6px; break-inside: avoid-page; page-break-inside: avoid; }
+          tr { break-inside: avoid-page; page-break-inside: avoid; }
           th, td { border: 1px solid #ccc; padding: 2px 4px; text-align: left; font-size: 9px; line-height: 1.2; }
           th { background: #f3f4f6; font-weight: 700; }
           img { display: block !important; }
@@ -305,30 +317,13 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
             @page { size: ${pageW}cm ${pageH}cm; margin: ${marginCm}cm; }
             html { width: ${usableW}cm; height: ${usableH}cm; overflow: hidden; }
             body { width: ${usableW}cm; height: ${usableH}cm; overflow: hidden; }
+            .slip-page { width: ${usableW}cm; height: ${usableH}cm; overflow: hidden; }
             .slip-inner { max-height: ${usableH}cm; overflow: hidden; }
           }
         </style>
-        <script>
-          window.onload = function() {
-            var inner = document.querySelector('.slip-inner');
-            if (!inner) return;
-            var pageHpx = ${usableH} * 37.7953;
-            var pageWpx = ${usableW} * 37.7953;
-            var h = inner.scrollHeight;
-            var w = inner.scrollWidth;
-            var scaleH = h > pageHpx ? pageHpx / h : 1;
-            var scaleW = w > pageWpx ? pageWpx / w : 1;
-            var scale = Math.min(scaleH, scaleW);
-            if (scale < 1) {
-              inner.style.transform = 'scale(' + scale.toFixed(4) + ')';
-              inner.style.transformOrigin = 'top left';
-              inner.style.display = 'block';
-              inner.style.width = (${usableW} * 37.7953 / scale) + 'px';
-            }
-          };
-        <\/script>
       </head>
       <body>
+        <div class="slip-page">
         <div class="slip-inner">
         <div class="logo-qr-row">
           <div class="logo-block">${logoBlock}</div>
@@ -363,6 +358,7 @@ function buildSlipHtml(order: Order, logoDataUrl: string, qrSvg: string, s: Slip
             ${itemRows || '<tr><td colspan="5">Satir bulunamadi</td></tr>'}
           </tbody>
         </table>` : ''}
+        </div>
         </div>
       </body>
     </html>
@@ -727,35 +723,102 @@ export default function Orders() {
     const s = await getSiteSetting<SlipSettings>(token, 'slip_settings', DEFAULT_SLIP)
     const slipCfg: SlipSettings = { ...DEFAULT_SLIP, ...s }
 
-    const items = Array.isArray(order.items) ? order.items : []
-    const itemNote = items
-      .map((it) => `${it.product_name || it.product_code || '?'}${it.product_color ? ` (${it.product_color})` : ''} x${it.quantity || 1}`)
-      .join(', ')
     const addr = [order.address, order.city].filter(Boolean).join(', ')
-    const qrData = [
-      'MECARD:',
-      order.customer_name ? `N:${order.customer_name};` : '',
-      order.phone ? `TEL:${order.phone};` : '',
-      addr ? `ADR:${addr};` : '',
-      order.order_no ? `NOTE:${order.order_no};` : '',
-      ';',
-    ].join('')
 
-    const qrDisplaySize = Math.round(slipCfg.qr_size * 1.2)
-    const logoDataUrl = slipCfg.show_logo ? await fetchLogoDataUrl() : ''
+    // QR opens info page. WhatsApp redirect is triggered by clicking support number on that page.
+    const nameText = String(order.customer_name || '').trim() || '-'
+    const phoneText = String(order.phone || '').replace(/\s+/g, ' ').trim() || '-'
+    const addressText = addr || '-'
+    const qp = new URLSearchParams({
+      o: String(order.order_no || '-'),
+      n: nameText,
+      p: phoneText,
+      a: addressText,
+      c: String(order.city || '-'),
+      t: String(order.tracking_code || '-'),
+      d: formatDate(order.created_at),
+    })
+    const qrBaseUrl = `${window.location.origin}/kargo-not.html`
+    let qrData = `${qrBaseUrl}?${qp.toString()}`
+    if (qrData.length > 700) qrData = qrData.slice(0, 697) + '...'
+
+    const qrDisplaySize = Math.max(140, Math.min(170, Math.round(slipCfg.qr_size * 0.85)))
+    const logoDataUrl = slipCfg.show_qr || slipCfg.show_logo ? await fetchLogoDataUrl() : ''
+    const qrStyle = logoDataUrl ? 'logo' : 'standard'
     const qrSvg = slipCfg.show_qr
       ? buildQrSvg(
           qrData,
           qrDisplaySize,
-          slipCfg.qr_style ?? 'rounded',
-          slipCfg.qr_style === 'logo' ? logoDataUrl : undefined,
+          qrStyle,
+          logoDataUrl || undefined,
         )
       : ''
     win.document.open()
     win.document.write(buildSlipHtml(order, logoDataUrl, qrSvg, slipCfg))
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print() }, 600)
+
+    const waitForImages = async () => {
+      const images = Array.from(win.document.images || [])
+      if (!images.length) return
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) {
+                resolve()
+                return
+              }
+              const done = () => resolve()
+              img.addEventListener('load', done, { once: true })
+              img.addEventListener('error', done, { once: true })
+            })
+        )
+      )
+    }
+
+    const applyFit = () => {
+      const page = win.document.querySelector('.slip-page') as HTMLElement | null
+      const inner = win.document.querySelector('.slip-inner') as HTMLElement | null
+      if (!page || !inner) return
+
+      inner.style.transform = 'none'
+      inner.style.transformOrigin = 'top left'
+      inner.style.width = '100%'
+      inner.style.display = 'block'
+
+      const pageW = Math.max(1, page.clientWidth)
+      const pageH = Math.max(1, page.clientHeight)
+      const contentW = Math.max(1, inner.scrollWidth)
+      const contentH = Math.max(1, inner.scrollHeight)
+      const scale = Math.min(1, (pageW - 2) / contentW, (pageH - 2) / contentH)
+
+      if (Number.isFinite(scale) && scale > 0 && scale < 1) {
+        inner.style.transform = `scale(${scale.toFixed(4)})`
+      }
+    }
+
+    const runPrint = async () => {
+      await waitForImages()
+      await new Promise((resolve) => win.requestAnimationFrame(() => resolve(null)))
+      await new Promise((resolve) => win.requestAnimationFrame(() => resolve(null)))
+      applyFit()
+      setTimeout(() => {
+        win.print()
+      }, 120)
+    }
+
+    if (win.document.readyState === 'complete') {
+      void runPrint()
+    } else {
+      win.addEventListener(
+        'load',
+        () => {
+          void runPrint()
+        },
+        { once: true }
+      )
+    }
   }
 
   const updateReturnStatus = async (item: ReturnRequest, status: string, successMessage: string) => {
