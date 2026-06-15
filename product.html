@@ -970,7 +970,7 @@ if (!product) {
     });
 
     // ── Swipe support (touch) ───────────────────────────────
-    function addSwipeNav(el, onPrev, onNext) {
+    function addSwipeNav(el, onPrev, onNext, onSwipeDown) {
         if (!el) return;
         let startX = 0, startY = 0, tracking = false;
         el.addEventListener('touchstart', e => {
@@ -987,6 +987,8 @@ if (!product) {
             const SWIPE_THRESHOLD = 40;
             if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
                 if (dx < 0) onNext(); else onPrev();
+            } else if (onSwipeDown && dy > SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
+                onSwipeDown();
             }
         }, { passive: true });
     }
@@ -1070,7 +1072,8 @@ if (!product) {
 
     addSwipeNav(document.getElementById('lightbox-img'),
         () => { if (lbIndex > 0) { lbIndex--; updateLightbox(); } },
-        () => { if (lbIndex < lbImages.length - 1) { lbIndex++; updateLightbox(); } });
+        () => { if (lbIndex < lbImages.length - 1) { lbIndex++; updateLightbox(); } },
+        () => closeLightbox());
 
     // Open lightbox on main image or zoom button click
     document.getElementById('gallery-main-area').addEventListener('click', e => {
