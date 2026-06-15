@@ -969,6 +969,32 @@ if (!product) {
         if (e.target.closest('#gallery-next')) { goToImg(currentImgIdx + 1); return; }
     });
 
+    // ── Swipe support (touch) ───────────────────────────────
+    function addSwipeNav(el, onPrev, onNext) {
+        if (!el) return;
+        let startX = 0, startY = 0, tracking = false;
+        el.addEventListener('touchstart', e => {
+            if (e.touches.length !== 1) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            tracking = true;
+        }, { passive: true });
+        el.addEventListener('touchend', e => {
+            if (!tracking) return;
+            tracking = false;
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            const SWIPE_THRESHOLD = 40;
+            if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+                if (dx < 0) onNext(); else onPrev();
+            }
+        }, { passive: true });
+    }
+
+    addSwipeNav(document.getElementById('gallery-main-area'),
+        () => goToImg(currentImgIdx - 1),
+        () => goToImg(currentImgIdx + 1));
+
     document.getElementById('gallery-thumbs')?.addEventListener('click', e => {
         const thumb = e.target.closest('.gallery-thumb');
         if (!thumb) return;
@@ -1041,6 +1067,10 @@ if (!product) {
         if (e.key === 'ArrowLeft'  && lbIndex > 0)                     { lbIndex--; updateLightbox(); }
         if (e.key === 'ArrowRight' && lbIndex < lbImages.length - 1)   { lbIndex++; updateLightbox(); }
     });
+
+    addSwipeNav(document.getElementById('lightbox-img'),
+        () => { if (lbIndex > 0) { lbIndex--; updateLightbox(); } },
+        () => { if (lbIndex < lbImages.length - 1) { lbIndex++; updateLightbox(); } });
 
     // Open lightbox on main image or zoom button click
     document.getElementById('gallery-main-area').addEventListener('click', e => {
