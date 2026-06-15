@@ -1070,7 +1070,7 @@ if (!product) {
         if (e.key === 'ArrowRight' && lbIndex < lbImages.length - 1)   { lbIndex++; updateLightbox(); }
     });
 
-    addSwipeNav(document.getElementById('lightbox-img'),
+    addSwipeNav(document.getElementById('lightbox'),
         () => { if (lbIndex > 0) { lbIndex--; updateLightbox(); } },
         () => { if (lbIndex < lbImages.length - 1) { lbIndex++; updateLightbox(); } },
         () => closeLightbox());
