@@ -589,7 +589,8 @@
         }
         .bath-desc-text {
             font-size: 0.83rem; line-height: 1.65;
-            color: #2563eb;
+            color: var(--text-2);
+            white-space: pre-line;
         }
         .bath-spec-grid {
             display: grid; grid-template-columns: 1fr 1fr;
@@ -1075,17 +1076,10 @@ if (!product) {
 
     const isBath = product.code.startsWith('BTH');
 
-    // Build short desc for bath (first sentence of description before \n)
-    function bathShortDesc(desc) {
+    function bathFullDesc(desc) {
         if (!desc) return '';
-        // Take the text before the first \nÖne bullet section
-        const lines = desc.split('\n');
-        // First line is "BLAENE ... - BTHXXX" + text. Extract just the sentence after the code suffix
-        const first = lines[0] || '';
-        // Remove the "BLAENE ... - BTH-XXX" prefix (everything up to end of product code pattern)
-        const match = first.match(/BTH-?\d{3}[-A]*(.*)/);
-        if (match && match[1]) return match[1].trim();
-        return first;
+        // Remove "BLAENE BTH-XXX, " prefix from start
+        return desc.replace(/^BLAENE\s+BTH-?\d{3}A?,\s*/i, '').trim();
     }
 
     const prodColorMap = isBath ? (BATH_COLOR_IMAGES[product.code] || {}) : {};
@@ -1101,7 +1095,7 @@ if (!product) {
             const barcode = bathBarcode(product.code, color.suffix);
             const prodNameClean = translatedName(product.name).replace(/ - BTH-?\d{3}[-A]*/i, '').trim();
             const shortName = prodNameClean.replace(/^BLAENE\s+/i, '').replace(/304 Paslanmaz Çelik\s*/i, '').trim();
-            const shortDesc = bathShortDesc(product.description);
+            const fullDesc = bathFullDesc(product.description);
 
             const colorDotsHTML = availableColors.map((c, i) => {
                 const dotStyle = `background:${c.dot};outline:2px solid ${i === selectedColorIdx ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`;
@@ -1150,9 +1144,9 @@ if (!product) {
                         <span class="bath-info-cell-value" id="bath-color-val">${color.name}</span>
                     </div>
                 </div>
-                ${shortDesc ? `<div class="bath-desc-section">
+                ${fullDesc ? `<div class="bath-desc-section">
                     <span class="bath-desc-label">${t('Ürün Açıklaması', 'Product Description')}</span>
-                    <p class="bath-desc-text">${shortDesc}</p>
+                    <p class="bath-desc-text">${fullDesc}</p>
                 </div>` : ''}
                 <div class="bath-spec-grid">
                     <div class="bath-spec-cell">
