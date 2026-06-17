@@ -855,20 +855,113 @@ function getBadges(c) {
 
 // ── BATH COLOR CONFIG ─────────────────────────────────
 const BATH_COLORS = [
-    { name: 'Mat Siyah',         suffix: 'SYH', dot: '#1a1a1a' },
-    { name: 'Mat Beyaz',         suffix: 'BYZ', dot: '#f0f0f0', dotBorder: '#d0d0d0' },
+    { name: 'Mat Siyah',         suffix: 'BLK', dot: '#1a1a1a' },
+    { name: 'Mat Beyaz',         suffix: 'WHT', dot: '#f0f0f0', dotBorder: '#d0d0d0' },
     { name: 'Fırçalı Paslanmaz', suffix: 'SAT', dot: '#b0b0b0' },
     { name: 'Mint Yeşili',       suffix: 'MNT', dot: '#6fcf97' },
 ];
 const BATH_DEFAULT_COLOR_IDX = 2; // Fırçalı Paslanmaz
 
 function bathSKU(code, suffix) {
-    // BTH-001 → BTH001 + suffix = BTH001SAT
-    return code.replace('BTH-', 'BTH').replace('-', '') + suffix;
+    return code.replace(/-/g, '') + suffix;
 }
-function bathBarcode(sku) {
-    return 'BLN26' + sku;
+function bathBarcode(code, suffix) {
+    const base = code.replace(/-/g, '');
+    return 'BLA-' + base + '-' + suffix;
 }
+
+const G = id => 'https://drive.google.com/uc?export=view&id=' + id;
+
+const BATH_COLOR_IMAGES = {
+    'BTH-001': {
+        BLK: [G('1qajx_cgLWBLhRRGWB-ZknWe-fNKb0ix8'), G('1zLMio7Bc_eP-51I5u2SaQvh3JMZBVfFj'), G('1eOBZmUr0vv4nrAmW4c6ITGoQiF8MlkRl')],
+        WHT: [G('1RtUeP9JzcyakHZ5RbQ56L7-Bv3nguXl2'), G('1Yk6aqUoNEaqYeXdmzvq2zHbJcVzNEyED'), G('1FkZkO4dBtl39jxm5R6hq7qdqPwlMbNQ9')],
+        SAT: [G('1Q4dm76dRJdof4MtXLq2M3ZpzbdAv4M9c'), G('1XQRVzFTE0YzzaPYFAAJfiJjsF9oBqtt1'), G('1-Ym8P4d-OJfAjLGd_1ND_U9pDdYXJYpv')],
+        MNT: [G('1iTfJ9iDocOhINfpHMHHbXJglJeEnzW2J'), G('18dRMt0oPiPm4_UmUx4C77bgT1TSg7Np4'), G('1LzUAVf9vCG5XQ23rcmdPVqY6oEkYN1Ox')],
+    },
+    'BTH-002': {
+        BLK: [G('19KJ5izCa5S4bOn545Fqp9DklLXBXB-jt'), G('1GSZAMTNJbJuS8fdg7EVO4NgBLU0J0KEM'), G('1x71N-tHYiqv3W3yyBefY_wuR7Kdd9Dsm')],
+        WHT: [G('1kGfnbAXoIXMlj9DN1qF3hJT2N9OzLjta'), G('1NfCcMsMc5tizxc-CLYFQSKsMxezC4hiw'), G('18Xla_7jKmSUGiOYswL67ogD-EVz-KMZ1')],
+        SAT: [G('1UH8M2Uuri5f4ilR-1docYaqUaPSHOyCO'), G('159KyLyR-kCq4cJdvAJ4pko9is9VQcqYI'), G('16ssS75J2n8hKIEbCwBZY_JXNOhem4kK-')],
+        MNT: [G('1EUDzFNGvWyMDGjf6MIEvmtic1kvBnqAo'), G('122B8BKT0L3U6ff5sBTOZqlBF-EcIWlRx'), G('1G_XmMvfZng0Hk4eO7jQTvjztLLoRJVqP')],
+    },
+    'BTH-003': {
+        BLK: [G('1fE5PHxDXCrVFi73p7UJu5-GHr1CWDqbU'), G('157dk9ZLwAUQHbrlbf6nF6JlaXrS5eRk0'), G('1mNiRoDSFvyjq9NTAXM47d4k-9bvrXIEq')],
+        WHT: [G('13oe47_xUd54nNJZe_8qCBDxqxz_w8Jfw'), G('1Wt40K9BXzb2CSor42aWmXXNKT-3dDfBX'), G('1OiBWZamv45DzIdJZvjSAcm0Hh9tdQzJj')],
+    },
+    'BTH-004': {
+        BLK: [G('1Bwmy8pn7RluEp-VS_l28XPBM28M2WEuV'), G('1UIUfnjD9vbZ_oUfMg_3R0Po2B9E0yBuv'), G('1kE8At9KclQNisEaVYlpjNOAnlmlQNN1A')],
+        WHT: [G('1WiQ_kX4rjcUnEWVcEEPTdL74w-yNz6n_'), G('1fOWGk5MAHctGpDmSWg9YDu_Y2OlcV2bI'), G('1uYhyJflRF6zcfnfYMV6olEiM3xiRiMxZ')],
+    },
+    'BTH-005': {
+        BLK: [G('1U5ukqfVawi_A4y54TW-yN5Cvx8N0swKA'), G('1SLHHDbnaj-UCjlH-7Or5DUal07mUkQTm'), G('1nvPofbSrcqLKnc9ugJiP27pbmCYSxLgK')],
+        WHT: [G('19Vnr2A2gartb7zT45W77jooDWLEsbHw7'), G('1NrD-5yTwJCgrolSP4B6c66pwrwTbJ4o8'), G('1YS39XvKmUNGKL2ZFsd162OUvWwusnvAK')],
+    },
+    'BTH-006': {
+        BLK: [G('1b-S9tYx30pjMV6XCIjzrQU9DG-TOvDk6'), G('1XpquhM3apl-CVwMvj_D-_YL4pSWnUJ4a'), G('1jm9agOp0IZP65Z79jYmisXW7JWuNNW7d')],
+        WHT: [G('1AXMcxglkLkbOi1iNM-67GXCw5P3XxkmO'), G('1kTvpMliAdWKJlkL6u5Wqa5Kezphnf18J'), G('141ht34-AsA0ox-mo4w3g3ihXGRUBE0om')],
+    },
+    'BTH-007': {
+        BLK: [G('1c-riWuNylNx49Ti8GF5A8LTyXR4GnBrq'), G('12YXkjvYoVa_LRuxH7g9w0qMDlEpKwbGU'), G('1hEh1IEXIK9TiCfE2BeyaC69I0c0F5cxe')],
+        WHT: [G('1hiThhLhjFO8ZcS2eY8XLp0qDqS3maJ4s'), G('18-7vJokfCZEUp0lzS7R3BdVIiX3ynGsZ'), G('1m8hCRtg3oyuqVMSLkefnmjGuiVqSmZt9')],
+    },
+    'BTH-008': {
+        BLK: [G('1WJ7V9BzdYOyLTfdy1E1tHadbYAQBuc4L'), G('1cBcaTCaOQTCaejK_VFzZ0nRHSsF1R-T4'), G('1cq4MFiP_AD8-QV2s6dvbB1Tfk_-PUiiq')],
+        WHT: [G('1mmIY-xLXCZjw_HMLlc1Sz4xGqQwj6-_o'), G('1YHCZLoAtfYrZ51m4kBuxkdA2l72T_v-A'), G('1w9uicmnZ2jSuMP7V-CH2KAmHSnpI34Vp')],
+    },
+    'BTH-009': {
+        BLK: [G('15kmi2kNmoo6naaKUW8zmsC0x0r53ZcDP'), G('1hSGAUl9x-DoUVcFH-9passN20Ohp07l1'), G('1hFFYmM16eIsFOA535kSTrPUgIz6cHqSk')],
+        WHT: [G('1io2vsW0QRcAj3apcA2hw_1sSc-uECc71'), G('1h1vSfrM4tpGMe1cnefvaCwxmUmImA7MA'), G('15be8tipeolmojW0afZWykiXEGk27xzdY')],
+    },
+    'BTH-010': {
+        BLK: [G('1c-z4-Exl9M-Vr2gYU32_8yLub7Qq6qLf'), G('1JvyEom87M3kQpziQkjlEQ4TrwWvI7jWx'), G('1fMotJPLFxPfM1wed2WKkgXogXtE2yoX5')],
+        WHT: [G('1yMLuMP-fF5FCBbGCgTBXUSmH_wnGjwxk'), G('1amD2lRCiuRc8haPDAeugKJlbfPumHukl'), G('1zsOSXsCfIbA4XP54sjQNXPubFWz8S15-')],
+    },
+    'BTH-011': {
+        BLK: [G('1T292A0ic5hUTEd96fPKcgo4QNQYk1etj'), G('12alI9me34scWl2CRUfZUjuNIOP15IpXH'), G('1jeEOZcNtzjby6N0cD7vQN7yS2Uh0uDfQ')],
+        WHT: [G('1ptGtBWbm4EfhmU4XAPHI6M98gT1Zx8mW'), G('1vX0PaX6qwTupef7VNDJIyEIJhIp2v9-d'), G('1x0XvhgjDzuq9EuNe4bk2QfHFfnG1HyzC')],
+    },
+    'BTH-012': {
+        BLK: [G('1NmwHx_yJ-9IWo8RS48pem_3Int61WNwK'), G('1qqfk4y3Jdm8WfPR4YD0wNFcqS_vkJ5g5'), G('1VSfbsGwLi_IzinNf5HvJoCHqrIORcmVG')],
+        WHT: [G('19URPzqT8S1xKukqXY_3vUm49-UZ-l3Lh'), G('1kiHsNQV0xqqA6cdSSwld3XdcYXfo4pYJ'), G('1HSRyW5MzpaX9SDfVt_h9iHr7gGbHpLa1')],
+    },
+    'BTH-013': {
+        BLK: [G('1T3e4tzQmRxxPvYmYvArVX8jrQNgwrsRH'), G('1duhSjl-kh_Lu0lEFAY5CSyWL7wAx-AkV'), G('1UYnXsL0UgeXRtvhDb7nmnmeUGjpi2vwh')],
+        WHT: [G('1KRzy5RTeUzg1msyPzzMs6NPqAifTBe7M'), G('1_hs9BL5TxY6T8p-SNFUDE8UA30XFHoBi'), G('1gbpYaXeh5VYNVm5ZWI2WJKC7n6_TFpGM')],
+    },
+    'BTH-014': {
+        BLK: [G('1bO5FBCwD-azn3zuz737wSmN85eAHkS2-'), G('1503o0VUvDRBc7NzXj-YPBMATMp_a1tm8'), G('1BZFnut9VwPuap2ZGU6JvsJV-Grs95WAe')],
+        WHT: [G('11roCu-ONqKupxRBlkLTRf8stqwVEFHyd'), G('1hOjhFhOAg9jwD9G8VeH1EimamYvwxBeZ'), G('1eHCPVJKJ49KAuuAf_Gt3zzyo0xWO7AzZ')],
+        SAT: [G('1t0CvvvW9R3ZSNYwRbfKSvotUvK6vKwvt'), G('1awv4n1qa6r_ClfFGcVtYVVJ-UCH0ooMI'), G('1CRsr_cPIXb4lBB7mHLoRaCCbQfMrwnTT')],
+        MNT: [G('16hfz8D4Qgg1KPzka8EhDkIZXwwedLf8P'), G('148q2QJZwb7kNyS3ZqQTlT_1Nsya3SHFL'), G('1aRl7xApV-3VpQvcjCjBUbzgra-9grNr0')],
+    },
+    'BTH-014-A': {
+        BLK: [G('1bxC2_gvewsaH7sCqu_eVA1hW6bG3y-XV'), G('1LI_IXdl79xJiB4A-TtfXFMhVi37iyDRt'), G('1sE6F-h8fRzJttrwzPu44IlvgAhJ1jHVo')],
+        WHT: [G('1SeTWip57wvRp5kX8jkuANnzpDkcZ5mIJ'), G('1PWTmDE2_S05oLe1oL172bbNmp3R4ZNOG'), G('1tL3FQTletC43sjA_A9_rklqAYnzc4jOP')],
+        SAT: [G('1YpEj5V48ZYtK5ZglrVzwFQ-psevW9ysy'), G('1LzgoPHW_z2JmHVfIYRRxJgYSJoXvP6T9'), G('11XgxvNblGuuRfkGpNAZu6ISF80-BE4GD')],
+        MNT: [G('10lG8migSt-H74R2P6Xy14RKMZJ_mqprE'), G('1BiTmu7uJ3LE_qQqnumyFq1ubgn-uRCDr'), G('1huGrxIzh27a-u_LBQNV7SFSMyaRouh2w')],
+    },
+    'BTH-015': {
+        BLK: [G('14TafPvmoc5GEhQgwIabXiOUHLoWE8IiN'), G('1jKYzJ77RQRJ5oApEG07tiImY1FWszE8g'), G('1ECVWEGhSa4YbsCTXVbFBS3Xnjt5OsMKr')],
+        WHT: [G('1qWELIzCwTnsyHhYnd9oDf-Fa2wQy0Scn'), G('1WB4X2xEITAyiuShb3sqX3dCXyTsehLSw'), G('1jpMJb5RdpHcc9D6sU73x1T55R_u8DSKg')],
+    },
+    'BTH-016': {
+        BLK: [G('1y7HJmkW8AwGlhN43RGTrTaWcqsVhzqOJ'), G('1dCKAN4tjPVM1R48e5v0nfi6tBEDwHTgN'), G('1p_ni9pjgIC8j5yIByoKUt4e1bE8dVV0s')],
+        WHT: [G('1AfNRi93ZkRTkQ_OXBr_8i5V-beEynvLR'), G('17W4m4ny9R8Crpq8AXckcgMsv1w_R2adI'), G('1uC4N1GFzLDm8PSbCL6jZKr9dqBiGJ_3A')],
+    },
+    'BTH-017': {
+        BLK: [G('1acRO6bRfU1625yQG2yVzGyzGQ4nXpbYi'), G('1cXnyyigYnbJC-olyrm0wnqG_BsTeRn4I'), G('1nmGrBLBp47Yiipy_LaU2OZfofOojzsd-')],
+        WHT: [G('1A2iljX2U3uPHD1fkiWLJnEOeU7P6md6V'), G('1-HbciqMC4bUzpwi5pCPxQ5FCBVrOj5Xi'), G('192U9JA4g6EXucQlva94fD6JeTHj8pKmd')],
+    },
+    'BTH-018': {
+        BLK: [G('1YSpvjx6D9OhMY0RK3fST6GF_OrKsJ-Sz'), G('16fyt1EOsBIrVUM1JjEayvl4c3yhnsKCg'), G('1tMdkwMvT-BEAY63sZurYyEVs-givMUqL')],
+        WHT: [G('1v__dJKpV6Y-sYnyKR5kjDowe3oIe_KtC'), G('1t_InInWoNWSsFqm20IjY0saSw0b7GIn2'), G('1GMopbre43eoBlE0iYl4o4IsNaQBEGJcx')],
+    },
+    'BTH-019': {
+        BLK: [G('1gYGeUaaHqLWudLqoDonenpdmElE9t0wS'), G('1WLuvMJqaTWyfMkLsXGKsgNk320ao4yVY'), G('1q-YqeSTtja3H--RQxaMjGIUtvuPK_A6t')],
+        WHT: [G('1mOYQN-XSymfYKsRIE80Yo7ApmX1ZvvmK'), G('1UGnKEIzvOS6TYMAUEX2szNRtzsxVRhhK'), G('1DuilFqWluqNW-cW5sNALk8EHTpyXfv2L')],
+    },
+};
 
 // ── INIT ─────────────────────────────────────────────
 const params  = new URLSearchParams(window.location.search);
@@ -996,30 +1089,28 @@ if (!product) {
     }
 
     if (isBath) {
-        let selectedColorIdx = BATH_DEFAULT_COLOR_IDX;
+        const prodColorMap = BATH_COLOR_IMAGES[product.code] || {};
+        const availableColors = BATH_COLORS.filter(c => prodColorMap[c.suffix]);
+        let selectedColorIdx = availableColors.findIndex(c => c.suffix === 'SAT');
+        if (selectedColorIdx < 0) selectedColorIdx = 0;
 
         function getBathInfoHTML() {
-            const color = BATH_COLORS[selectedColorIdx];
+            const color = availableColors[selectedColorIdx];
             const sku = bathSKU(product.code, color.suffix);
-            const barcode = bathBarcode(sku);
-            // Short product name without code suffix
+            const barcode = bathBarcode(product.code, color.suffix);
             const prodNameClean = translatedName(product.name).replace(/ - BTH-?\d{3}[-A]*/i, '').trim();
-            // Short name after BLAENE prefix
             const shortName = prodNameClean.replace(/^BLAENE\s+/i, '').replace(/304 Paslanmaz Çelik\s*/i, '').trim();
             const shortDesc = bathShortDesc(product.description);
 
-            const colorDotsHTML = BATH_COLORS.map((c, i) => {
-                const dotStyle = c.dotBorder
-                    ? `background:${c.dot};outline:2px solid ${i === selectedColorIdx ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`
-                    : `background:${c.dot};outline:2px solid ${i === selectedColorIdx ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`;
+            const colorDotsHTML = availableColors.map((c, i) => {
+                const dotStyle = `background:${c.dot};outline:2px solid ${i === selectedColorIdx ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`;
                 return `<button class="bath-color-btn${i === selectedColorIdx ? ' active' : ''}" data-cidx="${i}">
                     <span class="bath-color-dot" style="${dotStyle}"></span>
                     <span class="bath-color-name">${c.name}</span>
                 </button>`;
             }).join('');
 
-            // SKU dropdown options
-            const skuOptions = BATH_COLORS.map((c, i) => {
+            const skuOptions = availableColors.map((c, i) => {
                 const s = bathSKU(product.code, c.suffix);
                 return `<option value="${i}"${i === selectedColorIdx ? ' selected' : ''}>${s} — ${c.name}</option>`;
             }).join('');
@@ -1092,12 +1183,18 @@ if (!product) {
                 </div>`;
         }
 
+        const initColor = availableColors[selectedColorIdx];
+        const initImgs = prodColorMap[initColor.suffix] || product.images;
+        const initThumbsHTML = initImgs.length > 1
+            ? initImgs.map((src, i) => `<div class="gallery-thumb${i === 0 ? ' active' : ''}" data-idx="${i}"><img src="${src}" alt="${product.code} ${t('görsel', 'image')} ${i + 1}" loading="lazy"></div>`).join('')
+            : '';
+
         document.getElementById('main-content').innerHTML = `
         <div class="product-layout">
             <div class="img-col">
                 <div class="gallery-main" id="gallery-main-area">
                     ${passBadgeHTML}
-                    <img class="gallery-main-img" id="gallery-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="eager">
+                    <img class="gallery-main-img" id="gallery-img" src="${initImgs[0]}" alt="${product.code} — ${product.name}" loading="eager">
                     <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="${t('Önceki görsel', 'Previous image')}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
                     </button>
@@ -1108,7 +1205,7 @@ if (!product) {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                     </button>
                 </div>
-                <div class="gallery-thumbs" id="gallery-thumbs" ${product.images.length <= 1 ? 'style="display:none"' : ''}>${thumbsHTML}</div>
+                <div class="gallery-thumbs" id="gallery-thumbs" ${initImgs.length <= 1 ? 'style="display:none"' : ''}>${initThumbsHTML}</div>
             </div>
             <div class="info-col" id="bath-info-col">${getBathInfoHTML()}</div>
         </div>
@@ -1204,9 +1301,9 @@ if (!product) {
     if (isBath) {
         function updateBathColor(cidx) {
             selectedColorIdx = cidx;
-            const color = BATH_COLORS[cidx];
+            const color = availableColors[cidx];
             const sku = bathSKU(product.code, color.suffix);
-            const barcode = bathBarcode(sku);
+            const barcode = bathBarcode(product.code, color.suffix);
             const skuEl = document.getElementById('bath-sku-val');
             const bcEl = document.getElementById('bath-barcode-val');
             const colorEl = document.getElementById('bath-color-val');
@@ -1215,12 +1312,17 @@ if (!product) {
             if (bcEl) bcEl.textContent = barcode;
             if (colorEl) colorEl.textContent = color.name;
             if (selEl) selEl.value = cidx;
-            // Update dot outlines
             document.querySelectorAll('.bath-color-btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === cidx);
                 const dot = btn.querySelector('.bath-color-dot');
                 if (dot) dot.style.outlineColor = i === cidx ? 'var(--accent)' : 'var(--border)';
             });
+            // Switch gallery images to selected color
+            const newImgs = prodColorMap[color.suffix] || product.images;
+            currentImgIdx = 0;
+            setMainImg(newImgs[0]);
+            buildThumbs(newImgs);
+            updateArrows(newImgs.length);
         }
         document.getElementById('bath-color-btns')?.addEventListener('click', e => {
             const btn = e.target.closest('.bath-color-btn');
@@ -1357,6 +1459,10 @@ if (!product) {
         document.getElementById('lightbox-next').disabled = lbIndex === lbImages.length - 1;
     }
     function getCurrentImages() {
+        if (isBath) {
+            const color = availableColors[selectedColorIdx];
+            return (prodColorMap && color) ? (prodColorMap[color.suffix] || product.images) : product.images;
+        }
         const activeColor = document.querySelector('.variant-btn.active[data-color]')?.dataset.color;
         return (product.colorGroups && activeColor) ? product.colorGroups[activeColor] : product.images;
     }
