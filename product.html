@@ -1297,43 +1297,6 @@ if (!product) {
         </div>`;
     }
 
-    // ── Bath color selection
-    if (isBath) {
-        function updateBathColor(cidx) {
-            selectedColorIdx = cidx;
-            const color = availableColors[cidx];
-            const sku = bathSKU(product.code, color.suffix);
-            const barcode = bathBarcode(product.code, color.suffix);
-            const skuEl = document.getElementById('bath-sku-val');
-            const bcEl = document.getElementById('bath-barcode-val');
-            const colorEl = document.getElementById('bath-color-val');
-            const selEl = document.getElementById('bath-sku-sel');
-            if (skuEl) skuEl.textContent = sku;
-            if (bcEl) bcEl.textContent = barcode;
-            if (colorEl) colorEl.textContent = color.name;
-            if (selEl) selEl.value = cidx;
-            document.querySelectorAll('.bath-color-btn').forEach((btn, i) => {
-                btn.classList.toggle('active', i === cidx);
-                const dot = btn.querySelector('.bath-color-dot');
-                if (dot) dot.style.outlineColor = i === cidx ? 'var(--accent)' : 'var(--border)';
-            });
-            // Switch gallery images to selected color
-            const newImgs = prodColorMap[color.suffix] || product.images;
-            currentImgIdx = 0;
-            setMainImg(newImgs[0]);
-            buildThumbs(newImgs);
-            updateArrows(newImgs.length);
-        }
-        document.getElementById('bath-color-btns')?.addEventListener('click', e => {
-            const btn = e.target.closest('.bath-color-btn');
-            if (!btn) return;
-            updateBathColor(parseInt(btn.dataset.cidx, 10));
-        });
-        document.getElementById('bath-sku-sel')?.addEventListener('change', e => {
-            updateBathColor(parseInt(e.target.value, 10));
-        });
-    }
-
     // ── Gallery interaction
     function buildThumbs(imgs) {
         const thumbsEl = document.getElementById('gallery-thumbs');
@@ -1414,6 +1377,41 @@ if (!product) {
     // Init arrows
     updateArrows(getCurrentImages().length);
 
+    // ── Bath color selection (after gallery functions are defined)
+    if (isBath) {
+        function updateBathColor(cidx) {
+            selectedColorIdx = cidx;
+            const color = availableColors[cidx];
+            const sku = bathSKU(product.code, color.suffix);
+            const barcode = bathBarcode(product.code, color.suffix);
+            const skuEl = document.getElementById('bath-sku-val');
+            const bcEl = document.getElementById('bath-barcode-val');
+            const colorEl = document.getElementById('bath-color-val');
+            const selEl = document.getElementById('bath-sku-sel');
+            if (skuEl) skuEl.textContent = sku;
+            if (bcEl) bcEl.textContent = barcode;
+            if (colorEl) colorEl.textContent = color.name;
+            if (selEl) selEl.value = cidx;
+            document.querySelectorAll('.bath-color-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === cidx);
+                const dot = btn.querySelector('.bath-color-dot');
+                if (dot) dot.style.outlineColor = i === cidx ? 'var(--accent)' : 'var(--border)';
+            });
+            const newImgs = prodColorMap[color.suffix] || product.images;
+            currentImgIdx = 0;
+            setMainImg(newImgs[0]);
+            buildThumbs(newImgs);
+            updateArrows(newImgs.length);
+        }
+        document.getElementById('bath-color-btns')?.addEventListener('click', e => {
+            const btn = e.target.closest('.bath-color-btn');
+            if (!btn) return;
+            updateBathColor(parseInt(btn.dataset.cidx, 10));
+        });
+        document.getElementById('bath-sku-sel')?.addEventListener('change', e => {
+            updateBathColor(parseInt(e.target.value, 10));
+        });
+    }
 
     !isBath && document.querySelector('.variant-btns')?.addEventListener('click', e => {
         const btn = e.target.closest('.variant-btn');
