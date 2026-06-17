@@ -1184,11 +1184,90 @@ if (!product) {
         </div>`;
 
     } else {
+        // FRG / MDL — new layout
+        const isForge = product.code.startsWith('FRG');
+        const colorKeys = product.colorGroups ? Object.keys(product.colorGroups) : [];
+        const prodPills = isForge
+            ? [t('ST37 Çelik', 'ST37 Steel'), t('Lazer Kesim', 'Laser Cut'), t('Türkiye\'de Üretilmiştir', 'Made in Türkiye')]
+            : [t('Yüksek Mukavemetli Çelik', 'High Strength Steel'), t('Lazer Kesim', 'Laser Cut'), t('Türkiye\'de Üretilmiştir', 'Made in Türkiye')];
+        const prodMontaj = isForge
+            ? t('Flatpack — kullanıma hazır', 'Flatpack — ready to use')
+            : t('Tekerlekli / serbest konumlu', 'Wheeled / freestanding');
+        const prodGaranti = t('2 yıl ürün garantisi', '2 year product warranty');
+
+        const colorDotsHTML = colorKeys.map((c, i) => {
+            const dotColor = c === 'Siyah' ? '#1a1a1a' : '#999';
+            const dotStyle = `background:${dotColor};outline:2px solid ${i === 0 ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`;
+            return `<button class="bath-color-btn${i === 0 ? ' active' : ''}" data-color="${c}">
+                <span class="bath-color-dot" style="${dotStyle}"></span>
+                <span class="bath-color-name">${translatedColor(c)}</span>
+            </button>`;
+        }).join('');
+
+        const frgInfoHTML = `
+                ${colorKeys.length ? `<label class="bath-color-label">${t('Renk seçimi', 'Color selection')}</label>
+                <div class="bath-color-btns variant-btns" id="frg-color-btns">${colorDotsHTML}</div>` : ''}
+                <p class="bath-tagline">BLAENE | METAL IS FOREVER NEW</p>
+                <h1 class="bath-title">${translatedName(product.name)}</h1>
+                <p class="bath-subtitle">${product.code} | ${translatedMaterial(product.material)}</p>
+                <div class="bath-pill-row">
+                    ${prodPills.map(p => `<span class="bath-pill">${p}</span>`).join('')}
+                </div>
+                <div class="bath-info-grid">
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Model Kodu', 'Model Code')}</span>
+                        <span class="bath-info-cell-value">${product.code}</span>
+                    </div>
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Malzeme', 'Material')}</span>
+                        <span class="bath-info-cell-value">${translatedMaterial(product.material)}</span>
+                    </div>
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Kalınlık', 'Thickness')}</span>
+                        <span class="bath-info-cell-value">${product.thickness}</span>
+                    </div>
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Ölçüler', 'Dimensions')}</span>
+                        <span class="bath-info-cell-value">${translatedDims(product.dims)}</span>
+                    </div>
+                </div>
+                ${productDescription ? `<div class="bath-desc-section">
+                    <span class="bath-desc-label">${t('Ürün Açıklaması', 'Product Description')}</span>
+                    <p class="bath-desc-text">${productDescription}</p>
+                </div>` : ''}
+                <div class="bath-spec-grid">
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Malzeme', 'Material')}</span>
+                        <span class="bath-spec-cell-value">${translatedMaterial(product.material)}</span>
+                    </div>
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Montaj', 'Installation')}</span>
+                        <span class="bath-spec-cell-value">${prodMontaj}</span>
+                    </div>
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Kategori', 'Category')}</span>
+                        <span class="bath-spec-cell-value">${cat.label}</span>
+                    </div>
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Garanti', 'Warranty')}</span>
+                        <span class="bath-spec-cell-value">${prodGaranti}</span>
+                    </div>
+                </div>
+                <div id="blaene-product-cart-slot" class="product-cart-slot"></div>
+                <div class="cta-section">
+                    <a href="${wa(teklifMsg)}" class="cta-primary" target="_blank" rel="noopener noreferrer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg>
+                        ${t('Teklif Al', 'Get Quote')}
+                    </a>
+                    <a href="${wa(bilgiMsg)}" class="cta-secondary" target="_blank" rel="noopener noreferrer">
+                        ${t('Bilgi Al', 'Get Info')}
+                    </a>
+                </div>`;
+
         document.getElementById('main-content').innerHTML = `
         <div class="product-layout">
             <div class="img-col">
                 <div class="gallery-main" id="gallery-main-area">
-                    ${passBadgeHTML}
                     <img class="gallery-main-img" id="gallery-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="eager">
                     <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="${t('Önceki görsel', 'Previous image')}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1202,60 +1281,8 @@ if (!product) {
                 </div>
                 <div class="gallery-thumbs" id="gallery-thumbs" ${product.images.length <= 1 ? 'style="display:none"' : ''}>${thumbsHTML}</div>
             </div>
-            <div class="info-col">
-                <p class="info-eyebrow">${cat.name}</p>
-                <h1 class="info-code">${product.code}</h1>
-                <h2 class="info-name">${translatedName(product.name)}</h2>
-                ${productDescription ? `<p class="info-description">${productDescription}</p>` : ''}
-
-                <div class="info-divider"></div>
-
-                <p class="sub-label">${product.colorGroups ? t('Renk', 'Color') : t('Yüzey', 'Finish')}</p>
-                <div class="variant-btns">
-                    ${product.colorGroups
-                        ? Object.keys(product.colorGroups).map((c, i) => `<button class="variant-btn${i === 0 ? ' active' : ''}" data-color="${c}">${translatedColor(c)}</button>`).join('')
-                        : product.code.startsWith('FRG')
-                            ? `<button class="variant-btn active" data-variant="siyah">${t('Siyah', 'Black')}</button>`
-                            : `<button class="variant-btn active" data-variant="krom">${t('Krom', 'Chrome')}</button><button class="variant-btn" data-variant="siyah">${t('Siyah', 'Black')}</button>`
-                    }
-                </div>
-
-                <div id="blaene-product-cart-slot" class="product-cart-slot"></div>
-
-                <table class="specs-table" aria-label="${t('Ürün özellikleri', 'Product specifications')}">
-                    <tbody>${specsHTML}</tbody>
-                </table>
-
-                <div class="tech-section">
-                    <p class="sub-label">${t('Teknik Dosyalar', 'Technical Files')}</p>
-                    <div class="tech-btns">
-                        <a href="${wa(dxfMsg)}" class="tech-btn" target="_blank" rel="noopener noreferrer">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><polyline points="14,2 14,8 20,8"/></svg>
-                            ${t('DXF Talep Et', 'Request DXF')}
-                        </a>
-                        <a href="${wa(stepMsg)}" class="tech-btn" target="_blank" rel="noopener noreferrer">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><polyline points="14,2 14,8 20,8"/></svg>
-                            ${t('STEP Talep Et', 'Request STEP')}
-                        </a>
-                    </div>
-                </div>
-
-                <div class="cta-section">
-                    <a href="${wa(teklifMsg)}" class="cta-primary" target="_blank" rel="noopener noreferrer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg>
-                        ${t('Teklif Al', 'Get Quote')}
-                    </a>
-                    <a href="${wa(bilgiMsg)}" class="cta-secondary" target="_blank" rel="noopener noreferrer">
-                        ${t('Bilgi Al', 'Get Info')}
-                    </a>
-                </div>
-
-                <div class="badge-row">
-                    ${getBadges(product.code).map(b => `<span class="badge">${b}</span>`).join('\n                    ')}
-                </div>
-            </div>
+            <div class="info-col">${frgInfoHTML}</div>
         </div>
-
         <div class="back-section">
             <a href="${cat.url}" class="back-to-collection">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -1375,25 +1402,26 @@ if (!product) {
         });
     }
 
-    !isBath && document.querySelector('.variant-btns')?.addEventListener('click', e => {
-        const btn = e.target.closest('.variant-btn');
-        if (!btn) return;
-        document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        if (product.colorGroups && btn.dataset.color) {
-            // Color-based swap — real photos per color
-            const imgs = product.colorGroups[btn.dataset.color];
-            currentImgIdx = 0;
-            setMainImg(imgs[0]);
-            buildThumbs(imgs);
-            updateArrows(imgs.length);
-        } else {
-            // Yüzey (BANYO) — CSS filter
-            const img = document.getElementById('gallery-img');
-            img.classList.toggle('siyah', btn.dataset.variant === 'siyah');
-        }
-    });
+    // FRG/MDL color dot buttons
+    if (!isBath) {
+        document.getElementById('frg-color-btns')?.addEventListener('click', e => {
+            const btn = e.target.closest('.bath-color-btn');
+            if (!btn) return;
+            const color = btn.dataset.color;
+            document.querySelectorAll('#frg-color-btns .bath-color-btn').forEach((b, i) => {
+                b.classList.toggle('active', b === btn);
+                const dot = b.querySelector('.bath-color-dot');
+                if (dot) dot.style.outlineColor = b === btn ? 'var(--accent)' : 'var(--border)';
+            });
+            if (product.colorGroups && color) {
+                const imgs = product.colorGroups[color];
+                currentImgIdx = 0;
+                setMainImg(imgs[0]);
+                buildThumbs(imgs);
+                updateArrows(imgs.length);
+            }
+        });
+    }
     // ── LIGHTBOX ──────────────────────────────────────────
     let lbImages = [];
     let lbIndex  = 0;
@@ -1423,7 +1451,8 @@ if (!product) {
             const color = availableColors[selectedColorIdx];
             return (prodColorMap && color) ? (prodColorMap[color.suffix] || product.images) : product.images;
         }
-        const activeColor = document.querySelector('.variant-btn.active[data-color]')?.dataset.color;
+        const activeColorBtn = document.querySelector('#frg-color-btns .bath-color-btn.active');
+        const activeColor = activeColorBtn?.dataset?.color;
         return (product.colorGroups && activeColor) ? product.colorGroups[activeColor] : product.images;
     }
 
