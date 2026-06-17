@@ -1020,6 +1020,32 @@
     if (!window.BLAENE_DISABLE_REMOTE_PRODUCTS && (path.endsWith('/product.html') || path.endsWith('product.html'))) {
       await syncProductPage(client);
     }
+
+    if (window.BLAENE_INJECT_COMMERCE_ONLY && (path.endsWith('/product.html') || path.endsWith('product.html'))) {
+      if (!client) return;
+      const params = new URLSearchParams(location.search);
+      const code = String(params.get('code') || '').trim();
+      if (!code) return;
+      let { data } = await client
+        .from('products')
+        .select('id, code, name, category, material, thickness, dims, description, price, price_visible, images, variants, active, stock_quantity, display_order')
+        .ilike('code', code)
+        .eq('active', true)
+        .eq('archived', false)
+        .limit(1);
+      if (!data || !data.length) return;
+      let product = toPublicProduct(data[0]);
+      product = await enrichProductWithVariants(client, product);
+      try {
+        const promoMap = await loadPromotionDiscountMap(client);
+        const key = String(product.code || '').trim().toUpperCase();
+        if (promoMap[key]) {
+          product.discount_percent = promoMap[key].percent;
+          product.discount_promo_id = promoMap[key].id;
+        }
+      } catch {}
+      injectProductCommerce(product);
+    }
   }
 
   if (document.readyState === 'loading') {
