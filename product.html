@@ -495,6 +495,121 @@
             #lightbox-next { right: 0.5rem; }
         }
 
+        /* ── BATH NEW LAYOUT ────────────────────────────── */
+        .bath-sku-select-wrap {
+            margin-bottom: 1.2rem;
+        }
+        .bath-sku-label {
+            font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.4rem; display: block;
+        }
+        .bath-sku-select {
+            width: 100%; padding: 0.55rem 0.8rem;
+            border: 1px solid var(--border); background: var(--card);
+            color: var(--foreground); font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem; font-weight: 500;
+            cursor: pointer; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 0.75rem center;
+        }
+        .bath-sku-select:focus { outline: 1px solid var(--accent); }
+        .bath-tagline {
+            font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em;
+            text-transform: uppercase; color: var(--accent);
+            margin-bottom: 0.7rem;
+        }
+        .bath-title {
+            font-size: clamp(1rem, 2vw, 1.22rem); font-weight: 700;
+            line-height: 1.3; color: var(--foreground);
+            margin-bottom: 0.45rem; letter-spacing: -0.01em;
+        }
+        .bath-subtitle {
+            font-size: 0.72rem; color: var(--text-2);
+            margin-bottom: 1.1rem; font-weight: 500;
+        }
+        .bath-pill-row {
+            display: flex; flex-wrap: wrap; gap: 5px;
+            margin-bottom: 1.3rem;
+        }
+        .bath-pill {
+            font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; padding: 0.28rem 0.7rem;
+            background-color: var(--accent); color: #fff;
+            border-radius: 999px;
+        }
+        .bath-color-label {
+            font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.5rem; display: block;
+        }
+        .bath-color-btns {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-bottom: 1.3rem;
+        }
+        .bath-color-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            background: none; border: none; cursor: pointer; padding: 0;
+        }
+        .bath-color-dot {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid transparent;
+            outline: 2px solid var(--border);
+            transition: outline-color 0.15s;
+        }
+        .bath-color-btn.active .bath-color-dot {
+            outline-color: var(--accent);
+            border-color: #fff;
+        }
+        .bath-color-name {
+            font-size: 0.52rem; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--text-3);
+            font-weight: 500;
+        }
+        .bath-color-btn.active .bath-color-name { color: var(--accent); }
+        .bath-info-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1px; background-color: var(--border);
+            border: 1px solid var(--border);
+            margin-bottom: 1.3rem;
+        }
+        .bath-info-cell {
+            background: var(--card);
+            padding: 0.65rem 0.8rem;
+        }
+        .bath-info-cell-label {
+            font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.18rem; display: block;
+        }
+        .bath-info-cell-value {
+            font-size: 0.78rem; font-weight: 600; color: var(--foreground);
+        }
+        .bath-desc-section { margin-bottom: 1.3rem; }
+        .bath-desc-label {
+            font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.5rem; display: block;
+        }
+        .bath-desc-text {
+            font-size: 0.83rem; line-height: 1.65;
+            color: #2563eb;
+        }
+        .bath-spec-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1px; background-color: var(--border);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .bath-spec-cell {
+            background: var(--card);
+            padding: 0.7rem 0.8rem;
+        }
+        .bath-spec-cell-label {
+            font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.18rem; display: block;
+        }
+        .bath-spec-cell-value {
+            font-size: 0.75rem; font-weight: 500; color: var(--foreground);
+            line-height: 1.4;
+        }
+
         /* ── NOT FOUND ───────────────────────────────────── */
         .not-found {
             display: flex; flex-direction: column;
@@ -738,6 +853,23 @@ function getBadges(c) {
     return ['304 Kalite', 'Lazer Kesim', 'Mühendislik Onaylı'].map(translatedBadge);
 }
 
+// ── BATH COLOR CONFIG ─────────────────────────────────
+const BATH_COLORS = [
+    { name: 'Mat Siyah',         suffix: 'SYH', dot: '#1a1a1a' },
+    { name: 'Mat Beyaz',         suffix: 'BYZ', dot: '#f0f0f0', dotBorder: '#d0d0d0' },
+    { name: 'Fırçalı Paslanmaz', suffix: 'SAT', dot: '#b0b0b0' },
+    { name: 'Mint Yeşili',       suffix: 'MNT', dot: '#6fcf97' },
+];
+const BATH_DEFAULT_COLOR_IDX = 2; // Fırçalı Paslanmaz
+
+function bathSKU(code, suffix) {
+    // BTH-001 → BTH001 + suffix = BTH001SAT
+    return code.replace('BTH-', 'BTH').replace('-', '') + suffix;
+}
+function bathBarcode(sku) {
+    return 'BLN26' + sku;
+}
+
 // ── INIT ─────────────────────────────────────────────
 const params  = new URLSearchParams(window.location.search);
 const code    = String(params.get('code') || '').trim().toUpperCase();
@@ -848,7 +980,147 @@ if (!product) {
         ? (product.description_en || product.description || '')
         : (product.description || '');
 
-    document.getElementById('main-content').innerHTML = `
+    const isBath = product.code.startsWith('BTH');
+
+    // Build short desc for bath (first sentence of description before \n)
+    function bathShortDesc(desc) {
+        if (!desc) return '';
+        // Take the text before the first \nÖne bullet section
+        const lines = desc.split('\n');
+        // First line is "BLAENE ... - BTHXXX" + text. Extract just the sentence after the code suffix
+        const first = lines[0] || '';
+        // Remove the "BLAENE ... - BTH-XXX" prefix (everything up to end of product code pattern)
+        const match = first.match(/BTH-?\d{3}[-A]*(.*)/);
+        if (match && match[1]) return match[1].trim();
+        return first;
+    }
+
+    if (isBath) {
+        let selectedColorIdx = BATH_DEFAULT_COLOR_IDX;
+
+        function getBathInfoHTML() {
+            const color = BATH_COLORS[selectedColorIdx];
+            const sku = bathSKU(product.code, color.suffix);
+            const barcode = bathBarcode(sku);
+            // Short product name without code suffix
+            const prodNameClean = translatedName(product.name).replace(/ - BTH-?\d{3}[-A]*/i, '').trim();
+            // Short name after BLAENE prefix
+            const shortName = prodNameClean.replace(/^BLAENE\s+/i, '').replace(/304 Paslanmaz Çelik\s*/i, '').trim();
+            const shortDesc = bathShortDesc(product.description);
+
+            const colorDotsHTML = BATH_COLORS.map((c, i) => {
+                const dotStyle = c.dotBorder
+                    ? `background:${c.dot};outline:2px solid ${i === selectedColorIdx ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`
+                    : `background:${c.dot};outline:2px solid ${i === selectedColorIdx ? 'var(--accent)' : 'var(--border)'};border:2px solid #fff`;
+                return `<button class="bath-color-btn${i === selectedColorIdx ? ' active' : ''}" data-cidx="${i}">
+                    <span class="bath-color-dot" style="${dotStyle}"></span>
+                    <span class="bath-color-name">${c.name}</span>
+                </button>`;
+            }).join('');
+
+            // SKU dropdown options
+            const skuOptions = BATH_COLORS.map((c, i) => {
+                const s = bathSKU(product.code, c.suffix);
+                return `<option value="${i}"${i === selectedColorIdx ? ' selected' : ''}>${s} — ${c.name}</option>`;
+            }).join('');
+
+            return `
+                <div class="bath-sku-select-wrap">
+                    <label class="bath-sku-label" for="bath-sku-sel">${t('Ürün seç:', 'Select product:')}</label>
+                    <select class="bath-sku-select" id="bath-sku-sel">${skuOptions}</select>
+                </div>
+                <p class="bath-tagline">BLAENE | METAL IS FOREVER NEW</p>
+                <h1 class="bath-title">${prodNameClean}</h1>
+                <p class="bath-subtitle">${product.code} | ${shortName}</p>
+                <div class="bath-pill-row">
+                    <span class="bath-pill">304 Paslanmaz Çelik</span>
+                    <span class="bath-pill">Gizli Vida Montaj</span>
+                    <span class="bath-pill">Paslanmaya Karşı Garanti</span>
+                    <span class="bath-pill">Türkiye'de Üretilmiştir</span>
+                </div>
+                <label class="bath-color-label">${t('Renk seçimi', 'Color selection')}</label>
+                <div class="bath-color-btns" id="bath-color-btns">${colorDotsHTML}</div>
+                <div class="bath-info-grid">
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Model Kodu', 'Model Code')}</span>
+                        <span class="bath-info-cell-value">${product.code}</span>
+                    </div>
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Seçili SKU', 'Selected SKU')}</span>
+                        <span class="bath-info-cell-value" id="bath-sku-val">${sku}</span>
+                    </div>
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Yeni Barkod', 'Barcode')}</span>
+                        <span class="bath-info-cell-value" id="bath-barcode-val">${barcode}</span>
+                    </div>
+                    <div class="bath-info-cell">
+                        <span class="bath-info-cell-label">${t('Seçili Renk', 'Selected Color')}</span>
+                        <span class="bath-info-cell-value" id="bath-color-val">${color.name}</span>
+                    </div>
+                </div>
+                ${shortDesc ? `<div class="bath-desc-section">
+                    <span class="bath-desc-label">${t('Ürün Açıklaması', 'Product Description')}</span>
+                    <p class="bath-desc-text">${shortDesc}</p>
+                </div>` : ''}
+                <div class="bath-spec-grid">
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Malzeme', 'Material')}</span>
+                        <span class="bath-spec-cell-value">304 paslanmaz çelik</span>
+                    </div>
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Montaj', 'Installation')}</span>
+                        <span class="bath-spec-cell-value">${t('Duvara monte / gizli vida', 'Wall mount / hidden screw')}</span>
+                    </div>
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Paket', 'Package')}</span>
+                        <span class="bath-spec-cell-value">${t('Fischer dübel + A2 vida + pul + tapa', 'Fischer dowel + A2 screw + washer + cap')}</span>
+                    </div>
+                    <div class="bath-spec-cell">
+                        <span class="bath-spec-cell-label">${t('Garanti', 'Warranty')}</span>
+                        <span class="bath-spec-cell-value">${t('2 yıl ürün garantisi + paslanmaya karşı garanti', '2 year product warranty + anti-rust guarantee')}</span>
+                    </div>
+                </div>
+                <div id="blaene-product-cart-slot" class="product-cart-slot"></div>
+                <div class="cta-section">
+                    <a href="${wa(teklifMsg)}" class="cta-primary" target="_blank" rel="noopener noreferrer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg>
+                        ${t('Teklif Al', 'Get Quote')}
+                    </a>
+                    <a href="${wa(bilgiMsg)}" class="cta-secondary" target="_blank" rel="noopener noreferrer">
+                        ${t('Bilgi Al', 'Get Info')}
+                    </a>
+                </div>`;
+        }
+
+        document.getElementById('main-content').innerHTML = `
+        <div class="product-layout">
+            <div class="img-col">
+                <div class="gallery-main" id="gallery-main-area">
+                    ${passBadgeHTML}
+                    <img class="gallery-main-img" id="gallery-img" src="${product.images[0]}" alt="${product.code} — ${product.name}" loading="eager">
+                    <button class="gallery-arrow gallery-arrow-prev" id="gallery-prev" aria-label="${t('Önceki görsel', 'Previous image')}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button class="gallery-arrow gallery-arrow-next" id="gallery-next" aria-label="${t('Sonraki görsel', 'Next image')}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                    <button class="zoom-btn" aria-label="${t('Görseli büyüt', 'Zoom image')}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </button>
+                </div>
+                <div class="gallery-thumbs" id="gallery-thumbs" ${product.images.length <= 1 ? 'style="display:none"' : ''}>${thumbsHTML}</div>
+            </div>
+            <div class="info-col" id="bath-info-col">${getBathInfoHTML()}</div>
+        </div>
+        <div class="back-section">
+            <a href="${cat.url}" class="back-to-collection">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                ${t('Koleksiyona Dön', 'Back to Collection')}
+            </a>
+        </div>`;
+
+    } else {
+        document.getElementById('main-content').innerHTML = `
         <div class="product-layout">
             <div class="img-col">
                 <div class="gallery-main" id="gallery-main-area">
@@ -926,6 +1198,39 @@ if (!product) {
                 ${t('Koleksiyona Dön', 'Back to Collection')}
             </a>
         </div>`;
+    }
+
+    // ── Bath color selection
+    if (isBath) {
+        function updateBathColor(cidx) {
+            selectedColorIdx = cidx;
+            const color = BATH_COLORS[cidx];
+            const sku = bathSKU(product.code, color.suffix);
+            const barcode = bathBarcode(sku);
+            const skuEl = document.getElementById('bath-sku-val');
+            const bcEl = document.getElementById('bath-barcode-val');
+            const colorEl = document.getElementById('bath-color-val');
+            const selEl = document.getElementById('bath-sku-sel');
+            if (skuEl) skuEl.textContent = sku;
+            if (bcEl) bcEl.textContent = barcode;
+            if (colorEl) colorEl.textContent = color.name;
+            if (selEl) selEl.value = cidx;
+            // Update dot outlines
+            document.querySelectorAll('.bath-color-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === cidx);
+                const dot = btn.querySelector('.bath-color-dot');
+                if (dot) dot.style.outlineColor = i === cidx ? 'var(--accent)' : 'var(--border)';
+            });
+        }
+        document.getElementById('bath-color-btns')?.addEventListener('click', e => {
+            const btn = e.target.closest('.bath-color-btn');
+            if (!btn) return;
+            updateBathColor(parseInt(btn.dataset.cidx, 10));
+        });
+        document.getElementById('bath-sku-sel')?.addEventListener('change', e => {
+            updateBathColor(parseInt(e.target.value, 10));
+        });
+    }
 
     // ── Gallery interaction
     function buildThumbs(imgs) {
@@ -1008,7 +1313,7 @@ if (!product) {
     updateArrows(getCurrentImages().length);
 
 
-    document.querySelector('.variant-btns')?.addEventListener('click', e => {
+    !isBath && document.querySelector('.variant-btns')?.addEventListener('click', e => {
         const btn = e.target.closest('.variant-btn');
         if (!btn) return;
         document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
