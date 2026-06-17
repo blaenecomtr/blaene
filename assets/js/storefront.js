@@ -928,12 +928,14 @@
       addBtn.addEventListener('click', function () {
         if (!cart || !canSell || !sale) return;
         animateAddCartButton(addBtn);
-        const activeColor = String(document.querySelector('.variant-btn.active[data-color]')?.dataset?.color || '').trim();
-        const selectedImages = activeColor && Array.isArray(product.colorGroups?.[activeColor])
-          ? product.colorGroups[activeColor]
-          : [];
+        const bathColorBtn = document.querySelector('.bath-color-btn.active .bath-color-name');
+        const variantBtn = document.querySelector('.variant-btn.active[data-color]');
+        const activeColor = String(
+          bathColorBtn?.textContent ||
+          variantBtn?.dataset?.color ||
+          ''
+        ).trim();
         const selectedImage =
-          selectedImages[0] ||
           document.getElementById('gallery-img')?.getAttribute('src') ||
           product.images?.[0] ||
           'logo/sitelogo.png';
@@ -943,7 +945,7 @@
           price: sale.price,
           image: selectedImage,
           category: product.category,
-          color: activeColor || '',
+          color: activeColor,
           stock: stock,
         }, 1);
       });
