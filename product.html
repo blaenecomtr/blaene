@@ -1088,11 +1088,12 @@ if (!product) {
         return first;
     }
 
+    const prodColorMap = isBath ? (BATH_COLOR_IMAGES[product.code] || {}) : {};
+    const availableColors = isBath ? BATH_COLORS.filter(c => prodColorMap[c.suffix]) : [];
+    let selectedColorIdx = isBath ? availableColors.findIndex(c => c.suffix === 'SAT') : 0;
+    if (selectedColorIdx < 0) selectedColorIdx = 0;
+
     if (isBath) {
-        const prodColorMap = BATH_COLOR_IMAGES[product.code] || {};
-        const availableColors = BATH_COLORS.filter(c => prodColorMap[c.suffix]);
-        let selectedColorIdx = availableColors.findIndex(c => c.suffix === 'SAT');
-        if (selectedColorIdx < 0) selectedColorIdx = 0;
 
         function getBathInfoHTML() {
             const color = availableColors[selectedColorIdx];
@@ -1488,9 +1489,7 @@ if (!product) {
     document.getElementById('gallery-main-area').addEventListener('click', e => {
         if (e.target.closest('.zoom-btn') || e.target.id === 'gallery-img') {
             const imgs = getCurrentImages();
-            const currentSrc = document.getElementById('gallery-img').src;
-            const idx = imgs.findIndex(s => currentSrc.includes(s.split('/').pop()));
-            openLightbox(imgs, Math.max(0, idx));
+            openLightbox(imgs, Math.max(0, currentImgIdx));
         }
     });
 }
