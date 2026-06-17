@@ -496,23 +496,6 @@
         }
 
         /* ── BATH NEW LAYOUT ────────────────────────────── */
-        .bath-sku-select-wrap {
-            margin-bottom: 1.2rem;
-        }
-        .bath-sku-label {
-            font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
-            color: var(--text-3); margin-bottom: 0.4rem; display: block;
-        }
-        .bath-sku-select {
-            width: 100%; padding: 0.55rem 0.8rem;
-            border: 1px solid var(--border); background: var(--card);
-            color: var(--foreground); font-family: 'Montserrat', sans-serif;
-            font-size: 0.75rem; font-weight: 500;
-            cursor: pointer; appearance: none; -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 0.75rem center;
-        }
-        .bath-sku-select:focus { outline: 1px solid var(--accent); }
         .bath-tagline {
             font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em;
             text-transform: uppercase; color: var(--accent);
@@ -1105,16 +1088,9 @@ if (!product) {
                 </button>`;
             }).join('');
 
-            const skuOptions = availableColors.map((c, i) => {
-                const s = bathSKU(product.code, c.suffix);
-                return `<option value="${i}"${i === selectedColorIdx ? ' selected' : ''}>${s} — ${c.name}</option>`;
-            }).join('');
-
             return `
-                <div class="bath-sku-select-wrap">
-                    <label class="bath-sku-label" for="bath-sku-sel">${t('Ürün seç:', 'Select product:')}</label>
-                    <select class="bath-sku-select" id="bath-sku-sel">${skuOptions}</select>
-                </div>
+                <label class="bath-color-label">${t('Renk seçimi', 'Color selection')}</label>
+                <div class="bath-color-btns" id="bath-color-btns">${colorDotsHTML}</div>
                 <p class="bath-tagline">BLAENE | METAL IS FOREVER NEW</p>
                 <h1 class="bath-title">${prodNameClean}</h1>
                 <p class="bath-subtitle">${product.code} | ${shortName}</p>
@@ -1124,8 +1100,6 @@ if (!product) {
                     <span class="bath-pill">Paslanmaya Karşı Garanti</span>
                     <span class="bath-pill">Türkiye'de Üretilmiştir</span>
                 </div>
-                <label class="bath-color-label">${t('Renk seçimi', 'Color selection')}</label>
-                <div class="bath-color-btns" id="bath-color-btns">${colorDotsHTML}</div>
                 <div class="bath-info-grid">
                     <div class="bath-info-cell">
                         <span class="bath-info-cell-label">${t('Model Kodu', 'Model Code')}</span>
@@ -1382,11 +1356,9 @@ if (!product) {
             const skuEl = document.getElementById('bath-sku-val');
             const bcEl = document.getElementById('bath-barcode-val');
             const colorEl = document.getElementById('bath-color-val');
-            const selEl = document.getElementById('bath-sku-sel');
             if (skuEl) skuEl.textContent = sku;
             if (bcEl) bcEl.textContent = barcode;
             if (colorEl) colorEl.textContent = color.name;
-            if (selEl) selEl.value = cidx;
             document.querySelectorAll('.bath-color-btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === cidx);
                 const dot = btn.querySelector('.bath-color-dot');
@@ -1402,9 +1374,6 @@ if (!product) {
             const btn = e.target.closest('.bath-color-btn');
             if (!btn) return;
             updateBathColor(parseInt(btn.dataset.cidx, 10));
-        });
-        document.getElementById('bath-sku-sel')?.addEventListener('change', e => {
-            updateBathColor(parseInt(e.target.value, 10));
         });
     }
 
