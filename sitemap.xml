@@ -1,23 +1,462 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://blaene.com.tr/</loc>
+    <loc>https://www.blaene.com.tr/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/marka/bath.webp</image:loc>
+      <image:title>Blaene Banyo Koleksiyonu</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/forge%20banner.webp</image:loc>
+      <image:title>Blaene Forge Koleksiyonu</image:title>
+    </image:image>
   </url>
   <url>
-    <loc>https://blaene.com.tr/bath.html</loc>
+    <loc>https://www.blaene.com.tr/bath.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://blaene.com.tr/forge.html</loc>
+    <loc>https://www.blaene.com.tr/forge.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://blaene.com.tr/industrial.html</loc>
+    <loc>https://www.blaene.com.tr/industrial.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-001</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-001/BTH-001-B/blaene-bth-001-b-1.webp</image:loc>
+      <image:title>Blaene BTH-001 Çift Katlı Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-001 Çift Katlı Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-001/BTH-001-B/blaene-bth-001-b-2.webp</image:loc>
+      <image:title>Blaene BTH-001 Çift Katlı Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-001 Çift Katlı Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-001/BTH-001-B/blaene-bth-001-b-3.webp</image:loc>
+      <image:title>Blaene BTH-001 Çift Katlı Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-001 Çift Katlı Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-001/BTH-001-S/blaene-bth-001-s-1.webp</image:loc>
+      <image:title>Blaene BTH-001 Çift Katlı Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-001 Çift Katlı Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-001/BTH-001-MD/blaene-bth-001-md-1.webp</image:loc>
+      <image:title>Blaene BTH-001 Çift Katlı Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-001 Çift Katlı Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-001/BTH-001-ST/blaene-bth-001-st-1.webp</image:loc>
+      <image:title>Blaene BTH-001 Çift Katlı Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-001 Çift Katlı Köşe Duş Rafı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-002</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-002/BTH-002-B/blaene-bth-002-b-1.webp</image:loc>
+      <image:title>Blaene BTH-002 Slim Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-002 Slim Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-002/BTH-002-S/blaene-bth-002-s-1.webp</image:loc>
+      <image:title>Blaene BTH-002 Slim Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-002 Slim Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-002/BTH-002-MD/blaene-bth-002-md-1.webp</image:loc>
+      <image:title>Blaene BTH-002 Slim Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-002 Slim Köşe Duş Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-002/BTH-002-ST/blaene-bth-002-st-1.webp</image:loc>
+      <image:title>Blaene BTH-002 Slim Köşe Duş Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-002 Slim Köşe Duş Rafı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-003</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-003/BTH-003-B/blaene-bth-003-b-1.webp</image:loc>
+      <image:title>Blaene BTH-003 Modern Havluluk - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-003 Modern Havluluk</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-003/BTH-003-S/blaene-bth-003-s-1.webp</image:loc>
+      <image:title>Blaene BTH-003 Modern Havluluk - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-003 Modern Havluluk</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-004</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-004/BTH-004-B/blaene-bth-004-b-1.webp</image:loc>
+      <image:title>Blaene BTH-004 Çift Katlı Duş Organizeri - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-004 Çift Katlı Duş Organizeri</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-004/BTH-004-S/blaene-bth-004-s-1.webp</image:loc>
+      <image:title>Blaene BTH-004 Çift Katlı Duş Organizeri - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-004 Çift Katlı Duş Organizeri</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-005</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-005/BTH-005-B/blaene-bth-005-b-1.webp</image:loc>
+      <image:title>Blaene BTH-005 Raflı Havluluk - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-005 Raflı Havluluk</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-005/BTH-005-S/blaene-bth-005-s-1.webp</image:loc>
+      <image:title>Blaene BTH-005 Raflı Havluluk - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-005 Raflı Havluluk</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-006</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-006/BTH-006-B/blaene-bth-006-b-1.webp</image:loc>
+      <image:title>Blaene BTH-006 Premium WC İstasyonu - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-006 Premium WC İstasyonu</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-006/BTH-006-S/blaene-bth-006-s-1.webp</image:loc>
+      <image:title>Blaene BTH-006 Premium WC İstasyonu - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-006 Premium WC İstasyonu</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-007</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-007/BTH-007-B/blaene-bth-007-b-1.webp</image:loc>
+      <image:title>Blaene BTH-007 Kapalı Kasa WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-007 Kapalı Kasa WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-007/BTH-007-S/blaene-bth-007-s-1.webp</image:loc>
+      <image:title>Blaene BTH-007 Kapalı Kasa WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-007 Kapalı Kasa WC Kağıtlığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-008</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-008/BTH-008-B/blaene-bth-008-B-1.webp</image:loc>
+      <image:title>Blaene BTH-008 Raflı Havluluk Organizer - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-008 Raflı Havluluk Organizer</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-008/BTH-008-S/blaene-bth-008-S-1.webp</image:loc>
+      <image:title>Blaene BTH-008 Raflı Havluluk Organizer - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-008 Raflı Havluluk Organizer</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-009</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-009/BTH-009-B/blaene-bth-009-b-1.webp</image:loc>
+      <image:title>Blaene BTH-009 Çok Amaçlı Banyo Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-009 Çok Amaçlı Banyo Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-009/BTH-009-S/blaene-bth-009-s-1.webp</image:loc>
+      <image:title>Blaene BTH-009 Çok Amaçlı Banyo Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-009 Çok Amaçlı Banyo Rafı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-010</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-010/BTH-010-B/blaene-bth-010-b-1.webp</image:loc>
+      <image:title>Blaene BTH-010 Fön ve Bakım İstasyonu - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-010 Fön ve Bakım İstasyonu</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-010/BTH-010-S/blaene-bth-010-s-1.webp</image:loc>
+      <image:title>Blaene BTH-010 Fön ve Bakım İstasyonu - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-010 Fön ve Bakım İstasyonu</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-011</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-011/BTH-011-B/blaene-bth-011-b-1.webp</image:loc>
+      <image:title>Blaene BTH-011 Telefon Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-011 Telefon Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-011/BTH-011-S/blaene-bth-011-s-1.webp</image:loc>
+      <image:title>Blaene BTH-011 Telefon Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-011 Telefon Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-012</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-012/BTH-012-B/blaene-bth-012-b-1.webp</image:loc>
+      <image:title>Blaene BTH-012 Kompakt Banyo Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-012 Kompakt Banyo Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-012/BTH-012-S/blaene-bth-012-s-1.webp</image:loc>
+      <image:title>Blaene BTH-012 Kompakt Banyo Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-012 Kompakt Banyo Rafı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-013</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-013/BTH-013-B/blaene-bth-013-b-1.webp</image:loc>
+      <image:title>Blaene BTH-013 Slim WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-013 Slim WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-013/BTH-013-S/blaene-bth-013-s-1.webp</image:loc>
+      <image:title>Blaene BTH-013 Slim WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-013 Slim WC Kağıtlığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-014</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014/BTH-014-B/blaene-bth-014-b-1.webp</image:loc>
+      <image:title>Blaene BTH-014 Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014 Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014/BTH-014-S/blaene-bth-014-s-1.webp</image:loc>
+      <image:title>Blaene BTH-014 Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014 Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014/BTH-014-MD/blaene-bth-014-md-1.webp</image:loc>
+      <image:title>Blaene BTH-014 Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014 Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014/BTH-014-ST/blaene-bth-014-st-1.webp</image:loc>
+      <image:title>Blaene BTH-014 Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014 Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-014-A</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014A/BTH-014A-B/blaene-bth-014a-b-1.webp</image:loc>
+      <image:title>Blaene BTH-014-A Premium Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014-A Premium Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014A/BTH-014A-S/blaene-bth-014a-s-1.webp</image:loc>
+      <image:title>Blaene BTH-014-A Premium Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014-A Premium Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014A/BTH-014A-MD/blaene-bth-014a-md-1.webp</image:loc>
+      <image:title>Blaene BTH-014-A Premium Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014-A Premium Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-014A/BTH-014A-ST/blaene-bth-014a-st-1.webp</image:loc>
+      <image:title>Blaene BTH-014-A Premium Raflı WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-014-A Premium Raflı WC Kağıtlığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-015</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-015/BTH-015-B/blaene-bth-015-b-1.webp</image:loc>
+      <image:title>Blaene BTH-015 Modern Havluluk - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-015 Modern Havluluk</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-015/BTH-015-S/blaene-bth-015-s-1.webp</image:loc>
+      <image:title>Blaene BTH-015 Modern Havluluk - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-015 Modern Havluluk</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-016</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-016/BTH-016-B/blaene-bth-016-b-1.webp</image:loc>
+      <image:title>Blaene BTH-016 Minimal WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-016 Minimal WC Kağıtlığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-016/BTH-016-S/blaene-bth-016-s-1.webp</image:loc>
+      <image:title>Blaene BTH-016 Minimal WC Kağıtlığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-016 Minimal WC Kağıtlığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-017</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-017/BTH-017-B/blaene-bth-017-b-1.webp</image:loc>
+      <image:title>Blaene BTH-017 Fön Makinesi Askılığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-017 Fön Makinesi Askılığı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-017/BTH-017-S/blaene-bth-017-s-1.webp</image:loc>
+      <image:title>Blaene BTH-017 Fön Makinesi Askılığı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-017 Fön Makinesi Askılığı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-018</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-018/BTH-018-B/blaene-bth-018-b-1.webp</image:loc>
+      <image:title>Blaene BTH-018 Şampuanlık ve Banyo Organizeri - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-018 Şampuanlık ve Banyo Organizeri</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-018/BTH-018-S/blaene-bth-018-s-1.webp</image:loc>
+      <image:title>Blaene BTH-018 Şampuanlık ve Banyo Organizeri - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-018 Şampuanlık ve Banyo Organizeri</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=BTH-019</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-019/BTH-019-B/blaene-bth-019-b-1.webp</image:loc>
+      <image:title>Blaene BTH-019 Geniş Banyo Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-019 Geniş Banyo Rafı</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/KUNYE/BTH-019/BTH-019-S/blaene-bth-019-s-1.webp</image:loc>
+      <image:title>Blaene BTH-019 Geniş Banyo Rafı - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BTH-019 Geniş Banyo Rafı</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=FRG-001</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/frg-001/IMG_0237.webp</image:loc>
+      <image:title>Blaene FRG-001 Kampcı Portatif Mangal - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene FRG-001 Kampcı Portatif Mangal</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/frg-001/IMG_0068.webp</image:loc>
+      <image:title>Blaene FRG-001 Kampcı Portatif Mangal - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene FRG-001 Kampcı Portatif Mangal</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=FRG-002</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/frg-002/IMG_0160.webp</image:loc>
+      <image:title>Blaene FRG-002 Kampcı Portatif Mangal - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene FRG-002 Kampcı Portatif Mangal</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/frg-002/IMG_0161.webp</image:loc>
+      <image:title>Blaene FRG-002 Kampcı Portatif Mangal - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene FRG-002 Kampcı Portatif Mangal</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=FRG-003</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/frg-003/IMG_0182.webp</image:loc>
+      <image:title>Blaene FRG-003 Kampcı Portatif Mangal - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene FRG-003 Kampcı Portatif Mangal</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/forge/frg-003/IMG_0183.webp</image:loc>
+      <image:title>Blaene FRG-003 Kampcı Portatif Mangal - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene FRG-003 Kampcı Portatif Mangal</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=MDL-002</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/industrial/mdl-002/IMG_0278.webp</image:loc>
+      <image:title>Blaene MDL-002 Çelik Raf Sistemi - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene MDL-002 Çelik Raf Sistemi</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/industrial/mdl-002/IMG_0279.webp</image:loc>
+      <image:title>Blaene MDL-002 Çelik Raf Sistemi - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene MDL-002 Çelik Raf Sistemi</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=MDL-003</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/industrial/mdl-003/mdl-003%20(1)S%C4%B0YAH.webp</image:loc>
+      <image:title>Blaene MDL-003 Kademeli Servis Arabası - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene MDL-003 Kademeli Servis Arabası</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.blaene.com.tr/product.html?code=MDL-004</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.blaene.com.tr/g%C3%B6rsel/industrial/mdl-004/mdl-004%20(1)%20S%C4%B0YAH.webp</image:loc>
+      <image:title>Blaene MDL-004 Servis Takım Arabası - 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene MDL-004 Servis Takım Arabası</image:caption>
+    </image:image>
   </url>
 </urlset>

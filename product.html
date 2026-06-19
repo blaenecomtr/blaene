@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blaene — Ürün Detayı</title>
     <meta name="description" content="Blaene BANYO koleksiyonu ürün detayı. 304 Paslanmaz Çelik, DFMA uyumlu metal tasarım.">
+    <meta property="og:title" content="Blaene — Ürün Detayı">
+    <meta property="og:description" content="304 Paslanmaz Çelik, DFMA uyumlu metal tasarım ürünleri.">
+    <meta property="og:image" content="https://www.blaene.com.tr/logo/blaene-logo.png">
+    <meta property="og:type" content="product">
     <link rel="icon" href="logo/sitelogo.png" type="image/png">
     <link rel="apple-touch-icon" href="logo/sitelogo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -938,8 +942,44 @@ if (!product) {
         </div>`;
     document.title = t('Blaene — Ürün Bulunamadı', 'Blaene — Product Not Found');
 } else {
-    // Update meta + breadcrumb + nav active
+    // SEO: dynamic meta tags + structured data
     document.title = `Blaene ${product.code} — ${translatedName(product.name)}`;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.content = `${product.code} ${translatedName(product.name)} — ${product.material}, ${product.thickness}, ${product.dims}. Blaene metal tasarım ürünleri.`;
+
+    const absImg = new URL(product.images[0], location.origin).href;
+    const ogTags = {
+        'og:title': `Blaene ${product.code} — ${translatedName(product.name)}`,
+        'og:description': `${translatedName(product.name)} — ${product.material}, ${product.dims}`,
+        'og:image': absImg,
+        'og:image:width': '1024',
+        'og:image:height': '1536',
+        'og:type': 'product',
+        'og:url': location.href,
+    };
+    Object.entries(ogTags).forEach(([prop, content]) => {
+        let tag = document.querySelector(`meta[property="${prop}"]`);
+        if (!tag) { tag = document.createElement('meta'); tag.setAttribute('property', prop); document.head.appendChild(tag); }
+        tag.content = content;
+    });
+
+    const ldProduct = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: `Blaene ${product.code} — ${translatedName(product.name)}`,
+        description: product.description ? product.description.substring(0, 300) : translatedName(product.name),
+        brand: { '@type': 'Brand', name: 'Blaene' },
+        material: product.material,
+        image: product.images.map(src => new URL(src, location.origin).href),
+        sku: product.code,
+        manufacturer: { '@type': 'Organization', name: 'Blaene' },
+        countryOfOrigin: { '@type': 'Country', name: 'TR' },
+    };
+    const ldScript = document.createElement('script');
+    ldScript.type = 'application/ld+json';
+    ldScript.textContent = JSON.stringify(ldProduct);
+    document.head.appendChild(ldScript);
+
     document.getElementById('bc-code').textContent = product.code;
     const bcCat = document.getElementById('bc-cat');
     bcCat.textContent = cat.label;

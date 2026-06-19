@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Allow: /KUNYE/
+Allow: /görsel/
 
-Sitemap: https://blaene.com.tr/sitemap.xml
+User-agent: Googlebot-Image
+Allow: /
+
+Sitemap: https://www.blaene.com.tr/sitemap.xml
