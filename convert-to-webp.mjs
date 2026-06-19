@@ -33,6 +33,7 @@ async function walk(dir) {
           }
           const origStats = await stat(fullPath);
           await sharp(fullPath)
+            .rotate()
             .webp({ quality: QUALITY })
             .toFile(webpPath);
           const newStats = await stat(webpPath);
