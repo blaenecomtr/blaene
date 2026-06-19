@@ -393,7 +393,7 @@
         </div>
         <div class="cat-header-right">
             <!-- KATEGORİ GÖRSELİ: src kısmına görsel yolunu yazın (örn: görsel/marka/241.JPG) -->
-            <img class="cat-banner-img" src="görsel/marka/241.JPG" alt="Sanayi Koleksiyonu">
+            <img class="cat-banner-img" src="görsel/marka/241.webp" alt="Sanayi Koleksiyonu">
             <div class="cat-stat-overlay">
                 <span class="cat-stat-num" id="product-count-num">3</span>
                 <span class="cat-stat-label">Ürün</span>
@@ -497,6 +497,9 @@ const PRODUCTS = [
     { code: 'MDL-003', name: 'Kademeli Servis Arabası', thickness: '1.5mm', dims: '600-700-800 × 450mm · 100cm', images: ['görsel/industrial/mdl-003/mdl-003 (1)SİYAH.JPG', 'görsel/industrial/mdl-003/mdl-003 (2)SİYAH.JPG', 'görsel/industrial/mdl-003/mdl-003 (1)GRİ.png', 'görsel/industrial/mdl-003/mdl-003 (3)GRİ.JPG'] },
     { code: 'MDL-004', name: 'Servis Takım Arabası',    thickness: '1.5mm', dims: '55×45 cm · 3 Katlı',          images: ['görsel/industrial/mdl-004/mdl-004 (1) SİYAH.JPG', 'görsel/industrial/mdl-004/mdl-004 (2) SİYAH.JPG', 'görsel/industrial/mdl-004/mdl-004 (3)GRİ.JPG', 'görsel/industrial/mdl-004/mdl-004 (4)GRİ.JPG'] },
 ].map(p => ({ ...p, material: 'Yüksek Mukavemetli Çelik' }));
+
+function w(src) { return src.replace(/\.(png|jpg|jpeg)$/i, '.webp'); }
+PRODUCTS.forEach(p => { p.images = p.images.map(w); if (p.colorGroups) { for (const k in p.colorGroups) p.colorGroups[k] = p.colorGroups[k].map(w); } });
 
 const LANG_KEY = 'blaene_lang';
 let currentLang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'tr';

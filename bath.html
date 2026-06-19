@@ -468,7 +468,7 @@
         </div>
         <div class="cat-header-right">
             <!-- KATEGORİ GÖRSELİ: src kısmına görsel yolunu yazın (örn: görsel/marka/bath.JPG) -->
-            <img class="cat-banner-img" src="görsel/marka/bath.JPG" alt="BANYO Koleksiyonu">
+            <img class="cat-banner-img" src="görsel/marka/bath.webp" alt="BANYO Koleksiyonu">
             <div class="cat-img-placeholder">Görsel<br>alanı</div>
             <div class="cat-stat-overlay" aria-label="Koleksiyon istatistikleri">
                 <span class="cat-stat-num" id="product-count-num">26</span>
@@ -603,6 +603,9 @@ const PRODUCTS = [
         { code: 'BTH-018', name: 'Havluluk', thickness: '1.5mm', dims: '32×12×15 cm', images: ['KUNYE/BTH-018/BTH-018-B/blaene-bth-018-b-1.png', 'KUNYE/BTH-018/BTH-018-B/blaene-bth-018-b-2.png', 'KUNYE/BTH-018/BTH-018-B/blaene-bth-018-b-3.png'] },
         { code: 'BTH-019', name: 'Banyo Organizer', thickness: '1.5mm', dims: '28×10×5 cm', images: ['KUNYE/BTH-019/BTH-019-B/blaene-bth-019-b-1.png', 'KUNYE/BTH-019/BTH-019-B/blaene-bth-019-b-2.png', 'KUNYE/BTH-019/BTH-019-B/blaene-bth-019-b-3.png'] },
 ].map(p => ({ ...p, material: '304 Paslanmaz Çelik' }));
+
+function w(src) { return src.replace(/\.(png|jpg|jpeg)$/i, '.webp'); }
+PRODUCTS.forEach(p => { p.images = p.images.map(w); });
 
 const LANG_KEY = 'blaene_lang';
 let currentLang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'tr';

@@ -489,6 +489,9 @@ const PRODUCTS = [
     { code: 'FRG-003', name: 'Kampcı Portatif Mangal', thickness: '3mm', dims: 'Sipariş üzeri', material: 'ST37 Çelik',          images: ['görsel/forge/frg-003/IMG_0182.JPG', 'görsel/forge/frg-003/IMG_0183.JPG', 'görsel/forge/frg-003/IMG_0186.JPG', 'görsel/forge/frg-003/IMG_0190.JPG', 'görsel/forge/frg-003/IMG_0195.JPG'] },
 ];
 
+function w(src) { return src.replace(/\.(png|jpg|jpeg)$/i, '.webp'); }
+PRODUCTS.forEach(p => { p.images = p.images.map(w); });
+
 const LANG_KEY = 'blaene_lang';
 let currentLang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'tr';
 

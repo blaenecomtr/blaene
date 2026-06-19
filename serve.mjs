@@ -46,8 +46,14 @@ const server = createServer((request, response) => {
     return;
   }
 
-  const contentType = contentTypes[extname(filePath).toLowerCase()] || "application/octet-stream";
-  response.writeHead(200, { "Content-Type": contentType });
+  const ext = extname(filePath).toLowerCase();
+  const contentType = contentTypes[ext] || "application/octet-stream";
+  const isImage = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico"].includes(ext);
+  const headers = { "Content-Type": contentType };
+  if (isImage) {
+    headers["Cache-Control"] = "public, max-age=31536000, immutable";
+  }
+  response.writeHead(200, headers);
   createReadStream(filePath).pipe(response);
 });
 

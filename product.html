@@ -823,6 +823,18 @@ const PRODUCTS = [
       colorGroups: { 'Siyah': ['görsel/industrial/mdl-004/mdl-004 (1) SİYAH.JPG', 'görsel/industrial/mdl-004/mdl-004 (2) SİYAH.JPG'], 'Gri': ['görsel/industrial/mdl-004/mdl-004 (3)GRİ.JPG', 'görsel/industrial/mdl-004/mdl-004 (4)GRİ.JPG'] } },
 ]);
 
+// WebP path dönüşümü — geri almak için bu satırı `return src;` yapın
+function w(src) { return src.replace(/\.(png|jpg|jpeg)$/i, '.webp'); }
+function wArr(arr) { return arr.map(w); }
+function wProduct(p) {
+    p.images = wArr(p.images);
+    if (p.colorGroups) {
+        for (const k in p.colorGroups) p.colorGroups[k] = wArr(p.colorGroups[k]);
+    }
+    return p;
+}
+PRODUCTS.forEach(wProduct);
+
 // ── HELPERS ──────────────────────────────────────────
 function getCat(c) {
     if (c && c.startsWith('FRG')) return { name: t('KAMP Koleksiyonu', 'CAMP Collection'), url: 'forge.html', label: t('ATEŞ ÇUKURU', 'FIRE PIT') };
