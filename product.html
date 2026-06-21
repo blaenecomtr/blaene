@@ -432,6 +432,20 @@
             transition: color 0.15s, border-color 0.15s;
         }
         .footer-social a:hover { color: var(--accent); border-color: rgba(224,112,32,0.35); }
+        .footer-marketplaces {
+            border-top: 1px solid var(--border);
+            padding: 1.5rem 0 0.5rem;
+            text-align: center;
+        }
+        .footer-marketplaces span {
+            display: block; font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 1rem;
+        }
+        .footer-mp-logos { display: flex; justify-content: center; align-items: center; gap: 2.5rem; flex-wrap: wrap; }
+        .footer-mp-logos a { display: inline-block; opacity: 0.55; transition: opacity 0.2s; }
+        .footer-mp-logos a:hover { opacity: 1; }
+        .footer-mp-logos img { height: 28px; width: auto; object-fit: contain; }
         .footer-copy { font-size: 0.66rem; color: var(--text-3); margin-top: 2rem; text-align: center; }
 
         /* ── FLOATING WA ─────────────────────────────────── */
@@ -694,7 +708,7 @@
         </div>
         <div class="footer-meta">
             <address class="footer-address">Çorum / Osmancık, Türkiye</address>
-            <div class="footer-social" aria-label="Sosyal medya ve e-pazar yerleri">
+            <div class="footer-social" aria-label="Sosyal medya">
                 <a href="https://instagram.com/blaenecomtr" target="_blank" rel="noopener noreferrer" aria-label="Instagram @blaenecomtr">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                         <rect width="20" height="20" x="2" y="2" rx="5"/>
@@ -702,13 +716,18 @@
                         <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
                     </svg>
                 </a>
-                <a href="https://ty.gl/j06m6load8mcg" target="_blank" rel="noopener noreferrer" aria-label="Trendyol Mağaza">
-                    <svg width="16" height="16" viewBox="0 0 256 256" aria-hidden="true"><path d="M209.7 46.3H46.3C20.7 46.3 0 67 0 92.6v70.8c0 25.6 20.7 46.3 46.3 46.3h163.4c25.6 0 46.3-20.7 46.3-46.3V92.6c0-25.6-20.7-46.3-46.3-46.3zm-72.5 117.4h-18.8V99.3h-26.7V82.7h72.2v16.6h-26.7v64.4z" fill="currentColor"/></svg>
-                </a>
-                <a href="https://www.hepsiburada.com/magaza/blaene" target="_blank" rel="noopener noreferrer" aria-label="Hepsiburada Mağaza">
-                    <svg width="16" height="16" viewBox="0 0 256 256" aria-hidden="true"><path d="M128 0C93.7 0 66 60.9 66 136c0 66.3 27.7 120 62 120s62-53.7 62-120C190 60.9 162.3 0 128 0z" fill="#FF6000"/><path d="M128 42c-18.2 0-33 31.4-33 70.2 0 38.7 14.8 70.1 33 70.1s33-31.4 33-70.1C161 73.4 146.2 42 128 42z" fill="#ffffff"/></svg>
-                </a>
             </div>
+        </div>
+    </div>
+    <div class="footer-marketplaces">
+        <span>Mağazalarımız</span>
+        <div class="footer-mp-logos">
+            <a href="https://ty.gl/j06m6load8mcg" target="_blank" rel="noopener noreferrer" aria-label="Trendyol Mağaza">
+                <img src="pazaryerilogo/trendyol.png" alt="Trendyol" loading="lazy">
+            </a>
+            <a href="https://www.hepsiburada.com/magaza/blaene" target="_blank" rel="noopener noreferrer" aria-label="Hepsiburada Mağaza">
+                <img src="pazaryerilogo/hepsiburada.png" alt="Hepsiburada" loading="lazy">
+            </a>
         </div>
     </div>
     <p class="footer-copy">© 2026 Blaene. Tüm hakları saklıdır.</p>
