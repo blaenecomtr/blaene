@@ -59,6 +59,11 @@ let xml = `<?xml version="1.0" encoding="UTF-8"?>
     <loc>${BASE}/bath.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>${BASE}/${encUrl('görsel/marka/bath.webp')}</image:loc>
+      <image:title>Blaene Banyo Aksesuarları — 304 Paslanmaz Çelik</image:title>
+      <image:caption>Blaene BANYO Koleksiyonu: Duş rafı, havluluk, WC kağıtlığı, banyo organizeri</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>${BASE}/forge.html</loc>
