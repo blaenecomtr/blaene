@@ -47,7 +47,7 @@
         .site-header {
             position: sticky; top: 0; z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 2rem; height: 100px;
+            padding: 0 2rem; height: 140px;
             background-color: rgba(247,247,247,0.97);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
@@ -198,7 +198,7 @@
         /* ── GALLERY NAV ARROWS ──────────────────────────── */
         .gallery-arrow {
             position: absolute; top: 50%; transform: translateY(-50%);
-            width: 44px; height: 70px; z-index: 10;
+            width: 44px; height: 100px; z-index: 10;
             background: rgba(255,255,255,0.88); border: 1px solid rgba(0,0,0,0.12);
             color: rgba(0,0,0,0.6); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -245,7 +245,7 @@
         }
         .lightbox-close {
             position: absolute; top: 1.25rem; right: 1.25rem;
-            width: 44px; height: 70px;
+            width: 44px; height: 100px;
             background: transparent; border: 1px solid rgba(0,0,0,0.18);
             color: rgba(0,0,0,0.6); cursor: pointer; font-size: 1rem;
             display: flex; align-items: center; justify-content: center;
@@ -254,7 +254,7 @@
         .lightbox-close:hover { border-color: var(--accent); color: var(--accent); }
         .lightbox-nav {
             position: absolute; top: 50%; transform: translateY(-50%);
-            width: 44px; height: 70px;
+            width: 44px; height: 100px;
             background: transparent; border: 1px solid rgba(0,0,0,0.14);
             color: rgba(0,0,0,0.55); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -445,9 +445,9 @@
         .footer-mp-logos { display: flex; justify-content: center; align-items: center; gap: 4rem; flex-wrap: wrap; }
         .footer-mp-logos a { display: inline-block; opacity: 0.85; transition: opacity 0.2s; }
         .footer-mp-logos a:hover { opacity: 1; }
-        .footer-mp-logos img { height: 100px; width: auto; object-fit: contain; }
+        .footer-mp-logos img { height: 140px; width: auto; object-fit: contain; }
         @media (max-width: 480px) {
-            .footer-mp-logos img { height: 70px; }
+            .footer-mp-logos img { height: 100px; }
             .footer-mp-logos { gap: 2.5rem; }
         }
         .footer-copy { font-size: 0.66rem; color: var(--text-3); margin-top: 2rem; text-align: center; }
@@ -508,7 +508,7 @@
 
         /* ── MOBILE FIXES ────────────────────────────────── */
         @media (max-width: 860px) {
-            .zoom-btn { opacity: 1; width: 44px; height: 70px; }
+            .zoom-btn { opacity: 1; width: 44px; height: 100px; }
             .site-header { padding: 0 1.25rem; }
         }
         @media (max-width: 600px) {
