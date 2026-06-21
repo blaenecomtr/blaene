@@ -648,36 +648,40 @@
 
         .footer-marketplaces {
             border-top: 1px solid var(--border);
-            padding: 1.5rem 2rem 1rem;
+            padding: 2rem 2rem 1.5rem;
             text-align: center;
             max-width: 1200px; margin: 0 auto;
         }
         .footer-marketplaces span {
             display: block;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
             color: var(--text-3);
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         .footer-mp-logos {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 2.5rem;
+            gap: 4rem;
             flex-wrap: wrap;
         }
         .footer-mp-logos a {
             display: inline-block;
-            opacity: 0.55;
+            opacity: 0.6;
             transition: opacity 0.2s;
         }
         .footer-mp-logos a:hover { opacity: 1; }
         .footer-mp-logos img {
-            height: 28px;
+            height: 60px;
             width: auto;
             object-fit: contain;
+        }
+        @media (max-width: 480px) {
+            .footer-mp-logos img { height: 44px; }
+            .footer-mp-logos { gap: 2.5rem; }
         }
 
         .footer-bottom {

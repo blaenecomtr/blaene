@@ -429,28 +429,22 @@
         .footer-social a:hover { color: var(--accent); border-color: rgba(224,112,32,0.35); }
         .footer-marketplaces {
             border-top: 1px solid var(--border);
-            padding: 1.5rem 0 0.5rem;
+            padding: 2rem 0 1.5rem;
             text-align: center;
         }
         .footer-marketplaces span {
-            display: block;
-            font-size: 0.65rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-3);
-            margin-bottom: 1rem;
+            display: block; font-size: 0.7rem; font-weight: 600;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 1.5rem;
         }
-        .footer-mp-logos {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 2.5rem;
-            flex-wrap: wrap;
-        }
-        .footer-mp-logos a { display: inline-block; opacity: 0.55; transition: opacity 0.2s; }
+        .footer-mp-logos { display: flex; justify-content: center; align-items: center; gap: 4rem; flex-wrap: wrap; }
+        .footer-mp-logos a { display: inline-block; opacity: 0.6; transition: opacity 0.2s; }
         .footer-mp-logos a:hover { opacity: 1; }
-        .footer-mp-logos img { height: 28px; width: auto; object-fit: contain; }
+        .footer-mp-logos img { height: 60px; width: auto; object-fit: contain; }
+        @media (max-width: 480px) {
+            .footer-mp-logos img { height: 44px; }
+            .footer-mp-logos { gap: 2.5rem; }
+        }
         .footer-copy { font-size: 0.66rem; color: var(--text-3); margin-top: 2rem; text-align: center; }
 
         /* ── FLOATING WA ─────────────────────────────────── */
